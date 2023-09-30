@@ -4,10 +4,22 @@
 
 .bttnHolder {
     opacity: 0;
-
 }
 
 .storyTextboardHolder:hover .bttnHolder {
     opacity: 1;
 
+}
+
+.choices {
+    user-select: none;
+}
+
+.fillUpChoice {
+    background-color: green !important;
+}
+
+.makeStoryLabelInputCont {
+    display: flex;
+    flex-direction: column;
 }

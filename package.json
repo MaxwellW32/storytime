@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "jotai": "^2.4.3",
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",
