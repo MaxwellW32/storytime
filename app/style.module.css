@@ -1,0 +1,13 @@
+.storyBoardArr {
+    background-color: aliceblue;
+}
+
+.bttnHolder {
+    opacity: 0;
+
+}
+
+.storyTextboardHolder:hover .bttnHolder {
+    opacity: 1;
+
+}

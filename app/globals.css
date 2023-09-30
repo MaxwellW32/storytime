@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-color: #3498db;
+  --secondary-color: #2ecc71;
+  --text-color: #333333;
+  --background-color: #ffffff;
+  /* --error-color: #e74c3c; */
+
+  --font-family-main: Arial, sans-serif;
+  --small-font-size: 12px;
+  --medium-font-size: 16px;
+  --large-font-size: 20px;
+  --normal-font-weight: 400;
+  --bold-font-weight: 700;
+
+  --small-margin: 8px;
+  --medium-margin: 16px;
+  --large-margin: 24px;
+
+  --small-padding: 8px;
+  --medium-padding: 16px;
+  --large-padding: 24px;
+
+  --small-border-width: 1px;
+  --medium-border-width: 2px;
+  --large-border-width: 3px;
+  --default-border-radius: 8px;
+
+  --z-indexNormal: 1;
+  --z-indexPopUp: 998;
+  --z-indexNavBar: 999;
+
+  --short-animation-duration: 300ms;
+  --medium-animation-duration: 500ms;
+  --long-animation-duration: 800ms;
+}
+
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-color: #000000;
+  }
+}
+
+*:where( :not(html, iframe, canvas, img, svg, video, audio):not(svg *, symbol *)) {
+  all: unset;
+  display: revert;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+ol,
+ul,
+menu {
+  list-style: none;
+}
+
+img {
+  max-inline-size: 100%;
+  max-block-size: 100%;
+}
+
+svg {
+  max-inline-size: 100%;
+  max-block-size: 100%;
+}
