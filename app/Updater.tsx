@@ -35,9 +35,8 @@ export function gameObjGlobalUpdater(globalStories: StoryData[] | undefined, sto
                     if (typeof eachTextBoard === "string") {
                         return eachTextBoard
                     } else {
-                        console.log("gf", data.gameFinished)
                         if (eachTextBoard.gameModeId === objId) {
-                            return { ...data }
+                            return { ...eachTextBoard, ...data }
                         } else {
                             return eachTextBoard
                         }

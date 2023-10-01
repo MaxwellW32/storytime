@@ -41,7 +41,7 @@ function Story({ title, rating, storyTextBoard, shortDescription, backgroundAudi
       {/* storyboard container */}
 
       {reading && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", backgroundColor: "yellow", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", backgroundColor: "yellow", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", overflowY: "auto" }}>
 
           {storyTextBoard?.map((eachElemnt, index) => {
             if (typeof eachElemnt === "string") {
@@ -360,6 +360,7 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
 
 
   const [userAnswers, userAnswersSet] = useState<string[]>([])
+  const [choiceBuild, choiceBuildSet] = useState<string>("")
 
   const [dataSeen, dataSeenSet] = useState(false)
   const choiceRefs = useRef<HTMLDivElement[]>([])
@@ -447,12 +448,10 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
     }
   }
 
-  const [mouseIsDown, mouseIsDownSet] = useState(false)
-
-
-
   function checkAnswers() {
     let amtCorrect = 0
+    // console.table(`usernanswer`, userAnswers);
+    // console.table(`correct`, answers);
     userAnswers.forEach(userAns => {
       answers!.forEach(answer => {
         if (userAns === answer) {
@@ -467,6 +466,11 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
     }
   }
 
+  function refreshGame() {
+    gameFinished = false
+    updateGameModeObjGlobal()
+  }
+
   return (
     <div style={{ scale: gameFinished ? .9 : 1 }}>
       {dataSeen ? (
@@ -476,99 +480,107 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridAutoRows: "100px", gap: ".3rem" }}>
 
             {questions!.map((question, index) => (
-              <div style={{ backgroundColor: "white" }} ref={addQuestionRefs}>
+              <div
+                data-question={question}
+                style={{ backgroundColor: "white" }}
+                ref={addQuestionRefs}>
                 {question}
               </div>
             ))}
           </div>
           choices
           <div style={{ display: "flex", gap: "1rem" }}>
-            {choices!.map((choice, choiceMapIndex) => (
-              <div className={styles.choices} style={{}} ref={addChoiceRef}
-                onMouseDown={(e) => {
-                  mouseIsDownSet(true)
-                  choiceRefs.current[choiceMapIndex].style.width = `${70}px`
-                  choiceRefs.current[choiceMapIndex].style.height = `${70}px`
-                }}
-                onMouseMove={(e) => {
-                  if (mouseIsDown) {
-                    const { width, height } = choiceRefs.current[choiceMapIndex].getBoundingClientRect();
-                    choiceRefs.current[choiceMapIndex].style.position = "absolute"
-                    choiceRefs.current[choiceMapIndex].style.zIndex = `1`
+            {choices!.map((choice) => (
+              <div
+                draggable={true}
+                data-choice={choice}
+                className={styles.choices}
+                style={{}}
+                ref={addChoiceRef}
+                onDragStart={(e) => {
+                  const activeChoicePre = e.target as HTMLDivElement
+                  const activeChoiceSelected = activeChoicePre.dataset.choice;
 
-                    const newY = `${e.pageY - height - height / 2}px`
-                    const newX = `${e.pageX - width / 2}px`
-
-                    choiceRefs.current[choiceMapIndex].style.left = newX
-                    choiceRefs.current[choiceMapIndex].style.top = newY
-                    // console.log(`mpleft: ${newX} mptop: ${newY}`)
-
-                    const { top, left } = choiceRefs.current[choiceMapIndex].getBoundingClientRect();
-                    console.log(`rect currently has x:${left} y:${top}`)
-
-                  }
+                  choiceBuildSet(activeChoiceSelected!)
                 }}
 
-                onMouseUp={(e) => {
-                  mouseIsDownSet(false)
-                  choiceRefs.current[choiceMapIndex].style.zIndex = `0`
+                onDragEnd={(e) => {
+                  const mouseX = e.pageX
+                  const mouseY = e.pageY
 
-                  //current choice selected
-                  const { width: choiceWidth, height: choiceHeight } = choiceRefs.current[choiceMapIndex].getBoundingClientRect();
-                  const currentChoiceLocationX = e.pageX
-                  const currentChoiceLocationY = e.pageY
-
-                  console.log(`mouse point currently has x:${currentChoiceLocationX} y:${currentChoiceLocationY}`)
-
+                  console.log(`currently x${mouseX} y${mouseY}`);
 
                   let overAQuestionLocal = false
-                  let overQuestionIndex = 0
-                  let questionBound = {
-                    height: 0,
-                    width: 0,
-                    top: 0,
-                    left: 0
-                  }
+                  let qstValIntersectingWith: string | undefined
+                  let questionIndex = 0 //is the ref index
 
-                  questionRefs.current.forEach((eachRef, index) => {
-                    const { top, left, bottom, right, width, height } = eachRef.getBoundingClientRect()
 
-                    if (currentChoiceLocationX < right && currentChoiceLocationX >= left) {
-                      if (currentChoiceLocationY < bottom && currentChoiceLocationY >= top) {
+                  questionRefs.current.forEach((eachQstRef, index) => {
+                    const { top, left, bottom, right, width, height } = eachQstRef.getBoundingClientRect()
+
+                    if (mouseX < right && mouseX >= left) {
+                      if (mouseY < bottom && mouseY >= top) {
                         overAQuestionLocal = true
-                        overQuestionIndex = index
-                        questionBound = { width, height, top, left }
+                        qstValIntersectingWith = eachQstRef.dataset.question
+                        questionIndex = index
                       }
                     }
                   })
 
 
                   if (overAQuestionLocal) {
-                    choiceRefs.current[choiceMapIndex].style.position = "absolute"
-                    choiceRefs.current[choiceMapIndex].style.width = `${questionBound.width}px`
-                    choiceRefs.current[choiceMapIndex].style.height = `${questionBound.height}px`
-                    choiceRefs.current[choiceMapIndex].style.top = `${questionBound.top - questionBound.height}px`
-                    choiceRefs.current[choiceMapIndex].style.left = `${questionBound.left}px`
-                    choiceRefs.current[choiceMapIndex].classList.add(styles.fillUpChoice)
-
                     userAnswersSet(prevUserAnswers => {
                       const newArr = [...prevUserAnswers]
-                      newArr[choiceMapIndex] = `${questions![overQuestionIndex]}${choices![choiceMapIndex]}`
+                      newArr[questionIndex] = `${qstValIntersectingWith}${choiceBuild}`
                       return newArr
                     })
-                  } else {
-                    choiceRefs.current[choiceMapIndex].style.position = "relative"
-                    choiceRefs.current[choiceMapIndex].style.top = `0px`
-                    choiceRefs.current[choiceMapIndex].style.left = `0px`
-                    choiceRefs.current[choiceMapIndex].classList.remove(styles.fillUpChoice)
-                  }
 
-                }}>
+                    // console.log(`$seen you over question ${questionIndex} ayy`);
+                    //do element replace
+                    //get styling
+                    const choiceToStyle = e.target as HTMLDivElement
+                    const { y, x, width, height } = questionRefs.current[questionIndex].getBoundingClientRect()
+
+                    const parentElementSeen = questionRefs.current[questionIndex].parentElement;
+                    const newEl = document.createElement("div")
+                    newEl.setAttribute("id", `ce${choiceToStyle.dataset.choice}`)
+                    newEl.setAttribute("class", styles.tempElReplace)
+                    newEl.style.top = `${y - 30}px`
+                    newEl.style.left = `${x}px`
+                    parentElementSeen?.append(newEl)
+
+                    console.log(`el#${questionIndex} top${y} left${x}`);
+
+                    // choiceToStyle.style.position = "absolute"
+
+                    // choiceToStyle.style.width = `${120}px`
+                    // choiceToStyle.style.height = `${120}px`
+                    choiceToStyle.classList.add(styles.fillUpChoice)
+                  } else {
+
+                    const { y, x, width, height } = questionRefs.current[questionIndex].getBoundingClientRect()
+                    console.log(`el#${questionIndex} top${y} left${x}`);
+
+                    const choiceToStyle = e.target as HTMLDivElement
+                    choiceToStyle.style.position = "static"
+                    choiceToStyle.style.top = `${0}px`
+                    choiceToStyle.style.left = `${0}px`
+                    choiceToStyle.style.width = `${70}px`
+                    choiceToStyle.style.height = `${70}px`
+                    choiceToStyle.classList.remove(styles.fillUpChoice)
+
+                  }
+                }}
+              >
                 {choice}
               </div>
             ))}
           </div>
-          <button onClick={checkAnswers}>Check Answers</button>
+          {!gameFinished ? (
+            <button onClick={checkAnswers}>Check Answers</button>
+          ) : (
+            <button onClick={refreshGame}>Game Finished - refresh?</button>
+          )}
         </>
       ) : (
         <>

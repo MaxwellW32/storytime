@@ -11,15 +11,26 @@
 }
 
 .choices {
-    user-select: none;
     background-color: aqua;
     width: 70px;
     height: 70px;
-    position: relative;
+    cursor: move;
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    user-select: none;
 }
 
 .fillUpChoice {
+    /* background-color: green !important; */
+}
+
+.tempElReplace {
     background-color: green !important;
+    position: absolute;
+    width: 30px;
+    height: 30px;
+
 }
 
 .makeStoryLabelInputCont {
