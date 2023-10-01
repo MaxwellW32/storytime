@@ -21,8 +21,9 @@
     user-select: none;
 }
 
-.fillUpChoice {
+.canHide {
     /* background-color: green !important; */
+    opacity: 0;
 }
 
 .tempElReplace {
@@ -32,6 +33,7 @@
     height: 30px;
 
 }
+
 
 .makeStoryLabelInputCont {
     display: flex;

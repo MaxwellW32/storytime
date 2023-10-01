@@ -538,13 +538,29 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
                     // console.log(`$seen you over question ${questionIndex} ayy`);
                     //do element replace
                     //get styling
-                    const choiceToStyle = e.target as HTMLDivElement
+                    const choiceElToStyle = e.target as HTMLDivElement
                     const { y, x, width, height } = questionRefs.current[questionIndex].getBoundingClientRect()
 
                     const parentElementSeen = questionRefs.current[questionIndex].parentElement;
                     const newEl = document.createElement("div")
-                    newEl.setAttribute("id", `ce${choiceToStyle.dataset.choice}`)
+                    newEl.setAttribute("id", `ce${choiceElToStyle.dataset.choice}`)
                     newEl.setAttribute("class", styles.tempElReplace)
+
+                    newEl.addEventListener("click", (e) => {
+                      const seenEl = e.target as HTMLDivElement
+
+                      //make other elements visible again
+
+                      choiceRefs.current.forEach((eachRef) => {
+                        const seenChoiceStr = eachRef.dataset.choice as string
+                        if (seenChoiceStr === seenEl.id.substring(2)) {
+                          eachRef.classList.remove(styles.canHide)
+                        }
+                      })
+
+                      seenEl.remove()
+                    })
+
                     newEl.style.top = `${y - 30}px`
                     newEl.style.left = `${x}px`
                     parentElementSeen?.append(newEl)
@@ -555,7 +571,9 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
 
                     // choiceToStyle.style.width = `${120}px`
                     // choiceToStyle.style.height = `${120}px`
-                    choiceToStyle.classList.add(styles.fillUpChoice)
+                    choiceElToStyle.classList.add(styles.canHide)
+
+
                   } else {
 
                     const { y, x, width, height } = questionRefs.current[questionIndex].getBoundingClientRect()
@@ -567,8 +585,6 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
                     choiceToStyle.style.left = `${0}px`
                     choiceToStyle.style.width = `${70}px`
                     choiceToStyle.style.height = `${70}px`
-                    choiceToStyle.classList.remove(styles.fillUpChoice)
-
                   }
                 }}
               >
@@ -610,8 +626,9 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
           ))}
           {updateGameModeObjLocal && <button onClick={submit}>Save</button>}
         </>
-      )}
-    </div>
+      )
+      }
+    </div >
   )
 }
 
