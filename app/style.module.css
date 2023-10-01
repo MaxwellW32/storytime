@@ -8,11 +8,14 @@
 
 .storyTextboardHolder:hover .bttnHolder {
     opacity: 1;
-
 }
 
 .choices {
     user-select: none;
+    background-color: aqua;
+    width: 70px;
+    height: 70px;
+    position: relative;
 }
 
 .fillUpChoice {
