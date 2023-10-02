@@ -97,7 +97,7 @@ function Story({ title, rating, storyTextBoard, shortDescription, backgroundAudi
 
 
   return (
-    <div style={{ border: "1px solid red", display: "flex", gap: "1rem" }}>
+    <div style={{ backgroundColor: "white", padding: "1rem", display: "flex", gap: "1rem" }}>
       <h3>{title}</h3>
       {rating && <p>{rating}/5</p>}
       {shortDescription && <p>{shortDescription}</p>}
@@ -414,14 +414,6 @@ export default function Home() {
   const [stories, storiesSet] = useAtom(globalStorieArray)
   const [makingStory, makingStorySet] = useState(false)
 
-  // useEffect(() => {
-  //   function move(e) {
-  //     console.log(`x${e.clientX} y${e.clientY}`);
-  //   }
-
-  //   document.addEventListener("mousemove", move)
-  //   return () => document.removeEventListener("mousemove", move)
-  // }, [])
   useEffect(() => {
     //save
     if (stories) {
@@ -458,7 +450,7 @@ export default function Home() {
   }, [])
 
   return (
-    <main>
+    <main style={{ display: "grid", gap: "1rem" }}>
       <p>Home Page</p>
 
       {makingStory ? <MakeStory makingStorySet={makingStorySet} /> : (
@@ -928,12 +920,14 @@ function DisplayMedia({ url }: { url: string }) {
   return (
     <div className={styles.mediaCont}>
       {isYtVid ? (
-        <ReactPlayer
-          loop={false}
-          playing={false}
-          url={url ? url : "https://www.youtube.com/watch?v=NJuSStkIZBg"}
+        <div style={{ overflow: "hidden", maxWidth: "100dvw" }}>
+          <ReactPlayer
+            loop={false}
+            playing={false}
+            url={url ? url : "https://www.youtube.com/watch?v=NJuSStkIZBg"}
 
-        />
+          />
+        </div>
       ) : (
         <img src={url} />
       )}

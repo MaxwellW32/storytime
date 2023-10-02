@@ -56,8 +56,5 @@
     align-items: center;
     justify-items: center;
     object-fit: contain;
-}
 
-.mediaCont * {
-    max-width: 100dvw;
 }
