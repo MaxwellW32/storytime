@@ -400,7 +400,7 @@ function saveToLocalStorage(keyName: any, item: any) {
   localStorage.setItem(keyName, JSON.stringify(item));
 }
 
-export function retreiveFromLocalStorage(keyName: string) {
+function retreiveFromLocalStorage(keyName: string) {
   const todos = localStorage.getItem(keyName);
   if (todos) {
     const todosArray = JSON.parse(todos);
@@ -503,7 +503,7 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
 
   const [dataSeen, dataSeenSet] = useState(false)
 
-  const [activeId, setActiveId] = useState();
+  const [activeId, setActiveId] = useState<null>();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
