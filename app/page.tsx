@@ -101,7 +101,7 @@ function Story({ title, rating, storyTextBoard, shortDescription, backgroundAudi
       <h3>{title}</h3>
       {rating && <p>{rating}/5</p>}
       {shortDescription && <p>{shortDescription}</p>}
-      <button style={{ backgroundColor: "yellow" }} onClick={() => { readingSet(true) }}>Let's Read</button>
+      <button style={{ backgroundColor: "yellow" }} onClick={() => { readingSet(true) }}>Let&apos;s Read</button>
       <button style={{ backgroundColor: "yellow" }} onClick={() => { deleteStory(storyId) }}>Delete Story</button>
 
       {/* storyboard container */}
