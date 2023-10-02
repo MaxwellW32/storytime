@@ -42,7 +42,6 @@
 
 .textAreaEdit {
     resize: none;
-    /* resize: "vertical", */
     overflow: hidden;
     min-height: auto;
     max-height: 200px;

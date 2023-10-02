@@ -23,7 +23,7 @@ import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import Container from "./using/container";
 import { Item } from "./using/sortable_item";
 
-export const globalStorieArray = atom<StoryData[] | undefined>(undefined)
+const globalStorieArray = atom<StoryData[] | undefined>(undefined)
 
 //this is the layout for the objects of each of my games that holds everything
 export interface gamemodeInfo {
@@ -772,7 +772,7 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
 
 
           <DndContext
-            announcements={defaultAnnouncements}
+            // announcements={defaultAnnouncements}
             sensors={sensors}
             collisionDetection={closestCorners}
             onDragStart={handleDragStart}
