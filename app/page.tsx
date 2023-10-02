@@ -8,6 +8,20 @@ import ReactPlayer from "react-player/youtube";
 import updateGameModeObj, { gameObjGlobalUpdater } from './Updater';
 import gameObjLocalUpdater from './Updater';
 
+import {
+  DndContext,
+  DragOverlay,
+  closestCorners,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors
+} from "@dnd-kit/core";
+import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+
+import Container from "./using/container";
+import { Item } from "./using/sortable_item";
+
 export const globalStorieArray = atom<StoryData[] | undefined>(undefined)
 
 //this is the layout for the objects of each of my games that holds everything
@@ -28,6 +42,41 @@ export interface StoryData {
   shortDescription?: string
 }
 
+const wrapperStyle: any = {
+  display: "flex",
+  flexDirection: "row"
+};
+
+const defaultAnnouncements: any = {
+  onDragStart(id: any) {
+    console.log(`Picked up draggable item ${id}.`);
+  },
+  onDragOver(id: any, overId: any) {
+    if (overId) {
+      console.log(
+        `Draggable item ${id} was moved over droppable area ${overId}.`
+      );
+      return;
+    }
+
+    console.log(`Draggable item ${id} is no longer over a droppable area.`);
+  },
+  onDragEnd(id: any, overId: any) {
+    if (overId) {
+      console.log(
+        `Draggable item ${id} was dropped over droppable area ${overId}`
+      );
+      return;
+    }
+
+    console.log(`Draggable item ${id} was dropped.`);
+  },
+  onDragCancel(id: any) {
+    console.log(`Dragging was cancelled. Draggable item ${id} was dropped.`);
+  }
+};
+
+
 function Story({ title, rating, storyTextBoard, shortDescription, backgroundAudio, storyId }: StoryData) {
   const [reading, readingSet] = useState(false)
 
@@ -41,19 +90,19 @@ function Story({ title, rating, storyTextBoard, shortDescription, backgroundAudi
       {/* storyboard container */}
 
       {reading && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", backgroundColor: "yellow", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", overflowY: "auto" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", backgroundColor: "#aaa", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", overflowY: "auto" }}>
 
           {storyTextBoard?.map((eachElemnt, index) => {
             if (typeof eachElemnt === "string") {
               return (
-                <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", border: "3px solid red" }} key={uuidv4()}>
-                  <p style={{}}>{eachElemnt}</p>
+                <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column" }} key={uuidv4()}>
+                  <p style={{ backgroundColor: "wheat" }}>{eachElemnt}</p>
                 </div>
               )
             } else {
               //getname of element and choose component that way
               return (
-                <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", border: "3px solid red" }} key={uuidv4()}>
+                <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", backgroundColor: "wheat" }} key={uuidv4()}>
 
                   {eachElemnt.typeOfGameMode === "MATHCUP" ? (
                     <MatchUp {...eachElemnt} storyId={storyId} />
@@ -204,7 +253,7 @@ function MakeStory() {
             {storyTextBoardObjs.map((eachElemnt, index) => {
               if (typeof eachElemnt === "string") {
                 return (
-                  <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", border: "3px solid red" }} key={uuidv4()}>
+                  <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column" }} key={uuidv4()}>
                     <textarea style={{ backgroundColor: "wheat" }} defaultValue={eachElemnt} onBlur={(e) => {
                       storyTextBoardObjsSet(prevStoryBoard => {
                         const newArr = [...prevStoryBoard!]
@@ -307,7 +356,7 @@ export default function Home() {
     //save
     if (stories) {
       saveToLocalStorage("storiesArr", stories)
-      makingStorySet(false)
+      // makingStorySet(false)
     }
   }, [stories])
 
@@ -342,8 +391,7 @@ export default function Home() {
 //match 4
 interface matchupGameData {
   questionsArr?: string[],
-  choicesArr?: string[],
-  answersArr?: string[],
+  choicesArr?: string[][],
 }
 
 function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, gameFinished, storyId, updateGameModeObjLocal }: gamemodeInfo & { storyId: string, updateGameModeObjLocal?: (id: string, data: gamemodeInfo) => void } & {
@@ -354,50 +402,61 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
   // questionsArr, choicesArr, answersArr, gameId, updateGameModeObj, gameFinishedInit 
   const [stories, storiesSet] = useAtom(globalStorieArray)
 
-  const [questions, questionsSet] = useState<string[] | undefined>()
-  const [choices, choicesSet] = useState<string[] | undefined>()
-  const [answers, answersSet] = useState<string[] | undefined>()
+  const [questions, questionsSet] = useState<string[] | undefined>([""])
+  const [choices, choicesSet] = useState<string[][] | undefined>(() => {
+    return questions!.map(eachItem => {
+      return [""]
+    })
+  })
 
 
-  const [userAnswers, userAnswersSet] = useState<string[]>([])
-  const [choiceBuild, choiceBuildSet] = useState<string>("")
+  const [userAnswers, userAnswersSet] = useState<string[][]>([])
 
   const [dataSeen, dataSeenSet] = useState(false)
-  const choiceRefs = useRef<HTMLDivElement[]>([])
-  const questionRefs = useRef<HTMLDivElement[]>([])
+
+  const [activeId, setActiveId] = useState();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates
+    })
+  );
+
+  const [items, setItems] = useState<any>(() => {
+    //get all data, questions, choices, display em
+    let newItemObj: {
+      [key: string]: any
+    } = {}
+
+    gameData?.questionsArr?.forEach((eachQuestion, index) => {
+      newItemObj[`container${index}`] = []
+    })
+
+    const seenNewArr: string[] = []
+
+    gameData?.choicesArr?.forEach((choiceStrArr, index) => {
+      choiceStrArr.forEach((strVal) => {
+        seenNewArr.push(strVal)
+      })
+    })
+
+    newItemObj["root"] = seenNewArr
+    console.log(`$items`, newItemObj);
+
+    return { ...newItemObj }
+  });
 
   useEffect(() => {
-    if (gameData) {
+    if (gameData !== undefined) {
       dataSeenSet(true)
       questionsSet(gameData.questionsArr)
       choicesSet(gameData.choicesArr)
-      answersSet(gameData.answersArr)
-    }
 
+      // console.log(`$carr`, gameData.choicesArr);
+    }
   }, [])
 
-  const amtQuestionsArr = useRef(() => {
-    const amount = 4
-    const newArr = []
-    for (let index = 0; index < amount; index++) {
-      newArr.push(index)
-    }
-
-    return newArr
-  })
-
-  useEffect(() => {
-    if (questions && choices) {
-      answersSet(() => {
-        const newArr = amtQuestionsArr.current().map((temp, index) => {
-          return `${questions[index] ?? ''}${choices[index] ?? ''}`;
-
-        })
-        return newArr
-      })
-    }
-
-  }, [questions, choices])
 
   function submit() {
     //local submit to parent make Story - saved to the storyTextboard
@@ -405,7 +464,6 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
       gameModeId: gameModeId,
       typeOfGameMode: typeOfGameMode,
       gameData: {
-        answersArr: answers,
         choicesArr: choices,
         questionsArr: questions
       },
@@ -425,7 +483,6 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
       gameModeId: gameModeId,
       typeOfGameMode: typeOfGameMode,
       gameData: {
-        answersArr: answers,
         choicesArr: choices,
         questionsArr: questions
       },
@@ -436,31 +493,35 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
     storiesSet(gameObjGlobalUpdater(stories, storyId, gameModeId, newGameModeData))
   }
 
-  const addChoiceRef = (el: HTMLDivElement) => {
-    if (el && !choiceRefs.current.includes(el)) {
-      choiceRefs.current.push(el)
-    }
-  }
-
-  const addQuestionRefs = (el: HTMLDivElement) => {
-    if (el && !questionRefs.current.includes(el)) {
-      questionRefs.current.push(el)
-    }
-  }
-
   function checkAnswers() {
     let amtCorrect = 0
     // console.table(`usernanswer`, userAnswers);
     // console.table(`correct`, answers);
-    userAnswers.forEach(userAns => {
-      answers!.forEach(answer => {
-        if (userAns === answer) {
-          amtCorrect++
-        }
+
+    //go through each useAnswers arr, in each value compare it to be found in the answers arr at that same index pos
+    //if the amount found == the amount of answers in that index, got correct = true
+    //then can look at the amount correct
+    let globalAmtCorrect = 0
+
+    userAnswers.forEach((userAnsStrArr, index) => {
+      let correctCount = 0
+      userAnsStrArr.forEach((eachAnsStr, smallIndex) => {
+        choices![index].forEach(eachChoiceStr => {
+          if (eachAnsStr === eachChoiceStr) {
+            correctCount++
+          }
+        })
+
       })
+
+      if (correctCount === choices![index].length) {
+        globalAmtCorrect++
+      }
+
     })
 
-    if (amtCorrect === amtQuestionsArr.current().length) {
+
+    if (globalAmtCorrect === questions!.length) {
       gameFinished = true
       updateGameModeObjGlobal()
     }
@@ -471,127 +532,179 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
     updateGameModeObjGlobal()
   }
 
+  function findContainer(id: any) {
+    if (id in items) {
+      return id;
+    }
+
+    return Object.keys(items).find((key) => items[key].includes(id));
+  }
+
+  function handleDragStart(event: any) {
+    const { active } = event;
+    const { id } = active;
+
+    setActiveId(id);
+  }
+
+  function handleDragOver(event: any) {
+    const { active, over, draggingRect } = event;
+    const { id } = active;
+    const { id: overId } = over;
+
+    // console.log(`dragging ${id} over ${overId}`);
+    // Find the containers
+    const activeContainer = findContainer(id);
+    const overContainer = findContainer(overId);
+
+    if (
+      !activeContainer ||
+      !overContainer ||
+      activeContainer === overContainer
+    ) {
+      return;
+    }
+
+    setItems((prev: any) => {
+      const activeItems = prev[activeContainer];
+      const overItems = prev[overContainer];
+
+      // Find the indexes for the items
+      const activeIndex = activeItems.indexOf(id);
+      const overIndex = overItems.indexOf(overId);
+
+      let newIndex;
+      if (overId in prev) {
+        // We're at the root droppable of a container
+        newIndex = overItems.length + 1;
+      } else {
+        const isBelowLastItem =
+          over &&
+          overIndex === overItems.length - 1 &&
+          draggingRect?.offsetTop > over.rect.offsetTop + over.rect.height;
+
+        const modifier = isBelowLastItem ? 1 : 0;
+
+        newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length + 1;
+      }
+
+      return {
+        ...prev,
+        [activeContainer]: [
+          ...prev[activeContainer].filter((item: any) => item !== active.id)
+        ],
+        [overContainer]: [
+          ...prev[overContainer].slice(0, newIndex),
+          items[activeContainer][activeIndex],
+          ...prev[overContainer].slice(newIndex, prev[overContainer].length)
+        ]
+      };
+    });
+  }
+
+  function handleDragEnd(event: any) {
+    const { active, over } = event;
+    const { id } = active; //id is the info it contains
+    const { id: overId } = over; //element already in the container 
+
+    const activeContainer = findContainer(id);
+    const overContainer = findContainer(overId);
+
+    const containerIndex = event.active.data.current.arrPos
+    const seenText = event.active.data.current.choiceText
+
+    if (containerIndex !== 4) {
+      //set it to my user answers arr
+      userAnswersSet((prevUsrAnwers) => {
+        const newArr = prevUsrAnwers.map(eachArr => eachArr)
+
+        //its empty
+        if (!newArr[containerIndex]) {
+          newArr[containerIndex] = [seenText]
+          console.log(`$sempty`, newArr);
+          return newArr
+
+        } else {
+          //has string values
+          //scan items inside, ensure it doesnt have seenText already
+          const clearUsrAnsArr = newArr.map((eachStrArr, index) => {
+            if (!eachStrArr) {
+              // console.log(`$didnt see arr pos ${index}, added ""`);
+              return [""]
+
+            } else {
+              return eachStrArr.filter(eachStr => {
+                // console.log(`$str seen to filter `, eachStr);
+                if (eachStr !== seenText) {
+                  return eachStr
+                } else {
+                  return ""
+                }
+              })
+            }
+          })
+
+          clearUsrAnsArr[containerIndex] = [...clearUsrAnsArr[containerIndex], seenText]
+
+          // console.log(`$final, `, clearUsrAnsArr);
+          return clearUsrAnsArr
+        }
+      })
+    }
+
+    if (
+      !activeContainer ||
+      !overContainer ||
+      activeContainer !== overContainer
+    ) {
+      return;
+    }
+
+    const activeIndex = items[activeContainer].indexOf(active.id);
+    const overIndex = items[overContainer].indexOf(overId);
+
+    if (activeIndex !== overIndex) {
+      setItems((items: any) => ({
+        ...items,
+        [overContainer]: arrayMove(items[overContainer], activeIndex, overIndex)
+      }));
+    }
+
+    setActiveId(null);
+  }
+  //add on to choice arr with a new element
+  //add onto question arr
+
   return (
     <div style={{ scale: gameFinished ? .9 : 1 }}>
       {dataSeen ? (
         <>
           <p>seeing data - quiz time</p>
-          questions
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridAutoRows: "100px", gap: ".3rem" }}>
-
-            {questions!.map((question, index) => (
-              <div
-                data-question={question}
-                style={{ backgroundColor: "white" }}
-                ref={addQuestionRefs}>
-                {question}
-              </div>
-            ))}
-          </div>
-          choices
-          <div style={{ display: "flex", gap: "1rem" }}>
-            {choices!.map((choice) => (
-              <div
-                draggable={true}
-                data-choice={choice}
-                className={styles.choices}
-                style={{}}
-                ref={addChoiceRef}
-                onDragStart={(e) => {
-                  const activeChoicePre = e.target as HTMLDivElement
-                  const activeChoiceSelected = activeChoicePre.dataset.choice;
-
-                  choiceBuildSet(activeChoiceSelected!)
-                }}
-
-                onDragEnd={(e) => {
-                  const mouseX = e.pageX
-                  const mouseY = e.pageY
-
-                  console.log(`currently x${mouseX} y${mouseY}`);
-
-                  let overAQuestionLocal = false
-                  let qstValIntersectingWith: string | undefined
-                  let questionIndex = 0 //is the ref index
 
 
-                  questionRefs.current.forEach((eachQstRef, index) => {
-                    const { top, left, bottom, right, width, height } = eachQstRef.getBoundingClientRect()
-
-                    if (mouseX < right && mouseX >= left) {
-                      if (mouseY < bottom && mouseY >= top) {
-                        overAQuestionLocal = true
-                        qstValIntersectingWith = eachQstRef.dataset.question
-                        questionIndex = index
-                      }
-                    }
-                  })
-
-
-                  if (overAQuestionLocal) {
-                    userAnswersSet(prevUserAnswers => {
-                      const newArr = [...prevUserAnswers]
-                      newArr[questionIndex] = `${qstValIntersectingWith}${choiceBuild}`
-                      return newArr
-                    })
-
-                    // console.log(`$seen you over question ${questionIndex} ayy`);
-                    //do element replace
-                    //get styling
-                    const choiceElToStyle = e.target as HTMLDivElement
-                    const { y, x, width, height } = questionRefs.current[questionIndex].getBoundingClientRect()
-
-                    const parentElementSeen = questionRefs.current[questionIndex].parentElement;
-                    const newEl = document.createElement("div")
-                    newEl.setAttribute("id", `ce${choiceElToStyle.dataset.choice}`)
-                    newEl.setAttribute("class", styles.tempElReplace)
-
-                    newEl.addEventListener("click", (e) => {
-                      const seenEl = e.target as HTMLDivElement
-
-                      //make other elements visible again
-
-                      choiceRefs.current.forEach((eachRef) => {
-                        const seenChoiceStr = eachRef.dataset.choice as string
-                        if (seenChoiceStr === seenEl.id.substring(2)) {
-                          eachRef.classList.remove(styles.canHide)
-                        }
-                      })
-
-                      seenEl.remove()
-                    })
-
-                    newEl.style.top = `${y - 30}px`
-                    newEl.style.left = `${x}px`
-                    parentElementSeen?.append(newEl)
-
-                    console.log(`el#${questionIndex} top${y} left${x}`);
-
-                    // choiceToStyle.style.position = "absolute"
-
-                    // choiceToStyle.style.width = `${120}px`
-                    // choiceToStyle.style.height = `${120}px`
-                    choiceElToStyle.classList.add(styles.canHide)
+          <DndContext
+            announcements={defaultAnnouncements}
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            <div style={wrapperStyle}>
+              {questions!.map((eachQuestion, index) => {
+                return (
+                  <>
+                    <Container id={`container${index}`} items={items[`container${index}`]} arrPos={index} questionAsked={eachQuestion} />
+                  </>
+                )
+              })}
+            </div>
+            <Container id="root" items={items.root} arrPos={4} />
+            {/* <DragOverlay>{activeId ? <Item id={activeId} /> : null}</DragOverlay> */}
+          </DndContext>
 
 
-                  } else {
 
-                    const { y, x, width, height } = questionRefs.current[questionIndex].getBoundingClientRect()
-                    console.log(`el#${questionIndex} top${y} left${x}`);
-
-                    const choiceToStyle = e.target as HTMLDivElement
-                    choiceToStyle.style.position = "static"
-                    choiceToStyle.style.top = `${0}px`
-                    choiceToStyle.style.left = `${0}px`
-                    choiceToStyle.style.width = `${70}px`
-                    choiceToStyle.style.height = `${70}px`
-                  }
-                }}
-              >
-                {choice}
-              </div>
-            ))}
-          </div>
           {!gameFinished ? (
             <button onClick={checkAnswers}>Check Answers</button>
           ) : (
@@ -601,35 +714,93 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
       ) : (
         <>
           <p>setup data</p>
-          {amtQuestionsArr.current().map((temp, index) => (
+          {
+            questions?.map((temp, index) => (
 
-            <div key={index}>
-              <input type='text' placeholder={`Question ${index + 1}`} value={questions ? questions[index] : ""} onChange={(e) => {
-                questionsSet((prevQuestions) => {
-                  let newQuestionsArr: string[] = []
-                  if (prevQuestions) newQuestionsArr = [...prevQuestions]
-                  newQuestionsArr[index] = e.target.value
-                  return newQuestionsArr
-                })
-              }} />
-              <input type='text' placeholder={`Matching Choice ${index + 1}`} value={choices ? choices[index] : ""} onChange={(e) => {
-                choicesSet((prevChoices) => {
-                  let newChoicesArr: string[] = []
-                  if (prevChoices) newChoicesArr = [...prevChoices]
-                  newChoicesArr[index] = e.target.value
-                  return newChoicesArr
-                })
-              }} />
-            </div>
+              <div key={index}>
+                <input type='text' placeholder={`Question ${index + 1}`} value={questions ? questions[index] : ""} onChange={(e) => {
+                  questionsSet((prevQuestions) => {
+                    let newQuestionsArr: string[] = []
+                    if (prevQuestions) newQuestionsArr = [...prevQuestions]
+                    newQuestionsArr[index] = e.target.value
+                    return newQuestionsArr
+                  })
+                }} />
+
+                <div>
+                  {choices && choices[index] ? (
+                    choices[index].map((choice, smallerIndex) => (
+                      <>
+                        <input type='text' placeholder={`Choice ${smallerIndex + 1} for Q${index + 1}`} value={choices && choices[index] && choices[index][smallerIndex] ? choices[index][smallerIndex] : ""}
+                          onChange={(e) => {
+                            choicesSet(prevChoicesArr => {
+                              const updatedChoices = prevChoicesArr ?? [];
+
+                              if (!updatedChoices[index]) {
+                                updatedChoices[index] = [];
+                              }
+                              if (!updatedChoices[index][smallerIndex]) {
+                                updatedChoices[index][smallerIndex] = "";
+                              }
+                              updatedChoices[index][smallerIndex] = e.target.value;
+                              return [...updatedChoices];
+                            })
+                          }} />
+
+                      </>
+                    ))
+                  ) : (
+                    null
+                  )}
+                </div>
+
+                <button onClick={() => {
+                  choicesSet(prevArr => {
+                    const updatedChoices = prevArr!.map((arr, i) => {
+                      if (i === index) {
+                        return [...arr, ""];
+                      }
+                      return arr;
+                    });
+
+                    return updatedChoices;
+                  })
+                }}>Add choice</button>
 
 
-          ))}
+              </div>
+            ))
+          }
+
+          <button onClick={() => {
+            questionsSet(prev => {
+              if (prev) {
+                return [...prev, ""]
+              } else {
+                return [""]
+              }
+            })
+
+
+            choicesSet(prevChoicesArr => {
+              let updatedChoices = [...prevChoicesArr!]
+              const newArr = []
+
+              updatedChoices.push([""])
+
+              return updatedChoices
+            })
+
+
+          }}>Add Question</button>
+          <br />
           {updateGameModeObjLocal && <button onClick={submit}>Save</button>}
         </>
       )
       }
     </div >
   )
+
 }
 
 interface crosswordGameData { }
