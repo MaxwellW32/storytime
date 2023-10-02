@@ -1,0 +1,119 @@
+[
+    {
+        "storyId": "eb22e39f-26c8-487c-81a5-7c3316d690b4",
+        "title": "The Curious Kitten",
+        "rating": 5,
+        "shortDescription": "Kitten Exploration",
+        "storyTextBoard": [
+            "Once upon a time in a cozy little house, there lived a kitten named Mittens. Mittens had a heart full of curiosity and a spirit eager for adventure. Every morning, she would wake up with a sparkle in her eyes, ready to explore the world beyond her doorstep.",
+            "One sunny day, Mittens spotted a tall bookshelf in the corner of the room. Without a second thought, she began her ascent, little paws climbing higher and higher. Up she went, until she reached the very top. From there, she could see the entire room like never before. Mittens felt a rush of excitement, her heart pounding with the thrill of discovery.",
+            "However, Mittens' adventurous spirit sometimes led her into tricky situations. There were moments when she would slip or lose her balance, sending her tumbling down. But Mittens was never discouraged. With each fall, she learned something new about balance and perseverance. She would dust herself off and try again, determined to conquer the heights.",
+            "https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+            "Mittens' zest for exploration made her a beloved member of the household. Her family admired her courage and cheered her on in her quests. They provided soft cushions for her landings and gentle encouragement for her journeys. Mittens grew into a wise and fearless explorer, her days filled with wonder and excitement.",
+            {
+                "gameModeId": "b170bf3a-459a-4269-8835-c715ef74c907",
+                "typeOfGameMode": "MATHCUP",
+                "gameData": {
+                    "choicesArr": [
+                        [
+                            "Mittens"
+                        ],
+                        [
+                            " a rush of excitement"
+                        ],
+                        [
+                            "Yes, Mittens faced challenges during her adventures"
+                        ],
+                        [
+                            "Mittens' family admired her "
+                        ]
+                    ],
+                    "questionsArr": [
+                        "What was the name of the curious kitten?",
+                        "How did Mittens feel when she reached the top of the bookshelf?",
+                        "Did Mittens ever face challenges during her adventures? How did she handle them?",
+                        "How did Mittens' family support her in her explorations?"
+                    ]
+                }
+            }
+        ]
+    },
+    {
+        "storyId": "0c049577-3c44-40a0-8525-80f8a164b7bc",
+        "title": "The Magical Forest",
+        "rating": 5,
+        "shortDescription": "Trees",
+        "storyTextBoard": [
+            "In a land far, far away, nestled between rolling hills, there existed a forest unlike any other. This was the Magical Forest, where wonders and enchantments thrived. The trees whispered secrets, and the streams sparkled like liquid diamonds. It was a place of pure magic, where dreams and reality danced hand in hand.",
+            "Every morning, the forest awakened with a symphony of bird songs and rustling leaves. The trees stood tall, their branches reaching out as if to touch the sky. And at the heart of it all, there was an ancient oak, wise and kind. It was said that if you listened closely, you could hear the oak's ancient tales, stories that spanned centuries.",
+            "https://images.pexels.com/photos/3052725/pexels-photo-3052725.jpeg",
+            "The creatures of the forest were no less extraordinary. Squirrels with fluffy tails raced along the branches, while rabbits played hide-and-seek in the tall grass. Butterflies painted the air with their vibrant colors, creating a living rainbow. Every corner held a new surprise, a new friend waiting to be discovered.",
+            "One day, a young explorer named Lily ventured into the Magical Forest. Her eyes widened with wonder as she took in the sights and sounds. She felt a sense of belonging, as if the forest welcomed her with open arms. From that day on, Lily became a part of the magic, and the forest became a part of her.",
+            {
+                "gameModeId": "fd097016-06fd-4908-bf17-78c92ae1dbc3",
+                "typeOfGameMode": "MATHCUP",
+                "gameData": {
+                    "choicesArr": [
+                        [
+                            "The Magical Forest was a place of pure magic"
+                        ],
+                        [
+                            " the oak has stories"
+                        ],
+                        [
+                            " squirrels with fluffy tails that raced along the branches"
+                        ],
+                        [
+                            "she felt a sense of wonder and belonging"
+                        ]
+                    ],
+                    "questionsArr": [
+                        "What was special about the Magical Forest?",
+                        "How did the ancient oak contribute to the magic of the forest?",
+                        "What were some creatures in the forest?",
+                        "How did Lily feel entering the Magical Forest"
+                    ]
+                }
+            },
+            "https://images.pexels.com/photos/1805435/pexels-photo-1805435.jpeg"
+        ]
+    },
+    {
+        "storyId": "3dc0dc96-90f6-4276-965b-686b8b92faba",
+        "title": "The Lost Star",
+        "rating": 5,
+        "shortDescription": "Shine Bright",
+        "storyTextBoard": [
+            "In a sky full of shimmering stars, there was one little star named Twinkle who felt lost. Twinkle's light was dim, and she worried she couldn't find her place among the bright stars.",
+            "One night, a wise old comet named Cometina approached Twinkle. \"Don't fret, little one,\" she said. \"Your light may be small, but it holds a unique magic.\"",
+            "With Cometina's encouragement, Twinkle began to shine with all her might. Her light, though small, twinkled in a way that warmed hearts far and wide. Twinkle realized that being small didn't mean she couldn't make a big impact.",
+            {
+                "gameModeId": "9ef7d9c8-4c50-4409-8948-2d5ff3117f12",
+                "typeOfGameMode": "MATHCUP",
+                "gameData": {
+                    "choicesArr": [
+                        [
+                            "Twinkle"
+                        ],
+                        [
+                            "Twinkle felt lost "
+                        ],
+                        [
+                            "Cometina, the wise comet"
+                        ],
+                        [
+                            "Yes, Twinkle realized she could make a big impact."
+                        ]
+                    ],
+                    "questionsArr": [
+                        "What was the name of the little star?",
+                        "How did Twinkle feel about her light?",
+                        "Who encouraged Twinkle to shine?",
+                        "Did Twinkle realize she could make an impact? How?"
+                    ]
+                }
+            },
+            "https://www.youtube.com/watch?v=yCjJyiqpAuU&pp=ygUbdHdpbmtsZSB0d2lua2xlIGxpdHRsZSBzdGFy"
+        ]
+    }
+]

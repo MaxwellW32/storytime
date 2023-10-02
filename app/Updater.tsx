@@ -1,13 +1,14 @@
 import { StoryData, gamemodeInfo } from "./page"
+import { atom, useAtom } from 'jotai'
 
-export default function gameObjLocalUpdater(story: (gamemodeInfo | string)[] | undefined, id: string, data: gamemodeInfo) {
+export default function gameObjLocalUpdater(storyBoardObj: (gamemodeInfo | string)[] | undefined, id: string, data: gamemodeInfo) {
 
-    if (!story) return
+    if (!storyBoardObj) return
 
-    const newStory = [...story]
+    const newStoryBoardObj = [...storyBoardObj]
 
     //data can be all gamemodeobj data
-    return newStory.map(storyTextBoards => {
+    return newStoryBoardObj.map(storyTextBoards => {
         if (typeof storyTextBoards === "string") {
             return storyTextBoards
         } else {
@@ -24,11 +25,12 @@ export default function gameObjLocalUpdater(story: (gamemodeInfo | string)[] | u
 
 export function gameObjGlobalUpdater(globalStories: StoryData[] | undefined, storyId: string, objId: string, data: gamemodeInfo) {
 
+
     if (!globalStories) return
 
-    let newObj = [...globalStories]
 
-    newObj = globalStories.map(eachStory => {
+
+    const newObj = globalStories.map(eachStory => {
         if (eachStory.storyId === storyId) {
             return {
                 ...eachStory, storyTextBoard: eachStory.storyTextBoard?.map(eachTextBoard => {

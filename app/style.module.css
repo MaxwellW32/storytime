@@ -39,3 +39,26 @@
     display: flex;
     flex-direction: column;
 }
+
+.textAreaEdit {
+    resize: none;
+    /* resize: "vertical", */
+    overflow: hidden;
+    min-height: auto;
+    max-height: 200px;
+}
+
+.mediaCont {
+    background-color: yellow;
+    height: 70%;
+    aspect-ratio: 3/4;
+    margin: 0 auto;
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    object-fit: contain;
+}
+
+.mediaCont * {
+    max-width: 100dvw;
+}

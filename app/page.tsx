@@ -7,6 +7,7 @@ import { atom, useAtom } from 'jotai'
 import ReactPlayer from "react-player/youtube";
 import updateGameModeObj, { gameObjGlobalUpdater } from './Updater';
 import gameObjLocalUpdater from './Updater';
+import tempbddata from "../tempdbdata.json"
 
 import {
   DndContext,
@@ -76,9 +77,24 @@ const defaultAnnouncements: any = {
   }
 };
 
+const linksAndLineBreaksRegex = /(https?:\/\/[^\s]+\.(?:com|net|org|io)\/[^\s]+|\n\n)/g;
+
+function makeLinksAndParagraphsArray(text: string) {
+  return text.split(linksAndLineBreaksRegex).map(item => item.trim()).filter(Boolean);
+}
+
 
 function Story({ title, rating, storyTextBoard, shortDescription, backgroundAudio, storyId }: StoryData) {
   const [reading, readingSet] = useState(false)
+  const [globalStories, globalStoriesSet] = useAtom(globalStorieArray)
+
+  function deleteStory(id: string) {
+    globalStoriesSet(prevGlobalStoryArr => {
+      const newGlobalArr = prevGlobalStoryArr!.filter(eachStory => eachStory.storyId !== id)
+      return newGlobalArr
+    })
+  }
+
 
   return (
     <div style={{ border: "1px solid red", display: "flex", gap: "1rem" }}>
@@ -86,19 +102,38 @@ function Story({ title, rating, storyTextBoard, shortDescription, backgroundAudi
       {rating && <p>{rating}/5</p>}
       {shortDescription && <p>{shortDescription}</p>}
       <button style={{ backgroundColor: "yellow" }} onClick={() => { readingSet(true) }}>Let's Read</button>
+      <button style={{ backgroundColor: "yellow" }} onClick={() => { deleteStory(storyId) }}>Delete Story</button>
 
       {/* storyboard container */}
 
       {reading && (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem", backgroundColor: "#aaa", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", overflowY: "auto" }}>
-
+          <button onClick={() => {
+            readingSet(false)
+          }}>close</button>
           {storyTextBoard?.map((eachElemnt, index) => {
             if (typeof eachElemnt === "string") {
-              return (
-                <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column" }} key={uuidv4()}>
-                  <p style={{ backgroundColor: "wheat" }}>{eachElemnt}</p>
-                </div>
-              )
+
+              const isMedia = linksAndLineBreaksRegex.test(eachElemnt)
+
+              if (isMedia) {
+                return (
+                  <>
+                    <DisplayMedia url={eachElemnt} />
+                  </>
+                )
+              } else {
+                return (
+                  <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column" }} key={uuidv4()}>
+
+                    <p style={{ backgroundColor: "wheat" }}>{eachElemnt}</p>
+                  </div>
+
+
+                )
+              }
+
+
             } else {
               //getname of element and choose component that way
               return (
@@ -130,8 +165,7 @@ function Story({ title, rating, storyTextBoard, shortDescription, backgroundAudi
     </div>
   )
 }
-
-function MakeStory() {
+function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.SetStateAction<boolean>> }) {
   const [, storiesSet] = useAtom(globalStorieArray)
 
   const [storyTitle, storyTitleSet] = useState(`Story ${uuidv4()}`)
@@ -146,11 +180,13 @@ function MakeStory() {
   //game modes and story text
   const [storyTextBoardObjs, storyTextBoardObjsSet] = useState<(gamemodeInfo | string)[] | undefined>()
 
+
   function loadUpStoryTextBoardFresh() {
     //sets up my original array from text only blank
     storyTextBoardObjsSet(() => {
-      const paragraphs = preProcessedText.split('\n\n');
-      const storyBoardArr = paragraphs
+
+      const storyBoardArr = makeLinksAndParagraphsArray(preProcessedText)
+      console.log(`$d`, storyBoardArr);
       return storyBoardArr
     })
   }
@@ -208,8 +244,27 @@ function MakeStory() {
     })
   }
 
+  const textAreaRefs = useRef<HTMLTextAreaElement[]>([])
+
+  //give textarea right size
+  useEffect(() => {
+    textAreaRefs.current.forEach((eachRef) => {
+      eachRef.style.height = 'auto';
+      eachRef.style.height = eachRef.scrollHeight + 'px';
+    })
+  }, [])
+
+  const textAreaRefCal = (ref: HTMLTextAreaElement) => {
+    console.log(`$ran again`);
+
+    if (!textAreaRefs.current.includes(ref)) {
+      textAreaRefs.current = [...textAreaRefs.current, ref];
+    }
+  }
+
   return (
     <div style={{ overflowY: "auto", position: "fixed", top: 0, left: 0, zIndex: 1, height: "100dvh", width: "100%", backgroundColor: "blue", display: "flex", flexDirection: "column", gap: "2rem" }}>
+      <button onClick={() => { makingStorySet(false) }}>Close</button>
       <p>Lets make a story</p>
 
       <div className={styles.makeStoryLabelInputCont}>
@@ -243,7 +298,14 @@ function MakeStory() {
       {storyTextBoardObjs === undefined ? (
 
         <>
-          <textarea style={{ backgroundColor: "wheat", resize: "vertical", minHeight: "100px", width: "100%", }} placeholder='Enter your story' value={preProcessedText} onChange={(e) => { preProcessedTextSet(e.target.value) }} />
+          <textarea ref={textAreaRefCal} className={styles.textAreaEdit} style={{ backgroundColor: "wheat", width: "100%", }} placeholder='Enter your story' value={preProcessedText}
+
+            onChange={(e) => {
+              e.target.style.height = 'auto';
+              e.target.style.height = e.target.scrollHeight + 'px';
+
+              preProcessedTextSet(e.target.value)
+            }} />
           <button onClick={loadUpStoryTextBoardFresh}>Process</button>
         </>
       ) : (
@@ -254,24 +316,32 @@ function MakeStory() {
               if (typeof eachElemnt === "string") {
                 return (
                   <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column" }} key={uuidv4()}>
-                    <textarea style={{ backgroundColor: "wheat" }} defaultValue={eachElemnt} onBlur={(e) => {
-                      storyTextBoardObjsSet(prevStoryBoard => {
-                        const newArr = [...prevStoryBoard!]
-                        const paragraphsArrSeen = e.target.value.split('\n\n');
+                    <textarea style={{ backgroundColor: "wheat" }} defaultValue={eachElemnt}
+                      onInput={(e) => {
+                        const el = e.target as HTMLTextAreaElement
+                        el.style.height = 'auto';
+                        el.style.height = el.scrollHeight + 'px';
+                      }}
+                      onBlur={(e) => {
+                        storyTextBoardObjsSet(prevStoryBoard => {
+                          const newArr = [...prevStoryBoard!]
+                          const paragraphsArrSeen = makeLinksAndParagraphsArray(e.target.value);
 
-                        if (paragraphsArrSeen.length <= 1) {
-                          newArr[index] = e.target.value
-                        } else {
-                          newArr.splice(index, 1);
-                          paragraphsArrSeen.forEach((paragraph, pIndex) => {
-                            const indexToAdd = pIndex + index;
-                            newArr.splice(indexToAdd, 0, paragraph);
-                          })
-                        }
 
-                        return newArr
-                      })
-                    }} />
+
+                          if (paragraphsArrSeen.length <= 1) {
+                            newArr[index] = e.target.value
+                          } else {
+                            newArr.splice(index, 1);
+                            paragraphsArrSeen.forEach((paragraph, pIndex) => {
+                              const indexToAdd = pIndex + index;
+                              newArr.splice(indexToAdd, 0, paragraph);
+                            })
+                          }
+
+                          return newArr
+                        })
+                      }} />
                     <div className={styles.bttnHolder} style={{ display: "flex", gap: "1rem" }}>
                       <button style={{ marginRight: "1rem" }} onClick={() => {
                         addToStoryTextBoard(index)
@@ -330,7 +400,7 @@ function saveToLocalStorage(keyName: any, item: any) {
   localStorage.setItem(keyName, JSON.stringify(item));
 }
 
-function retreiveFromLocalStorage(keyName: string) {
+export function retreiveFromLocalStorage(keyName: string) {
   const todos = localStorage.getItem(keyName);
   if (todos) {
     const todosArray = JSON.parse(todos);
@@ -356,15 +426,34 @@ export default function Home() {
     //save
     if (stories) {
       saveToLocalStorage("storiesArr", stories)
-      // makingStorySet(false)
+      makingStorySet(false)
     }
   }, [stories])
 
   useEffect(() => {
-    const seenStories = retreiveFromLocalStorage("storiesArr")
-    //save
+    const seenStories = retreiveFromLocalStorage("storiesArr") as StoryData[]
+    //load
     if (seenStories) {
-      storiesSet(seenStories)
+
+      const seenStoriesClear = seenStories.filter(eachSeenStory => {
+
+        let foundInArr = false
+        tempbddata.forEach(eachTempStory => {
+          if (eachTempStory.storyId === eachSeenStory.storyId) {
+            foundInArr = true
+          }
+        })
+
+        if (!foundInArr) {
+          return eachSeenStory
+        }
+      })
+
+      console.log(`$cleararr`, seenStoriesClear);
+      storiesSet([...tempbddata, ...seenStoriesClear])
+    } else {
+      storiesSet(tempbddata)
+      console.log(`$loaded save data from temp`);
     }
   }, [])
 
@@ -372,7 +461,7 @@ export default function Home() {
     <main>
       <p>Home Page</p>
 
-      {makingStory ? <MakeStory /> : (
+      {makingStory ? <MakeStory makingStorySet={makingStorySet} /> : (
         <button onClick={() => {
           makingStorySet(true)
         }}>Add a Story</button>
@@ -402,7 +491,7 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
   // questionsArr, choicesArr, answersArr, gameId, updateGameModeObj, gameFinishedInit 
   const [stories, storiesSet] = useAtom(globalStorieArray)
 
-  const [questions, questionsSet] = useState<string[] | undefined>([""])
+  const [questions, questionsSet] = useState<string[] | undefined>(["", "", "", ""])
   const [choices, choicesSet] = useState<string[][] | undefined>(() => {
     return questions!.map(eachItem => {
       return [""]
@@ -828,4 +917,27 @@ function Pronounciation() {
       Pronounciation
     </div>
   )
+}
+
+
+function DisplayMedia({ url }: { url: string }) {
+  const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
+
+  const isYtVid = youtubeRegex.test(url)
+
+  return (
+    <div className={styles.mediaCont}>
+      {isYtVid ? (
+        <ReactPlayer
+          loop={false}
+          playing={false}
+          url={url ? url : "https://www.youtube.com/watch?v=NJuSStkIZBg"}
+
+        />
+      ) : (
+        <img src={url} />
+      )}
+    </div>
+  )
+
 }
