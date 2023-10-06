@@ -55,7 +55,6 @@
 }
 
 .imageCont {
-    background-color: yellow;
     height: 70%;
     aspect-ratio: 3/4;
     margin: 0 auto;
@@ -63,17 +62,10 @@
     align-items: center;
     justify-items: center;
     object-fit: contain;
-
 }
 
 .videoCont {
-    background-color: yellow;
     height: 70%;
     aspect-ratio: 3/4;
     margin: 0 auto;
-    display: grid;
-    align-items: center;
-    justify-items: center;
-    object-fit: contain;
-
 }

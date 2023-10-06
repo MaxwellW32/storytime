@@ -1070,7 +1070,7 @@ function DisplayImage({ passedImageData, editing = false, handleStoryBoard }: { 
 
 
   return (
-    <div>
+    <>
 
       {editing ? (
         <>
@@ -1095,15 +1095,15 @@ function DisplayImage({ passedImageData, editing = false, handleStoryBoard }: { 
           }}>Save Changes</button>
         </>
       ) : (
-        <div style={{}}>
+        <div style={{}} className={styles.imageCont}>
           <img
             src={imageObj.imageUrl ? imageObj.imageUrl : "https://images.pexels.com/photos/10497155/pexels-photo-10497155.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"}
-            className={styles.imageCont}
+
           />
         </div>
       )}
 
-    </div>
+    </>
 
   )
 
