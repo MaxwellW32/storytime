@@ -113,7 +113,7 @@ function makeLinksAndParagraphsArray(text: string) {
 
 
 
-const ISLINKORBREAK = /(https?:\/\/[^\s]+\.(?:com|net|org|io)\/[^\s]+|\n\n)/g;
+const ISLINKORBREAK = /(https?:\/\/[^\s]+\.(?:com|net|org|io)\/[^\s]+|\n\n\n)/g;
 const ISLINK = /(https?:\/\/[^\s]+\.(?:com|net|org|io)\/[^\s]+)/g;
 const ISYTVID = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
 
@@ -435,8 +435,8 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
   useEffect(() => {
     console.log(`$tarefs`, textAreaRefs.current);
     textAreaRefs.current.forEach((eachRef) => {
-      // eachRef.style.height = 'auto';
-      // eachRef.style.height = eachRef.scrollHeight + 'px';
+      eachRef.style.height = 'auto';
+      eachRef.style.height = eachRef.scrollHeight + 'px';
     })
 
     // return () => textAreaRefs.current = []
