@@ -151,7 +151,7 @@ function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudi
             if (eachElemnt.boardType === "text") {
               return (
                 <div key={uuidv4()} className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column" }}>
-                  <p style={{ backgroundColor: "wheat" }}>{eachElemnt.storedText}</p>
+                  <p style={{ backgroundColor: "wheat", whiteSpace: "pre-wrap" }}>{eachElemnt.storedText}</p>
                 </div>
               )
             } else if (eachElemnt.boardType === "image") {
@@ -423,6 +423,8 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
         return [newStoryObj]
       }
     })
+
+    makingStorySet(false)
   }
 
   const textAreaRefs = useRef<HTMLTextAreaElement[]>([])
@@ -435,8 +437,10 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
   useEffect(() => {
     console.log(`$tarefs`, textAreaRefs.current);
     textAreaRefs.current.forEach((eachRef) => {
-      eachRef.style.height = 'auto';
-      eachRef.style.height = eachRef.scrollHeight + 'px';
+      if (eachRef) {
+        eachRef.style.height = 'auto';
+        eachRef.style.height = eachRef.scrollHeight + 'px';
+      }
     })
 
     // return () => textAreaRefs.current = []
@@ -571,7 +575,7 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
 
 export default function Home() {
   const [stories, storiesSet] = useAtom(globalStorieArray)
-  const [makingStory, makingStorySet] = useState(true)
+  const [makingStory, makingStorySet] = useState(false)
 
   useEffect(() => {
     //save
