@@ -6,7 +6,7 @@ import styles from "./style.module.css"
 import { atom, useAtom } from 'jotai'
 import ReactPlayer from "react-player/youtube";
 import updateBoardObjWithBoardDataGlobal from './Updater';
-import tempbddata from "../tempdbdata.json"
+import tempbddata from "../tempdbdata1.json"
 
 import {
   DndContext,
@@ -581,38 +581,33 @@ export default function Home() {
     //save
     if (stories) {
       saveToLocalStorage("storiesArr", stories)
-      // makingStorySet(false)
     }
   }, [stories])
 
   useEffect(() => {
     const seenStories = retreiveFromLocalStorage("storiesArr") as StoryData[]
     //load
-    // if (seenStories) {
+    if (seenStories) {
 
-    // const seenStoriesClear = seenStories.filter(eachSeenStory => {
+      const seenStoriesClear = seenStories.filter(eachSeenStory => {
 
-    //   let foundInArr = false
-    //   tempbddata.forEach(eachTempStory => {
-    //     if (eachTempStory.storyId === eachSeenStory.storyId) {
-    //       foundInArr = true
-    //     }
-    //   })
+        let foundInArr = false
+        tempbddata.forEach(eachTempStory => {
+          if (eachTempStory.storyId === eachSeenStory.storyId) {
+            foundInArr = true
+          }
+        })
 
-    //   if (!foundInArr) {
-    //     return eachSeenStory
-    //   }
-    // })
+        if (!foundInArr) {
+          return eachSeenStory
+        }
+      })
 
-    storiesSet(seenStories)
-    // console.log(`$cleararr`, seenStoriesClear);
-    // storiesSet(seenStoriesClear)
-    // storiesSet([...tempbddata, ...seenStoriesClear])
-    // }
-    //  else {
-    //   storiesSet(tempbddata)
-    //   console.log(`$loaded save data from temp`);
-    // }
+      storiesSet([...tempbddata as StoryData[], ...seenStoriesClear])
+    }
+    else {
+      storiesSet(tempbddata as StoryData[])
+    }
   }, [])
 
   return (
