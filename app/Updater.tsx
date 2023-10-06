@@ -1,48 +1,16 @@
-import { StoryData, gamemodeInfo } from "./page"
-import { atom, useAtom } from 'jotai'
-
-export default function gameObjLocalUpdater(storyBoardObj: (gamemodeInfo | string)[] | undefined, id: string, data: gamemodeInfo) {
-
-    if (!storyBoardObj) return
-
-    const newStoryBoardObj = [...storyBoardObj]
-
-    //data can be all gamemodeobj data
-    return newStoryBoardObj.map(storyTextBoards => {
-        if (typeof storyTextBoards === "string") {
-            return storyTextBoards
-        } else {
-            if (id === storyTextBoards.gameModeId) {
-                return { ...data }
-            } else {
-                return storyTextBoards
-            }
-        }
-    })
-}
+import { StoryData, storyBoardType } from "./page"
 
 
+export default function updateBoardObjWithBoardDataGlobal(globalStories: StoryData[], storyId: string, seenBoardId: string, seenBoardObjData: storyBoardType) {
 
-export function gameObjGlobalUpdater(globalStories: StoryData[] | undefined, storyId: string, objId: string, data: gamemodeInfo) {
-
-
-    if (!globalStories) return
-
-
-
-    const newObj = globalStories.map(eachStory => {
+    const newGlobalStoried = globalStories.map(eachStory => {
         if (eachStory.storyId === storyId) {
             return {
-                ...eachStory, storyTextBoard: eachStory.storyTextBoard?.map(eachTextBoard => {
-                    if (typeof eachTextBoard === "string") {
-                        return eachTextBoard
+                ...eachStory, storyBoard: eachStory.storyBoard!.map(eachStoryBoard => {
+                    if (eachStoryBoard.boardObjId === seenBoardId) {
+                        return { ...seenBoardObjData }
                     } else {
-                        if (eachTextBoard.gameModeId === objId) {
-                            return { ...eachTextBoard, ...data }
-                        } else {
-                            return eachTextBoard
-                        }
-
+                        return eachStoryBoard
                     }
                 })
             }
@@ -52,7 +20,5 @@ export function gameObjGlobalUpdater(globalStories: StoryData[] | undefined, sto
         }
     })
 
-    console.log("new obj")
-    console.log(newObj)
-    return newObj
+    return newGlobalStoried
 }

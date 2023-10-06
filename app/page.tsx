@@ -5,8 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import styles from "./style.module.css"
 import { atom, useAtom } from 'jotai'
 import ReactPlayer from "react-player/youtube";
-import updateGameModeObj, { gameObjGlobalUpdater } from './Updater';
-import gameObjLocalUpdater from './Updater';
+import updateBoardObjWithBoardDataGlobal from './Updater';
 import tempbddata from "../tempdbdata.json"
 
 import {
@@ -18,73 +17,108 @@ import {
   useSensor,
   useSensors
 } from "@dnd-kit/core";
+
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
 import Container from "./using/container";
-import { Item } from "./using/sortable_item";
 
 const globalStorieArray = atom<StoryData[] | undefined>(undefined)
 
 //this is the layout for the objects of each of my games that holds everything
-export interface gamemodeInfo {
-  typeOfGameMode: string,
-  gameModeId: string,
-  gameData?: matchupGameData | pronounciationGameData | wordsToMeaningGameData | crosswordGameData,
-  shouldStartOnNewPage?: boolean,
-  gameFinished?: boolean
+
+
+interface textType { //default add
+  boardObjId: string,
+  storedText: string | undefined,
+  boardType: "text",
 }
 
+interface imageType {
+  boardObjId: string,
+  imageUrl: string,
+  boardType: "image",
+}
+
+interface videoType {
+  boardObjId: string,
+  videoUrl: string,
+  boardType: "video",
+}
+
+export type gameDataType = matchupType | pronounceType | wordsToMeaningType | crosswordType
+
+export type gameSelectionTypes = "matchup" | "crossword" | "pronounce" | "wordmeaning"
+export interface gameObjType {
+  boardObjId: string,
+  gameSelection: gameSelectionTypes, //tell different types of gamemodes
+  gameFinished: boolean,
+  boardType: "gamemode",
+  shouldStartOnNewPage: boolean | undefined,
+  gameData: gameDataType | undefined,
+}
+
+
+export type storyBoardType = gameObjType | videoType | imageType | textType
 export interface StoryData {
   title: string,
   storyId: string,
-  rating?: number,
-  storyTextBoard?: (gamemodeInfo | string)[],
-  backgroundAudio?: string,
-  shortDescription?: string
+  rating: number | undefined,
+  storyBoard: storyBoardType[] | undefined,
+  backgroundAudio: string | undefined,
+  shortDescription: string | undefined
 }
 
-const wrapperStyle: any = {
-  display: "flex",
-  flexDirection: "row"
-};
 
-const defaultAnnouncements: any = {
-  onDragStart(id: any) {
-    console.log(`Picked up draggable item ${id}.`);
-  },
-  onDragOver(id: any, overId: any) {
-    if (overId) {
-      console.log(
-        `Draggable item ${id} was moved over droppable area ${overId}.`
-      );
-      return;
-    }
+interface matchupType {
+  gameDataFor: "matchup",
+  questionsArr: string[],
+  choicesArr: string[][],
+}
 
-    console.log(`Draggable item ${id} is no longer over a droppable area.`);
-  },
-  onDragEnd(id: any, overId: any) {
-    if (overId) {
-      console.log(
-        `Draggable item ${id} was dropped over droppable area ${overId}`
-      );
-      return;
-    }
+interface pronounceType {
+  gameDataFor: "pronounce",
 
-    console.log(`Draggable item ${id} was dropped.`);
-  },
-  onDragCancel(id: any) {
-    console.log(`Dragging was cancelled. Draggable item ${id} was dropped.`);
+}
+
+interface wordsToMeaningType {
+  gameDataFor: "wordmeaning",
+
+}
+
+interface crosswordType {
+  gameDataFor: "crossword",
+
+}
+
+
+function saveToLocalStorage(keyName: any, item: any) {
+  // localStorage.removeItem(keyName);
+  localStorage.setItem(keyName, JSON.stringify(item));
+}
+
+function retreiveFromLocalStorage(keyName: string) {
+  const todos = localStorage.getItem(keyName);
+  if (todos) {
+    const todosArray = JSON.parse(todos);
+    return todosArray
+  } else {
+    return null
   }
-};
-
-const linksAndLineBreaksRegex = /(https?:\/\/[^\s]+\.(?:com|net|org|io)\/[^\s]+|\n\n)/g;
+}
 
 function makeLinksAndParagraphsArray(text: string) {
-  return text.split(linksAndLineBreaksRegex).map(item => item.trim()).filter(Boolean);
+  return text.split(ISLINKORBREAK).map(item => item.trim()).filter(Boolean);
 }
 
 
-function Story({ title, rating, storyTextBoard, shortDescription, backgroundAudio, storyId }: StoryData) {
+
+const ISLINKORBREAK = /(https?:\/\/[^\s]+\.(?:com|net|org|io)\/[^\s]+|\n\n)/g;
+const ISLINK = /(https?:\/\/[^\s]+\.(?:com|net|org|io)\/[^\s]+)/g;
+const ISYTVID = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
+
+
+
+function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudio, storyId }: StoryData) {
   const [reading, readingSet] = useState(false)
   const [globalStories, globalStoriesSet] = useAtom(globalStorieArray)
 
@@ -111,47 +145,42 @@ function Story({ title, rating, storyTextBoard, shortDescription, backgroundAudi
           <button onClick={() => {
             readingSet(false)
           }}>close</button>
-          {storyTextBoard?.map((eachElemnt, index) => {
-            if (typeof eachElemnt === "string") {
+          {storyBoard?.map((eachElemnt, index) => {
 
-              const isMedia = linksAndLineBreaksRegex.test(eachElemnt)
+            if (eachElemnt.boardType === "text") {
+              return (
+                <div key={uuidv4()} className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column" }}>
+                  <p style={{ backgroundColor: "wheat" }}>{eachElemnt.storedText}</p>
+                </div>
+              )
+            } else if (eachElemnt.boardType === "image") {
+              console.log(`$eachseen`, eachElemnt);
+              return (
+                <DisplayImage key={uuidv4()} imageUrl={eachElemnt.imageUrl} />
+              )
 
-              if (isMedia) {
-                return (
-                  <>
-                    <DisplayMedia url={eachElemnt} />
-                  </>
-                )
-              } else {
-                return (
-                  <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column" }} key={uuidv4()}>
-
-                    <p style={{ backgroundColor: "wheat" }}>{eachElemnt}</p>
-                  </div>
-
-
-                )
-              }
+            } else if (eachElemnt.boardType === "video") {
+              return (
+                <DisplayVideo key={uuidv4()} {...eachElemnt} />
+              )
 
 
-            } else {
-              //getname of element and choose component that way
+            } else if (eachElemnt.boardType === "gamemode") {
               return (
                 <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", backgroundColor: "wheat" }} key={uuidv4()}>
 
-                  {eachElemnt.typeOfGameMode === "MATHCUP" ? (
-                    <MatchUp {...eachElemnt} storyId={storyId} />
-                  ) : eachElemnt.typeOfGameMode === "CROSSWORD" ? (
-                    <Crossword />
-                  ) : eachElemnt.typeOfGameMode === "WORDSTOMEANING" ? (
-                    <WordsToMeaning />
-                  ) : (
-                    <Pronounciation />
-                  )}
+                  {eachElemnt.gameSelection === "matchup" ? (
+                    <MatchUpGM {...eachElemnt} storyId={storyId} />
+                  ) : eachElemnt.gameSelection === "crossword" ? (
+                    <CrosswordGM />
+                  ) : eachElemnt.gameSelection === "wordmeaning" ? (
+                    <WordsToMeaningGM />
+                  ) : eachElemnt.gameSelection === "pronounce" ? (
+                    <PronounciationGM />
+                  ) : null}
                 </div>
               )
             }
-
           })}
         </div>
       )}
@@ -165,74 +194,230 @@ function Story({ title, rating, storyTextBoard, shortDescription, backgroundAudi
     </div>
   )
 }
+
 function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.SetStateAction<boolean>> }) {
+
   const [, storiesSet] = useAtom(globalStorieArray)
 
   const [storyTitle, storyTitleSet] = useState(`Story ${uuidv4()}`)
-  const storyId = useRef(() => uuidv4())
+  const storyId = useRef(uuidv4())
 
   const [storyRating, storyRatingSet] = useState<undefined | number>(5)
   const [storyBgAudio, storyBgAudioSet] = useState<undefined | string>()
   const [storyShrtDescription, storyShrtDescriptionSet] = useState<undefined | string>("nice story")
 
   const [preProcessedText, preProcessedTextSet] = useState(`1 paragraph \n\n 2 paragraph \n\n 3 paragraph \n\n 4 paragraph \n\n 5 paragraph`)
-
-  //game modes and story text
-  const [storyTextBoardObjs, storyTextBoardObjsSet] = useState<(gamemodeInfo | string)[] | undefined>()
+  const [storyBoards, storyBoardsSet] = useState<storyBoardType[]>()
 
 
-  function loadUpStoryTextBoardFresh() {
+  function addStoriesToBoard(passedText: string, indexToAdd?: number) {
     //sets up my original array from text only blank
-    storyTextBoardObjsSet(() => {
 
-      const storyBoardArr = makeLinksAndParagraphsArray(preProcessedText)
-      console.log(`$d`, storyBoardArr);
-      return storyBoardArr
-    })
-  }
+    if (indexToAdd !== undefined) {
+      console.log(`$hi lets add to the array`);
 
-  function addToStoryTextBoard(index: number, option = "newString") {
+      storyBoardsSet(prevStoryBoardArr => {
 
-    if (option === "newString") {
-      storyTextBoardObjsSet((prevStoryBoard) => {
-        const newBoard = [...prevStoryBoard!]
-        newBoard.splice(index + 1, 0, "")
-        return newBoard
+        const storyBoardArr = makeLinksAndParagraphsArray(passedText) //just text array
+        const ObjsArray = storyBoardArr.map(eachStr => {
+          //run test on each str to see if its text, image or video
+          //then return an obj with different properties
+          const isLink = ISLINK.test(eachStr)
+
+
+          if (isLink) {
+            const isVideo = ISYTVID.test(eachStr)
+
+            if (isVideo) {
+              const newYtObj: videoType = {
+                boardObjId: uuidv4(),
+                boardType: "video",
+                videoUrl: eachStr,
+              }
+              return newYtObj
+
+            } else {
+              //return image obj
+              const newImgObj: imageType = {
+                boardObjId: uuidv4(),
+                boardType: "image",
+                imageUrl: eachStr,
+
+              }
+              return newImgObj
+            }
+
+
+          } else {
+            //return text obj
+            const newWordObj: textType = {
+              boardObjId: uuidv4(),
+              boardType: "text",
+              storedText: eachStr
+            }
+
+            return newWordObj
+          }
+
+          //check eachStr if 
+        })
+
+        if (ObjsArray.length === 1) {
+
+          prevStoryBoardArr![indexToAdd] = ObjsArray[0]
+        } else {
+          prevStoryBoardArr!.splice(indexToAdd, 1);
+
+          ObjsArray.forEach((eachObj, smallIndex) => {
+            prevStoryBoardArr!.splice(indexToAdd + smallIndex, 0, eachObj);
+          })
+
+        }
+
+        return [...prevStoryBoardArr!]
       })
+
+
     } else {
-      storyTextBoardObjsSet((prevStoryBoard) => {
+      storyBoardsSet(() => {
+
+        const storyBoardArr = makeLinksAndParagraphsArray(passedText) //just text array
+        const ObjsArray = storyBoardArr.map(eachStr => {
+          //run test on each str to see if its text, image or video
+          //then return an obj with different properties
+          const isLink = ISLINK.test(eachStr)
+
+          if (isLink) {
+            const isVideo = ISYTVID.test(eachStr)
+
+            if (isVideo) {
+              const newVidObj: videoType = {
+                boardObjId: uuidv4(),
+                boardType: "video",
+                videoUrl: eachStr,
+              }
+              return newVidObj
+
+            } else {
+              //return image obj
+              const newImgObj: imageType = {
+                boardObjId: uuidv4(),
+                boardType: "image",
+                imageUrl: eachStr,
+              }
+              return newImgObj
+            }
+
+
+          } else {
+            //return text obj
+            const newWordObj: textType = {
+              boardObjId: uuidv4(),
+              boardType: "text",
+              storedText: eachStr,
+            }
+
+            return newWordObj
+          }
+        })
+
+        console.log(`new created`, ObjsArray);
+        return ObjsArray
+      })
+    }
+  }
+
+  function addSpecificStoryToBoard(index: number, option: string, gmOption?: gameSelectionTypes) {
+
+    if (option === "newstring") {
+      storyBoardsSet((prevStoryBoard) => {
         const newBoard = [...prevStoryBoard!]
-        newBoard.splice(index + 1, 0, makeNewGameModeObj(option))
+        const newStrObj: textType = {
+          boardType: "text",
+          storedText: "",
+          boardObjId: uuidv4()
+        }
+        newBoard.splice(index + 1, 0, newStrObj)
         return newBoard
+      })
+    } else if (option === "newvideo") {
+      storyBoardsSet((prevStoryBoard) => {
+        const newBoard = [...prevStoryBoard!]
+        const newVidObj: videoType = {
+          boardType: "video",
+          videoUrl: "",
+          boardObjId: uuidv4()
+        }
+        newBoard.splice(index + 1, 0, newVidObj)
+        return newBoard
+      })
+    } else if (option === "newimage") {
+      storyBoardsSet((prevStoryBoard) => {
+        const newBoard = [...prevStoryBoard!]
+        const newImgObj: imageType = {
+          boardType: "image",
+          imageUrl: "",
+          boardObjId: uuidv4()
+        }
+        newBoard.splice(index + 1, 0, newImgObj)
+        return newBoard
+      })
+    } else if (option === "newgamemode") {
+      if (gmOption) {
+
+        const gameModeObj: gameObjType = {
+          gameSelection: gmOption,
+          boardType: "gamemode", //gives appropriate name
+          gameFinished: false,
+          boardObjId: uuidv4(),
+          shouldStartOnNewPage: undefined,
+          gameData: undefined
+        }
+
+        storyBoardsSet((prevStoryBoard) => {
+          const newBoard = [...prevStoryBoard!]
+
+          newBoard.splice(index + 1, 0, gameModeObj)
+          return newBoard
+        })
+      }
+    }
+
+
+  }
+
+  function handleStoryBoard(option: string, seenBoardId: string, newBoardData?: storyBoardType) {
+
+    if (option === "update") {
+      storyBoardsSet(prevStoryBoards => {
+        const newArr = prevStoryBoards!.map(eachStoryBoard => {
+          if (eachStoryBoard.boardObjId === seenBoardId) {
+            return { ...eachStoryBoard, ...newBoardData }
+          } else {
+            return eachStoryBoard
+          }
+        })
+
+        return newArr
+      })
+
+    } else if (option === "delete") {
+      storyBoardsSet(prevStoryBoards => {
+        const filteredArr = prevStoryBoards!.filter(eachBoard => eachBoard.boardObjId !== seenBoardId)
+        return filteredArr
       })
     }
 
-  }
-
-  function makeNewGameModeObj(option: string) {
-    let typeOfGameModeSet = option.toUpperCase()
-    let gameModeIdSet: string = uuidv4()
-
-    const gameModeObj: gamemodeInfo = {
-      typeOfGameMode: typeOfGameModeSet,
-      gameModeId: gameModeIdSet,
-    }
-
-    return { ...gameModeObj }
-  }
-
-  function updateGameModeObjLocal(stryBoardId: string, data: gamemodeInfo) {
-    storyTextBoardObjsSet(gameObjLocalUpdater(storyTextBoardObjs, stryBoardId, data))
   }
 
   function handleSubmit() {
     const newStoryObj: StoryData = {
-      storyId: storyId.current(),
+      storyId: storyId.current,
       title: storyTitle,
       backgroundAudio: storyBgAudio,
       rating: storyRating,
       shortDescription: storyShrtDescription,
-      storyTextBoard: storyTextBoardObjs
+      storyBoard: storyBoards
     }
 
     storiesSet(prevStoriesArr => {
@@ -255,12 +440,12 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
   }, [])
 
   const textAreaRefCal = (ref: HTMLTextAreaElement) => {
-    console.log(`$ran again`);
 
     if (!textAreaRefs.current.includes(ref)) {
       textAreaRefs.current = [...textAreaRefs.current, ref];
     }
   }
+
 
   return (
     <div style={{ overflowY: "auto", position: "fixed", top: 0, left: 0, zIndex: 1, height: "100dvh", width: "100%", backgroundColor: "blue", display: "flex", flexDirection: "column", gap: "2rem" }}>
@@ -295,10 +480,16 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
         }} />
       </div>
 
-      {storyTextBoardObjs === undefined ? (
+
+
+
+
+
+
+      {storyBoards === undefined ? (
 
         <>
-          <textarea ref={textAreaRefCal} className={styles.textAreaEdit} style={{ backgroundColor: "wheat", width: "100%", }} placeholder='Enter your story' value={preProcessedText}
+          <textarea className={styles.textAreaEdit} style={{ backgroundColor: "wheat", width: "100%", }} placeholder='Enter your story' value={preProcessedText}
 
             onChange={(e) => {
               e.target.style.height = 'auto';
@@ -306,83 +497,73 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
 
               preProcessedTextSet(e.target.value)
             }} />
-          <button onClick={loadUpStoryTextBoardFresh}>Process</button>
+          <button onClick={() => { addStoriesToBoard(preProcessedText) }}>Process</button>
         </>
       ) : (
 
         <>
           <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-            {storyTextBoardObjs.map((eachElemnt, index) => {
-              if (typeof eachElemnt === "string") {
-                return (
-                  <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column" }} key={uuidv4()}>
-                    <textarea style={{ backgroundColor: "wheat" }} defaultValue={eachElemnt}
-                      onInput={(e) => {
-                        const el = e.target as HTMLTextAreaElement
-                        el.style.height = 'auto';
-                        el.style.height = el.scrollHeight + 'px';
-                      }}
-                      onBlur={(e) => {
-                        storyTextBoardObjsSet(prevStoryBoard => {
-                          const newArr = [...prevStoryBoard!]
-                          const paragraphsArrSeen = makeLinksAndParagraphsArray(e.target.value);
+            {storyBoards.map((eachElemnt, index) => {
+
+              let el
 
 
+              if (eachElemnt.boardType === "text") {
+                el = <textarea className={styles.textAreaEdit2} key={uuidv4()} defaultValue={eachElemnt.storedText} ref={textAreaRefCal} style={{ backgroundColor: "wheat" }}
+                  onInput={(e) => {
+                    const el = e.target as HTMLTextAreaElement
+                    el.style.height = 'auto';
+                    el.style.height = el.scrollHeight + 'px';
+                  }}
+                  onBlur={(e) => {
+                    addStoriesToBoard(e.target.value, index)
+                  }} />
 
-                          if (paragraphsArrSeen.length <= 1) {
-                            newArr[index] = e.target.value
-                          } else {
-                            newArr.splice(index, 1);
-                            paragraphsArrSeen.forEach((paragraph, pIndex) => {
-                              const indexToAdd = pIndex + index;
-                              newArr.splice(indexToAdd, 0, paragraph);
-                            })
-                          }
 
-                          return newArr
-                        })
-                      }} />
-                    <div className={styles.bttnHolder} style={{ display: "flex", gap: "1rem" }}>
-                      <button style={{ marginRight: "1rem" }} onClick={() => {
-                        addToStoryTextBoard(index)
-                      }}>Add Below</button>
+              } else if (eachElemnt.boardType === "image") {
 
-                      <button onClick={() => { addToStoryTextBoard(index, "MATHCUP") }}>Matchup</button>
-                      <button onClick={() => { addToStoryTextBoard(index, "CROSSWORD") }}>Crossword</button>
-                      <button onClick={() => { addToStoryTextBoard(index, "WORDSTOMEANING") }}>WordsToMeaning</button>
-                      <button onClick={() => { addToStoryTextBoard(index, "PRONOUNCIATION") }}>Pronounciation</button>
-                    </div>
-                  </div>
-                )
-              } else {
-                //getname of element and choose component that way
-                return (
-                  <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", border: "3px solid red" }} key={uuidv4()}>
+                el = <DisplayImage key={uuidv4()} imageUrl={eachElemnt.imageUrl} />
 
-                    {eachElemnt.typeOfGameMode === "MATHCUP" ? (
-                      <MatchUp {...eachElemnt} storyId={storyId.current()} updateGameModeObjLocal={updateGameModeObjLocal} />
-                    ) : eachElemnt.typeOfGameMode === "CROSSWORD" ? (
-                      <Crossword />
-                    ) : eachElemnt.typeOfGameMode === "WORDSTOMEANING" ? (
-                      <WordsToMeaning />
-                    ) : (
-                      <Pronounciation />
-                    )}
+              } else if (eachElemnt.boardType === "video") {
+                el = <DisplayVideo key={uuidv4()} {...eachElemnt} />
+              } else if (eachElemnt.boardType === "gamemode") {
+                el = <div key={uuidv4()} className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", backgroundColor: "wheat" }}>
 
-                    <div className={styles.bttnHolder} style={{ display: "flex", gap: "1rem" }}>
-                      <button style={{ marginRight: "1rem" }} onClick={() => {
-                        addToStoryTextBoard(index)
-                      }}>Add Below</button>
-
-                      <button onClick={() => { addToStoryTextBoard(index, "MATHCUP") }}>Matchup</button>
-                      <button onClick={() => { addToStoryTextBoard(index, "CROSSWORD") }}>Crossword</button>
-                      <button onClick={() => { addToStoryTextBoard(index, "WORDSTOMEANING") }}>WordsToMeaning</button>
-                      <button onClick={() => { addToStoryTextBoard(index, "PRONOUNCIATION") }}>Pronounciation</button>
-                    </div>
-                  </div>
-                )
+                  {eachElemnt.gameSelection === "matchup" ? (
+                    <MatchUpGM {...eachElemnt} storyId={storyId.current} handleStoryBoard={handleStoryBoard} />
+                  ) : eachElemnt.gameSelection === "crossword" ? (
+                    <CrosswordGM />
+                  ) : eachElemnt.gameSelection === "wordmeaning" ? (
+                    <WordsToMeaningGM />
+                  ) : eachElemnt.gameSelection === "pronounce" ? (
+                    <PronounciationGM />
+                  ) : null}
+                </div>
               }
 
+              return (
+
+                <div className={styles.addMore}>
+                  {el}
+                  <div className={styles.bttnHolder} style={{ display: "flex", gap: "1rem" }}>
+                    <button onClick={() => {
+                      addSpecificStoryToBoard(index, "newstring")
+                    }}>add new text</button>
+                    <button onClick={() => {
+                      addSpecificStoryToBoard(index, "newimage")
+                    }}
+
+                    >add new image</button>
+                    <button onClick={() => {
+                      addSpecificStoryToBoard(index, "newvideo")
+                    }}>add new youtube</button>
+                    <button onClick={() => {
+                      addSpecificStoryToBoard(index, "newgamemode", "matchup")
+                    }}>add new gamemode</button>
+                  </div>
+                </div>
+
+              )
             })}
           </div>
 
@@ -395,58 +576,46 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
   )
 }
 
-function saveToLocalStorage(keyName: any, item: any) {
-  // localStorage.removeItem(keyName);
-  localStorage.setItem(keyName, JSON.stringify(item));
-}
-
-function retreiveFromLocalStorage(keyName: string) {
-  const todos = localStorage.getItem(keyName);
-  if (todos) {
-    const todosArray = JSON.parse(todos);
-    return todosArray
-  } else {
-    return null
-  }
-}
-
 export default function Home() {
   const [stories, storiesSet] = useAtom(globalStorieArray)
-  const [makingStory, makingStorySet] = useState(false)
+  const [makingStory, makingStorySet] = useState(true)
 
   useEffect(() => {
     //save
     if (stories) {
       saveToLocalStorage("storiesArr", stories)
-      makingStorySet(false)
+      // makingStorySet(false)
     }
   }, [stories])
 
   useEffect(() => {
     const seenStories = retreiveFromLocalStorage("storiesArr") as StoryData[]
     //load
-    if (seenStories) {
+    // if (seenStories) {
 
-      const seenStoriesClear = seenStories.filter(eachSeenStory => {
+    // const seenStoriesClear = seenStories.filter(eachSeenStory => {
 
-        let foundInArr = false
-        tempbddata.forEach(eachTempStory => {
-          if (eachTempStory.storyId === eachSeenStory.storyId) {
-            foundInArr = true
-          }
-        })
+    //   let foundInArr = false
+    //   tempbddata.forEach(eachTempStory => {
+    //     if (eachTempStory.storyId === eachSeenStory.storyId) {
+    //       foundInArr = true
+    //     }
+    //   })
 
-        if (!foundInArr) {
-          return eachSeenStory
-        }
-      })
+    //   if (!foundInArr) {
+    //     return eachSeenStory
+    //   }
+    // })
 
-      console.log(`$cleararr`, seenStoriesClear);
-      storiesSet([...tempbddata, ...seenStoriesClear])
-    } else {
-      storiesSet(tempbddata)
-      console.log(`$loaded save data from temp`);
-    }
+    storiesSet(seenStories)
+    // console.log(`$cleararr`, seenStoriesClear);
+    // storiesSet(seenStoriesClear)
+    // storiesSet([...tempbddata, ...seenStoriesClear])
+    // }
+    //  else {
+    //   storiesSet(tempbddata)
+    //   console.log(`$loaded save data from temp`);
+    // }
   }, [])
 
   return (
@@ -460,7 +629,7 @@ export default function Home() {
       )}
 
       {stories?.map(eachStory => (
-        <Story key={eachStory.storyId} {...eachStory} />
+        <ViewStory key={eachStory.storyId} {...eachStory} />
       ))}
     </main>
   )
@@ -468,19 +637,12 @@ export default function Home() {
 
 
 
-// games
-//match 4
-interface matchupGameData {
-  questionsArr?: string[],
-  choicesArr?: string[][],
-}
-
-function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, gameFinished, storyId, updateGameModeObjLocal }: gamemodeInfo & { storyId: string, updateGameModeObjLocal?: (id: string, data: gamemodeInfo) => void } & {
-  gameData?: matchupGameData
+function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinished, storyId, gameData, handleStoryBoard }: gameObjType & {
+  storyId: string,
+  gameData: gameDataType | undefined,
+  handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void
 }) {
 
-  //this function receives the entire object relating to it
-  // questionsArr, choicesArr, answersArr, gameId, updateGameModeObj, gameFinishedInit 
   const [stories, storiesSet] = useAtom(globalStorieArray)
 
   const [questions, questionsSet] = useState<string[] | undefined>(["", "", "", ""])
@@ -510,6 +672,9 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
       [key: string]: any
     } = {}
 
+    gameData = gameData as matchupType
+
+
     gameData?.questionsArr?.forEach((eachQuestion, index) => {
       newItemObj[`container${index}`] = []
     })
@@ -530,6 +695,8 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
 
   useEffect(() => {
     if (gameData !== undefined) {
+      gameData = gameData as matchupType
+
       dataSeenSet(true)
       questionsSet(gameData.questionsArr)
       choicesSet(gameData.choicesArr)
@@ -539,39 +706,42 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
   }, [])
 
 
-  function submit() {
+  function submitNewGameModeObj() {
     //local submit to parent make Story - saved to the storyTextboard
-    const newGameModeData: gamemodeInfo = {
-      gameModeId: gameModeId,
-      typeOfGameMode: typeOfGameMode,
+
+    const newGameMode: gameObjType = {
+      gameSelection: gameSelection,
       gameData: {
         choicesArr: choices,
         questionsArr: questions
-      },
+      } as matchupType,
       gameFinished: gameFinished,
-      shouldStartOnNewPage: shouldStartOnNewPage
+      shouldStartOnNewPage: shouldStartOnNewPage,
+      boardType: "gamemode",
+      boardObjId: uuidv4()
     }
 
-    if (updateGameModeObjLocal) {
-      updateGameModeObjLocal(gameModeId, newGameModeData)
+    if (handleStoryBoard) {
+      handleStoryBoard("update", boardObjId, newGameMode)
     }
   }
 
   function updateGameModeObjGlobal() {
-    //use this for updates about the obj like whether game finished or not
+    //for updates to gameFinished
 
-    const newGameModeData: gamemodeInfo = {
-      gameModeId: gameModeId,
-      typeOfGameMode: typeOfGameMode,
+    const newGameModeData: gameObjType = {
+      boardObjId: boardObjId,
+      boardType: "gamemode",
+      gameSelection: gameSelection,
       gameData: {
         choicesArr: choices,
         questionsArr: questions
-      },
+      } as matchupType,
       gameFinished: gameFinished,
       shouldStartOnNewPage: shouldStartOnNewPage
     }
 
-    storiesSet(gameObjGlobalUpdater(stories, storyId, gameModeId, newGameModeData))
+    storiesSet(updateBoardObjWithBoardDataGlobal(stories!, storyId, boardObjId, newGameModeData))
   }
 
   function checkAnswers() {
@@ -760,9 +930,6 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
     <div style={{ scale: gameFinished ? .9 : 1 }}>
       {dataSeen ? (
         <>
-          <p>seeing data - quiz time</p>
-
-
           <DndContext
             // announcements={defaultAnnouncements}
             sensors={sensors}
@@ -771,11 +938,14 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
           >
-            <div style={wrapperStyle}>
+            <div style={{
+              display: "flex",
+              flexDirection: "row"
+            }}>
               {questions!.map((eachQuestion, index) => {
                 return (
                   <>
-                    <Container id={`container${index}`} items={items[`container${index}`]} arrPos={index} questionAsked={eachQuestion} />
+                    <Container key={uuidv4()} id={`container${index}`} items={items[`container${index}`]} arrPos={index} questionAsked={eachQuestion} />
                   </>
                 )
               })}
@@ -794,11 +964,10 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
         </>
       ) : (
         <>
-          <p>setup data</p>
           {
             questions?.map((temp, index) => (
 
-              <div key={index}>
+              <div key={uuidv4()}>
                 <input type='text' placeholder={`Question ${index + 1}`} value={questions ? questions[index] : ""} onChange={(e) => {
                   questionsSet((prevQuestions) => {
                     let newQuestionsArr: string[] = []
@@ -865,7 +1034,6 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
 
             choicesSet(prevChoicesArr => {
               let updatedChoices = [...prevChoicesArr!]
-              const newArr = []
 
               updatedChoices.push([""])
 
@@ -875,7 +1043,7 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
 
           }}>Add Question</button>
           <br />
-          {updateGameModeObjLocal && <button onClick={submit}>Save</button>}
+          {handleStoryBoard && <button onClick={submitNewGameModeObj}>Save</button>}
         </>
       )
       }
@@ -884,8 +1052,7 @@ function MatchUp({ typeOfGameMode, gameModeId, gameData, shouldStartOnNewPage, g
 
 }
 
-interface crosswordGameData { }
-function Crossword() {
+function CrosswordGM() {
   return (
     <div>
       crossword
@@ -893,8 +1060,7 @@ function Crossword() {
   )
 }
 
-interface wordsToMeaningGameData { }
-function WordsToMeaning() {
+function WordsToMeaningGM() {
   return (
     <div>
       WordsToMeaning
@@ -902,8 +1068,7 @@ function WordsToMeaning() {
   )
 }
 
-interface pronounciationGameData { }
-function Pronounciation() {
+function PronounciationGM() {
   return (
     <div>
       Pronounciation
@@ -911,26 +1076,31 @@ function Pronounciation() {
   )
 }
 
+function DisplayImage({ imageUrl }: { imageUrl: string }) {
+  console.log(`$imgurl`, imageUrl);
+  return (
+    <img
+      src={"https://images.pexels.com/photos/10497155/pexels-photo-10497155.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"}
+      className={styles.imageCont}
 
-function DisplayMedia({ url }: { url: string }) {
-  const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
+    />
 
-  const isYtVid = youtubeRegex.test(url)
+  )
+}
+
+function DisplayVideo({ videoUrl }: { videoUrl: string }) {
 
   return (
-    <div className={styles.mediaCont}>
-      {isYtVid ? (
-        <div style={{ overflow: "hidden", maxWidth: "100dvw" }}>
-          <ReactPlayer
-            loop={false}
-            playing={false}
-            url={url ? url : "https://www.youtube.com/watch?v=NJuSStkIZBg"}
+    <div className={styles.videoCont}>
+      <div style={{ overflow: "hidden", maxWidth: "100dvw" }}>
+        <ReactPlayer
+          loop={false}
+          playing={false}
+          url={videoUrl ? videoUrl : "https://www.youtube.com/watch?v=NJuSStkIZBg"}
 
-          />
-        </div>
-      ) : (
-        <img src={url} />
-      )}
+        />
+      </div>
+
     </div>
   )
 

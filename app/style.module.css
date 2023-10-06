@@ -6,7 +6,11 @@
     opacity: 0;
 }
 
-.storyTextboardHolder:hover .bttnHolder {
+.addMore {
+    width: 100%;
+}
+
+.addMore:hover .bttnHolder {
     opacity: 1;
 }
 
@@ -43,11 +47,26 @@
 .textAreaEdit {
     resize: none;
     overflow: hidden;
-    min-height: auto;
-    max-height: 200px;
+    min-height: 200px;
 }
 
-.mediaCont {
+.textAreaEdit2 {
+    width: 100%;
+}
+
+.imageCont {
+    background-color: yellow;
+    height: 70%;
+    aspect-ratio: 3/4;
+    margin: 0 auto;
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    object-fit: contain;
+
+}
+
+.videoCont {
     background-color: yellow;
     height: 70%;
     aspect-ratio: 3/4;
