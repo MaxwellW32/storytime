@@ -35,13 +35,13 @@ interface textType { //default add
 
 interface imageType {
   boardObjId: string,
-  imageUrl: string,
+  imageUrl: string | undefined,
   boardType: "image",
 }
 
 interface videoType {
   boardObjId: string,
-  videoUrl: string,
+  videoUrl: string | undefined,
   boardType: "video",
 }
 
@@ -89,6 +89,7 @@ interface crosswordType {
   gameDataFor: "crossword",
 
 }
+
 
 
 function saveToLocalStorage(keyName: any, item: any) {
@@ -156,18 +157,18 @@ function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudi
             } else if (eachElemnt.boardType === "image") {
               console.log(`$eachseen`, eachElemnt);
               return (
-                <DisplayImage key={uuidv4()} imageUrl={eachElemnt.imageUrl} />
+                <DisplayImage key={uuidv4()} passedImageData={eachElemnt} />
               )
 
             } else if (eachElemnt.boardType === "video") {
               return (
-                <DisplayVideo key={uuidv4()} {...eachElemnt} />
+                <DisplayVideo key={uuidv4()} passedVideoData={eachElemnt} />
               )
 
 
             } else if (eachElemnt.boardType === "gamemode") {
               return (
-                <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", backgroundColor: "wheat" }} key={uuidv4()}>
+                <div key={uuidv4()} className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", backgroundColor: "wheat" }} >
 
                   {eachElemnt.gameSelection === "matchup" ? (
                     <MatchUpGM {...eachElemnt} storyId={storyId} />
@@ -206,20 +207,20 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
   const [storyBgAudio, storyBgAudioSet] = useState<undefined | string>()
   const [storyShrtDescription, storyShrtDescriptionSet] = useState<undefined | string>("nice story")
 
-  const [preProcessedText, preProcessedTextSet] = useState(`1 paragraph \n\n 2 paragraph \n\n 3 paragraph \n\n 4 paragraph \n\n 5 paragraph`)
+  const [preProcessedText, preProcessedTextSet] = useState(`1 paragraph \n\n\n 2 paragraph \n\n\n 3 paragraph \n\n\n 4 paragraph \n\n\n 5 paragraph`)
   const [storyBoards, storyBoardsSet] = useState<storyBoardType[]>()
 
 
-  function addStoriesToBoard(passedText: string, indexToAdd?: number) {
+  function convertTextToStoryBoards(passedText: string, indexToAdd?: number) {
     //sets up my original array from text only blank
 
     if (indexToAdd !== undefined) {
       console.log(`$hi lets add to the array`);
+      console.clear()
 
       storyBoardsSet(prevStoryBoardArr => {
 
-        const storyBoardArr = makeLinksAndParagraphsArray(passedText) //just text array
-        const ObjsArray = storyBoardArr.map(eachStr => {
+        const ObjsArray = makeLinksAndParagraphsArray(passedText).map(eachStr => {
           //run test on each str to see if its text, image or video
           //then return an obj with different properties
           const isLink = ISLINK.test(eachStr)
@@ -262,19 +263,14 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
           //check eachStr if 
         })
 
-        if (ObjsArray.length === 1) {
+        const newArr = prevStoryBoardArr!.map(each => each)
+        newArr.splice(indexToAdd, 1);
 
-          prevStoryBoardArr![indexToAdd] = ObjsArray[0]
-        } else {
-          prevStoryBoardArr!.splice(indexToAdd, 1);
+        ObjsArray.forEach((eachObj, smallIndex) => {
+          newArr.splice(indexToAdd + smallIndex, 0, eachObj);
+        })
 
-          ObjsArray.forEach((eachObj, smallIndex) => {
-            prevStoryBoardArr!.splice(indexToAdd + smallIndex, 0, eachObj);
-          })
-
-        }
-
-        return [...prevStoryBoardArr!]
+        return newArr
       })
 
 
@@ -334,7 +330,7 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
         const newBoard = [...prevStoryBoard!]
         const newStrObj: textType = {
           boardType: "text",
-          storedText: "",
+          storedText: undefined,
           boardObjId: uuidv4()
         }
         newBoard.splice(index + 1, 0, newStrObj)
@@ -345,7 +341,7 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
         const newBoard = [...prevStoryBoard!]
         const newVidObj: videoType = {
           boardType: "video",
-          videoUrl: "",
+          videoUrl: undefined,
           boardObjId: uuidv4()
         }
         newBoard.splice(index + 1, 0, newVidObj)
@@ -356,7 +352,7 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
         const newBoard = [...prevStoryBoard!]
         const newImgObj: imageType = {
           boardType: "image",
-          imageUrl: "",
+          imageUrl: undefined,
           boardObjId: uuidv4()
         }
         newBoard.splice(index + 1, 0, newImgObj)
@@ -431,20 +427,20 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
 
   const textAreaRefs = useRef<HTMLTextAreaElement[]>([])
 
+  const addToTextAreaRefs = (ref: HTMLTextAreaElement, index: number) => {
+    textAreaRefs.current[index] = ref
+  }
+
   //give textarea right size
   useEffect(() => {
+    console.log(`$tarefs`, textAreaRefs.current);
     textAreaRefs.current.forEach((eachRef) => {
-      eachRef.style.height = 'auto';
-      eachRef.style.height = eachRef.scrollHeight + 'px';
+      // eachRef.style.height = 'auto';
+      // eachRef.style.height = eachRef.scrollHeight + 'px';
     })
-  }, [])
 
-  const textAreaRefCal = (ref: HTMLTextAreaElement) => {
-
-    if (!textAreaRefs.current.includes(ref)) {
-      textAreaRefs.current = [...textAreaRefs.current, ref];
-    }
-  }
+    // return () => textAreaRefs.current = []
+  }, [storyBoards])
 
 
   return (
@@ -497,7 +493,7 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
 
               preProcessedTextSet(e.target.value)
             }} />
-          <button onClick={() => { addStoriesToBoard(preProcessedText) }}>Process</button>
+          <button onClick={() => { convertTextToStoryBoards(preProcessedText) }}>Process</button>
         </>
       ) : (
 
@@ -505,46 +501,43 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
           <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
             {storyBoards.map((eachElemnt, index) => {
 
-              let el
-
-
-              if (eachElemnt.boardType === "text") {
-                el = <textarea className={styles.textAreaEdit2} key={uuidv4()} defaultValue={eachElemnt.storedText} ref={textAreaRefCal} style={{ backgroundColor: "wheat" }}
-                  onInput={(e) => {
-                    const el = e.target as HTMLTextAreaElement
-                    el.style.height = 'auto';
-                    el.style.height = el.scrollHeight + 'px';
-                  }}
-                  onBlur={(e) => {
-                    addStoriesToBoard(e.target.value, index)
-                  }} />
-
-
-              } else if (eachElemnt.boardType === "image") {
-
-                el = <DisplayImage key={uuidv4()} imageUrl={eachElemnt.imageUrl} />
-
-              } else if (eachElemnt.boardType === "video") {
-                el = <DisplayVideo key={uuidv4()} {...eachElemnt} />
-              } else if (eachElemnt.boardType === "gamemode") {
-                el = <div key={uuidv4()} className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", backgroundColor: "wheat" }}>
-
-                  {eachElemnt.gameSelection === "matchup" ? (
-                    <MatchUpGM {...eachElemnt} storyId={storyId.current} handleStoryBoard={handleStoryBoard} />
-                  ) : eachElemnt.gameSelection === "crossword" ? (
-                    <CrosswordGM />
-                  ) : eachElemnt.gameSelection === "wordmeaning" ? (
-                    <WordsToMeaningGM />
-                  ) : eachElemnt.gameSelection === "pronounce" ? (
-                    <PronounciationGM />
-                  ) : null}
-                </div>
-              }
-
               return (
+                <div key={uuidv4()} className={styles.addMore}>
 
-                <div className={styles.addMore}>
-                  {el}
+                  {eachElemnt.boardType === "text" ? (
+
+                    <textarea key={uuidv4()} className={styles.textAreaEdit2} defaultValue={eachElemnt.storedText} ref={(e: HTMLTextAreaElement) => { addToTextAreaRefs(e, index) }} style={{ backgroundColor: "wheat" }}
+                      onInput={(e) => {
+                        const el = e.target as HTMLTextAreaElement
+                        el.style.height = 'auto';
+                        el.style.height = el.scrollHeight + 'px';
+                      }}
+                      onBlur={(e) => {
+                        convertTextToStoryBoards(e.target.value, index)
+                      }} />
+
+                  ) : eachElemnt.boardType === "image" ? (
+                    <DisplayImage passedImageData={eachElemnt} editing={true} handleStoryBoard={handleStoryBoard} />
+                  ) : eachElemnt.boardType === "video" ? (
+                    <DisplayVideo passedVideoData={eachElemnt} editing={true} handleStoryBoard={handleStoryBoard} />
+                  ) : eachElemnt.boardType === "gamemode" ? (
+                    <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", backgroundColor: "wheat" }}>
+
+                      {eachElemnt.gameSelection === "matchup" ? (
+                        <MatchUpGM {...eachElemnt} storyId={storyId.current} handleStoryBoard={handleStoryBoard} />
+                      ) : eachElemnt.gameSelection === "crossword" ? (
+                        <CrosswordGM />
+                      ) : eachElemnt.gameSelection === "wordmeaning" ? (
+                        <WordsToMeaningGM />
+                      ) : eachElemnt.gameSelection === "pronounce" ? (
+                        <PronounciationGM />
+                      ) : null}
+
+                    </div>
+
+                  ) : null}
+
+
                   <div className={styles.bttnHolder} style={{ display: "flex", gap: "1rem" }}>
                     <button onClick={() => {
                       addSpecificStoryToBoard(index, "newstring")
@@ -562,9 +555,9 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
                     }}>add new gamemode</button>
                   </div>
                 </div>
-
               )
             })}
+
           </div>
 
           <button onClick={handleSubmit}>Submit</button>
@@ -944,9 +937,7 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
             }}>
               {questions!.map((eachQuestion, index) => {
                 return (
-                  <>
-                    <Container key={uuidv4()} id={`container${index}`} items={items[`container${index}`]} arrPos={index} questionAsked={eachQuestion} />
-                  </>
+                  <Container key={uuidv4()} id={`container${index}`} items={items[`container${index}`]} arrPos={index} questionAsked={eachQuestion} />
                 )
               })}
             </div>
@@ -980,28 +971,26 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
                 <div>
                   {choices && choices[index] ? (
                     choices[index].map((choice, smallerIndex) => (
-                      <>
-                        <input type='text' placeholder={`Choice ${smallerIndex + 1} for Q${index + 1}`} value={choices && choices[index] && choices[index][smallerIndex] ? choices[index][smallerIndex] : ""}
-                          onChange={(e) => {
-                            choicesSet(prevChoicesArr => {
-                              const updatedChoices = prevChoicesArr ?? [];
+                      <input key={uuidv4()} type='text' placeholder={`Choice ${smallerIndex + 1} for Q${index + 1}`} value={choices && choices[index] && choices[index][smallerIndex] ? choices[index][smallerIndex] : ""}
+                        onChange={(e) => {
+                          choicesSet(prevChoicesArr => {
+                            const updatedChoices = prevChoicesArr ?? [];
 
-                              if (!updatedChoices[index]) {
-                                updatedChoices[index] = [];
-                              }
-                              if (!updatedChoices[index][smallerIndex]) {
-                                updatedChoices[index][smallerIndex] = "";
-                              }
-                              updatedChoices[index][smallerIndex] = e.target.value;
-                              return [...updatedChoices];
-                            })
-                          }} />
+                            if (!updatedChoices[index]) {
+                              updatedChoices[index] = [];
+                            }
+                            if (!updatedChoices[index][smallerIndex]) {
+                              updatedChoices[index][smallerIndex] = "";
+                            }
+                            updatedChoices[index][smallerIndex] = e.target.value;
+                            return [...updatedChoices];
+                          })
+                        }} />
 
-                      </>
                     ))
-                  ) : (
+                  ) :
                     null
-                  )}
+                  }
                 </div>
 
                 <button onClick={() => {
@@ -1076,32 +1065,92 @@ function PronounciationGM() {
   )
 }
 
-function DisplayImage({ imageUrl }: { imageUrl: string }) {
-  console.log(`$imgurl`, imageUrl);
-  return (
-    <img
-      src={"https://images.pexels.com/photos/10497155/pexels-photo-10497155.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"}
-      className={styles.imageCont}
 
-    />
+function DisplayImage({ passedImageData, editing = false, handleStoryBoard }: { passedImageData: imageType, editing?: boolean, handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void }) {
+  const [imageObj, imageObjSet] = useState<imageType>({ ...passedImageData })
+
+
+  return (
+    <div>
+
+      {editing ? (
+        <>
+          <p>Add some text</p>
+          <textarea value={imageObj.imageUrl} onChange={(e) => {
+            imageObjSet(prevVideoObj => {
+              prevVideoObj.imageUrl = e.target.value
+              return { ...prevVideoObj }
+            })
+          }} />
+
+          {imageObj.imageUrl !== undefined && (
+            <img src={imageObj.imageUrl}
+              className={styles.imageCont}
+            />
+          )}
+
+          <button onClick={() => {
+            if (handleStoryBoard) {
+              handleStoryBoard("update", imageObj.boardObjId, imageObj)
+            }
+          }}>Save Changes</button>
+        </>
+      ) : (
+        <div style={{}}>
+          <img
+            src={imageObj.imageUrl ? imageObj.imageUrl : "https://images.pexels.com/photos/10497155/pexels-photo-10497155.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"}
+            className={styles.imageCont}
+          />
+        </div>
+      )}
+
+    </div>
 
   )
+
 }
 
-function DisplayVideo({ videoUrl }: { videoUrl: string }) {
+function DisplayVideo({ passedVideoData, editing = false, handleStoryBoard }: { passedVideoData: videoType, editing?: boolean, handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void }) {
+  const [videoObj, videoObjSet] = useState<videoType>({ ...passedVideoData })
+
 
   return (
     <div className={styles.videoCont}>
-      <div style={{ overflow: "hidden", maxWidth: "100dvw" }}>
-        <ReactPlayer
-          loop={false}
-          playing={false}
-          url={videoUrl ? videoUrl : "https://www.youtube.com/watch?v=NJuSStkIZBg"}
 
-        />
-      </div>
+      {editing ? (
+        <>
+          <p>Add some text</p>
+          <textarea value={videoObj.videoUrl} onChange={(e) => {
+            videoObjSet(prevVideoObj => {
+              prevVideoObj.videoUrl = e.target.value
+              return { ...prevVideoObj }
+            })
+          }} />
+
+          <ReactPlayer
+            loop={false}
+            playing={false}
+            url={videoObj.videoUrl}
+          />
+
+          <button onClick={() => {
+            if (handleStoryBoard) {
+              handleStoryBoard("update", videoObj.boardObjId, videoObj)
+            }
+          }}>Save Changes</button>
+        </>
+      ) : (
+        <div style={{ overflow: "hidden", maxWidth: "100dvw" }}>
+          <ReactPlayer
+            loop={false}
+            playing={false}
+            url={videoObj.videoUrl ? videoObj.videoUrl : "https://www.youtube.com/watch?v=NJuSStkIZBg"}
+          />
+        </div>
+      )}
 
     </div>
+
   )
 
 }
