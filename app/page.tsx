@@ -7,6 +7,12 @@ import { atom, useAtom } from 'jotai'
 import ReactPlayer from "react-player/youtube";
 import updateBoardObjWithBoardDataGlobal from './Updater';
 import tempbddata from "../tempdbdata1.json"
+import { Roboto } from 'next/font/google'
+
+const roboto = Roboto({
+  subsets: ['latin'],
+  weight: ['400', '700']
+})
 
 import {
   DndContext,
@@ -21,8 +27,11 @@ import {
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
 import Container from "./using/container";
+import { request } from 'http';
+import NavBar from './components/navbar/NavBar';
 
 const globalStorieArray = atom<StoryData[] | undefined>(undefined)
+export const globalTheme = atom<boolean>(true)
 
 //this is the layout for the objects of each of my games that holds everything
 
@@ -92,16 +101,18 @@ interface crosswordType {
 
 
 
-function saveToLocalStorage(keyName: any, item: any) {
+
+export function saveToLocalStorage(keyName: any, item: any) {
   // localStorage.removeItem(keyName);
   localStorage.setItem(keyName, JSON.stringify(item));
 }
 
-function retreiveFromLocalStorage(keyName: string) {
-  const todos = localStorage.getItem(keyName);
-  if (todos) {
-    const todosArray = JSON.parse(todos);
-    return todosArray
+export function retreiveFromLocalStorage(keyName: string) {
+  const keyItem = localStorage.getItem(keyName);
+
+  if (keyItem) {
+    const keyItemParsed = JSON.parse(keyItem);
+    return keyItemParsed
   } else {
     return null
   }
@@ -113,11 +124,12 @@ function makeLinksAndParagraphsArray(text: string) {
 
 
 
-const ISLINKORBREAK = /(https?:\/\/[^\s]+\.(?:com|net|org|io)\/[^\s]+|\n\n\n)/g;
+let regNewLineLimit = "\n\n\n";
+const ISLINKORBREAK = new RegExp(`(https?:\/\/[^\s]+\.(?:com|net|org|io)\/[^\s]+|${regNewLineLimit})`, 'g');
+
+
 const ISLINK = /(https?:\/\/[^\s]+\.(?:com|net|org|io)\/[^\s]+)/g;
 const ISYTVID = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
-
-
 
 function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudio, storyId }: StoryData) {
   const [reading, readingSet] = useState(false)
@@ -130,19 +142,52 @@ function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudi
     })
   }
 
+  const descRef = useRef<HTMLParagraphElement>(null)
+  const [showDescriptionFull, showDescriptionFullSet] = useState(false)
+  const [descOverFlowing, descOverFlowingSet] = useState(false)
+
+  useEffect(() => {
+    const element = descRef.current;
+    if (element) {
+      descOverFlowingSet(element.scrollHeight > element.clientHeight);
+    }
+  }, [])
+
+
 
   return (
-    <div style={{ backgroundColor: "white", padding: "1rem", display: "flex", gap: "1rem" }}>
-      <h3>{title}</h3>
-      {rating && <p>{rating}/5</p>}
-      {shortDescription && <p>{shortDescription}</p>}
-      <button style={{ backgroundColor: "yellow" }} onClick={() => { readingSet(true) }}>Let&apos;s Read</button>
-      <button style={{ backgroundColor: "yellow" }} onClick={() => { deleteStory(storyId) }}>Delete Story</button>
+    <div style={{ width: "95%", margin: "0 auto", borderRadius: ".7rem", padding: "1rem", backgroundColor: "var(--backgroundColor)" }}>
+
+      <div className={styles.titleCont}>
+
+        <h3>{title}</h3>
+
+        <div className="flex flex-col gap-1 items-center">
+          {rating && <p>{rating}/5</p>}
+          <Image height={20} alt='ratingstars' src={require("../public/threestars.png")} style={{ objectFit: "contain" }} />
+        </div>
+
+        <div style={{ display: "flex", gap: "1rem" }}>
+          <button onClick={() => { readingSet(true) }}>Let&apos;s Read</button>
+          <button style={{}} onClick={() => { deleteStory(storyId) }}>Delete Story</button>
+        </div>
+      </div>
+
+      <div className={`italic`} style={{ fontSize: ".9em", marginTop: "var(--medium-margin)", display: "grid", gap: ".3rem", alignSelf: "flex-end" }}>
+        {shortDescription && (
+          <>
+            <p >Description -</p>
+            <p ref={descRef} className={styles.descText} style={{ display: showDescriptionFull ? "block" : "-webkit-box" }}>{shortDescription}</p>
+            {descOverFlowing && <p className={styles.highlighted} onClick={() => {
+              showDescriptionFullSet(prev => !prev)
+            }}>{showDescriptionFull ? "Show Less" : "Show More"}</p>}
+          </>
+        )}
+      </div>
 
       {/* storyboard container */}
-
       {reading && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", backgroundColor: "#aaa", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", overflowY: "auto" }}>
+        <div className={roboto.className} style={{ display: "flex", flexDirection: "column", gap: "1rem", backgroundColor: "#aaa", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", overflowY: "auto" }}>
           <button onClick={() => {
             readingSet(false)
           }}>close</button>
@@ -185,7 +230,7 @@ function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudi
           })}
         </div>
       )}
-
+      {/* audio */}
       <div style={{ display: "none", opacity: 0, userSelect: "none" }}>
         <ReactPlayer
           loop={true}
@@ -416,7 +461,10 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
       storyBoard: storyBoards
     }
 
+    console.log(`$new`, newStoryObj);
+
     storiesSet(prevStoriesArr => {
+      console.log(`$got in set`);
       if (prevStoriesArr) {
         return [...prevStoriesArr, newStoryObj]
       } else {
@@ -446,6 +494,7 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
     // return () => textAreaRefs.current = []
   }, [storyBoards])
 
+  const [gameModeButtonClicked, gameModeButtonClickedSet] = useState(false)
 
   return (
     <div style={{ overflowY: "auto", position: "fixed", top: 0, left: 0, zIndex: 1, height: "100dvh", width: "100%", backgroundColor: "blue", display: "flex", flexDirection: "column", gap: "2rem" }}>
@@ -481,14 +530,10 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
       </div>
 
 
-
-
-
-
-
       {storyBoards === undefined ? (
 
         <>
+
           <textarea className={styles.textAreaEdit} style={{ backgroundColor: "wheat", width: "100%", }} placeholder='Enter your story' value={preProcessedText}
 
             onChange={(e) => {
@@ -542,7 +587,7 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
                   ) : null}
 
 
-                  <div className={styles.bttnHolder} style={{ display: "flex", gap: "1rem" }}>
+                  <div className={styles.bttnHolder} style={{}}>
                     <button onClick={() => {
                       addSpecificStoryToBoard(index, "newstring")
                     }}>add new text</button>
@@ -554,16 +599,43 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
                     <button onClick={() => {
                       addSpecificStoryToBoard(index, "newvideo")
                     }}>add new youtube</button>
-                    <button onClick={() => {
-                      addSpecificStoryToBoard(index, "newgamemode", "matchup")
-                    }}>add new gamemode</button>
+                    <div style={{}}>
+
+                      <button onClick={() => {
+                        gameModeButtonClickedSet(prev => !prev)
+                      }}>add new gamemode</button>
+
+                      {gameModeButtonClicked && (
+                        <div style={{ display: "flex", flexWrap: "wrap" }}>
+                          <button onClick={() => {
+                            addSpecificStoryToBoard(index, "newgamemode", "matchup")
+                            gameModeButtonClickedSet(false)
+                          }}>Matchup</button>
+
+                          <button onClick={() => {
+                            addSpecificStoryToBoard(index, "newgamemode", "crossword")
+                            gameModeButtonClickedSet(false)
+                          }}>Crossword</button>
+
+                          <button onClick={() => {
+                            addSpecificStoryToBoard(index, "newgamemode", "pronounce")
+                            gameModeButtonClickedSet(false)
+                          }}>Pronounciation</button>
+
+                          <button onClick={() => {
+                            addSpecificStoryToBoard(index, "newgamemode", "wordmeaning")
+                            gameModeButtonClickedSet(false)
+                          }}>Words to Meanings</button>
+                        </div>
+                      )}
+
+                    </div>
                   </div>
                 </div>
               )
             })}
 
           </div>
-
           <button onClick={handleSubmit}>Submit</button>
         </>
       )}
@@ -575,11 +647,41 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
 
 export default function Home() {
   const [stories, storiesSet] = useAtom(globalStorieArray)
-  const [makingStory, makingStorySet] = useState(false)
+  const [makingStory, makingStorySet] = useState(true)
 
+  const [theme, themeSet] = useAtom(globalTheme)
+
+
+  const themeStyles = useMemo(() => {
+
+    if (theme) {
+      return {
+        "--primaryColor": "Red",
+        "--secondaryColor": "purple",
+        "--backgroundColor": "#ffe9cb",
+        "--textColor": "black",
+        "--textColorAnti": "white",
+        "--backdrop": `url(https://lh3.googleusercontent.com/fife/AK0iWDzq8om75zyiW7-rA4lFrq0ozmEAQ8zbPT12OE7Jx3hvuuTvcwFENpngXQSF1UpbTd4xsMsUc_INKL5LJF3Hnf-HeMbK57uFsdKLrMnJcWIbM3mMCeex8X0gS90NzJlblmuvLrN4G-EShyYOegMx9QcaAeQz18ton2JFmUprKgJUjJ-Hsm7fTND7eU-XmxUBh9crLBbjBTWQI4YS1Z-9euS_X2yJTf_DaOGA_zQ75Q5SqpF5COQYBrqR_q_6rI5IIWG3jwbcmVKFv7fobysTtcpuHCKIigYk_esdcxle34BOjs1fmz5c-BFeL_i9dUt3on_y8dU412uShQSWBcDyR_FcABMwbks1SJgxfr-1_vCEzO6UeYU-0LL7ZoopuewjHT7QuBRxskaZ2hcx54EkResnNvvAht-MT3UICnEOIeWH3GeRLqMQoUutpZ8308HwIYCjjgNUNm5lHtQkMdWhJX6BWLPx9VYNJgKlTmAo-Mbo16zClG-6XN8EPtnlnGtp3FiyYqHxOgTbdqQo3kGkO2eXhpsBuYL1XPmUbh1jOVpldgH1qTwa6TzIZ9EXc-gqbg1i1WVHVBBMD3r7tscdQY0bl8LhZMu5Wkg9U_kUhBE6hx6ufLWu0YF-atYhYws6bIn3pvyef85RyWfX9_zyfL-b-sl6rs8EyvOMPdng9JK6LyFogqIrNiRcRYJcLoB1IXOUB6ghQ_AD_ln5JfDdjyQyZeOkzi3lGtGORdCYppamgd411EAMgvR62kaqdgBAqaz0tjIPxSQ7wMvw7EZ2ZDhflFVpg_jRS5JhJNnYdxQIj3D9Z1hm0QoR8YkLPRUjpeyMvqNcEm-hAKaURuKce_JL7Vy764LUgF5ipm3mMUl40mQWLVCJkK4wsLMFIneDfvjlt6Xzo7xUW5koEDGfY1XbWwqezb3eHzZa6S7t9Ebw9OTLH8CBGjIqv6HrnO33ZU5C7tqnbM70fFFIbnOpQWcWDHBPFJQttX0FSxpOpPkSL-LYraS8mrAUI6EAJYpcVTEPIzuaeYpB11rVuvtAzQoFSqwnCO9FNBohcAhQVnD3ZXUrZ3SOsPncDr9YrlEeOJtxGiw_-q8-hJvZAyomAcKBWm44WAGbZHOnYPcdS38X5fp2N3gn9qrSq3deEDZb52JOhpdPUicXi-gcWwCl34anERVhT_yTcUcStsLT9C1IzLdyB1u4kzNHqFe2B8UgxvBnXh7zuqcdOZmB5A9YY5bYhiv-rU_LLbIn3GWJIvzk3as9hmqVH8ZKtc2BlNhvm-EGmkjEqMu21HnqLckjyWy1lwKEvnjzsCScH0WjF14kiOIboULrbLl_84Et68Rj5BJL7HCBBqqECdBZg0TyWCXHBLnaG2jmVnqUj-hUwcpsyxaPYhOYNtHFDZ9x9T5VKoerLCV-ENuBiOSz50YLmn3FM7mPbZgwg2PponFbrIPdxNpo8iv7DnVKBcPGCju0y4g86aP4fQ3uVedeLBlTFESDXNlECaZEAv1sr902t4xE7XnGelWiOZ6RXAsbimuRjR1nZytpNLRGO_brtT79GnWUiaFtzMe4PdRgklMM6mnvfdzSncvIffWV=w1920-h892)`,
+        // "--navBarColor": "#ffe9cb"
+      }
+    } else {
+      return {
+        "--primaryColor": "blue",
+        "--secondaryColor": "orange",
+        "--backgroundColor": "#23201d",
+        "--textColor": "white",
+        "--textColorAnti": "black",
+        "--backdrop": `url(https://lh3.googleusercontent.com/fife/AK0iWDyDKJc9zISjiKJ0wzlhh38Dly1h35VA74rWHahC5r4jLoYoEjmA3kjw7A-1UHigxO1ybZlhIWdY5d8ki95nCylitjaxlhLUVL76hj-JX75RDRoOHEQZYpHfl4PRPVCbH1l6gdze6b9lzv9MvJLN_h8GKGteyfZrOiMc9j013IZ9sbIGzLs_NnNFUav0c_ZQS3XaTbOywRxKc2eDpHfIzPd9bNhKnT7rymJGyoy1-ljd8bllEVayuXHMDdJGx0vjIGpESxMvBlk6vBldNsOAbB2fXVwr_mLRKQ3Ma8mBlKqdNwn8W1OcT-LcAzsyE8YSVZykIEH9P9buBjGT7P4ZVz9gXGiMpTou32Jv10adiOnn-uLZdC41NfuMjPbuTHI8fe7nq2n3U8CRqn5mFfmpQ8-43otano_7kmQfDwKfRsVIR99_jRljgCK8et_pdCcxhXSiinRbCtKY43Dh-g7myGwATCecTGw6NTS_-vgPIhqi_ykboT9Kp_08dUMb8Alc6tvVrMCpA3_daJAhCLujfzf5Xg7v_k8vA5zh6CN7K9kZhptuIcYv_Thm7QBWYcGoUk2mycno87Vn88kkDvJ49Ap6sfb7HBAo8YnoP6yq8iW7E3JIhdiMKolsYkhO29lKxLl1GWgsg8inAICI_rAbHP-PahQcJyOiKZwaXTSN_1_WUsorTsDn6nfQvhrr4QUxvw4oRFoP8GEbcoAdcxOMRDvMHAY15qMI04pCwoiJFOtEJFeUJ0gCpi3MsWaC_L2OyiPei8jH46-3GYjhnIxQVeJIRBryGpb5JhfNKijCTIa91ddADdIpD9JLVHCe2vg2I4_7qGMCysL4Sfef_U0VbZdqlPu-NdjDrccUvLcle4bDCGse2pphIyG8BpadAFu_2UUUvv8erGJibzPcuWPWoSU6b_zxWzpYDiN-jH5F-mYwrRMmQ581_0NSaBNW6ln2YARWD3N524qe0VLyx5E-IFrsLx36_V3vJFPGil4COJ87omzd-0ge6Crtta30xclJyS8AKmsAyXCOYGG77VX73lS4NRBMyO4BxxhfSUBfh3_e7NGgvQFD0u64bZ5-x2bGMMZ_i0qMxeK4KRk4tkVA0qruk-qG9zzdTuw8N2yQiYz3hlRTdTwOTEQtgGi8KnW0zYY1IyCykgmG93B_Qj0JBiPu8Xeh1IVlYCw_STk8lcR9oD6B25OMA3Yqv8alWbxhsIUvoFMmBzzDzifgDJQDug9SvsBb1rfwrMzwerr_4XNyfudsyHo2pEhdFNryf1PwrLAtGWtwOuxTjT3IKoBS7q2cQIYCBJb6ERiAWb5oN_iF-4uuLxnJhdDnfnGOUIFS7R-TsuurQDSPmS1SqKXrmq-qVatgCfR5x8TN4GFcUVcP5RPiE_mc8I4w7gyyKzyC_1QuZPlFTHy0lEJPzSrx1gbNgLiqZum_TJknzV6HKnpx_hl01xDO_uRwn-Inm8R7SHrRW_lp4oI3UCWmtj9O35aiIDx5__7Wshe4ro5aiPxCzyMvhKV0R1TjD86eDsGpikPnoWqYKlKYG8QVQh-vtXpAWMqUYWiDnfElShWoKP9oRkOtehVUap7Y=w1920-h892)`,
+        // "--navBarColor": "#00132b"
+      }
+    }
+  }, [theme])
+
+
+  //save stories
   useEffect(() => {
-    //save
     if (stories) {
+      console.log(`$reran`);
       saveToLocalStorage("storiesArr", stories)
     }
   }, [stories])
@@ -588,41 +690,46 @@ export default function Home() {
     const seenStories = retreiveFromLocalStorage("storiesArr") as StoryData[]
     //load
     if (seenStories) {
+      storiesSet(seenStories)
+      console.log(`$thus reran too loader`);
 
-      const seenStoriesClear = seenStories.filter(eachSeenStory => {
+      //   const seenStoriesClear = seenStories.filter(eachSeenStory => {
 
-        let foundInArr = false
-        tempbddata.forEach(eachTempStory => {
-          if (eachTempStory.storyId === eachSeenStory.storyId) {
-            foundInArr = true
-          }
-        })
+      //     let foundInArr = false
+      //     tempbddata.forEach(eachTempStory => {
+      //       if (eachTempStory.storyId === eachSeenStory.storyId) {
+      //         foundInArr = true
+      //       }
+      //     })
 
-        if (!foundInArr) {
-          return eachSeenStory
-        }
-      })
+      //     if (!foundInArr) {
+      //       return eachSeenStory
+      //     }
+      //   })
 
-      storiesSet([...tempbddata as StoryData[], ...seenStoriesClear])
-    }
-    else {
-      storiesSet(tempbddata as StoryData[])
+      //   storiesSet([...tempbddata as StoryData[], ...seenStoriesClear])
+      // }
+      // else {
+      //   storiesSet(tempbddata as StoryData[])
     }
   }, [])
 
-  return (
-    <main style={{ display: "grid", gap: "1rem" }}>
-      <p>Home Page</p>
 
-      {makingStory ? <MakeStory makingStorySet={makingStorySet} /> : (
-        <button onClick={() => {
-          makingStorySet(true)
-        }}>Add a Story</button>
-      )}
+
+
+  return (
+    <main id='homeDiv' style={{ display: "flex", flexDirection: "column", gap: "1rem", backgroundImage: themeStyles['--backdrop'], ...themeStyles }}>
+
+      <NavBar />
+      {makingStory
+        ? <MakeStory makingStorySet={makingStorySet} />
+        : (<button onClick={() => { makingStorySet(true) }}>Add a Story</button>)
+      }
 
       {stories?.map(eachStory => (
         <ViewStory key={eachStory.storyId} {...eachStory} />
       ))}
+
     </main>
   )
 }
@@ -737,7 +844,6 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
   }
 
   function checkAnswers() {
-    let amtCorrect = 0
     // console.table(`usernanswer`, userAnswers);
     // console.table(`correct`, answers);
 
@@ -945,7 +1051,6 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
           </DndContext>
 
 
-
           {!gameFinished ? (
             <button onClick={checkAnswers}>Check Answers</button>
           ) : (
@@ -1035,7 +1140,7 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
         </>
       )
       }
-    </div >
+    </div>
   )
 
 }

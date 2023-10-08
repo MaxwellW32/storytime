@@ -2,9 +2,6 @@
     background-color: aliceblue;
 }
 
-.bttnHolder {
-    opacity: 0;
-}
 
 .addMore {
     width: 100%;
@@ -68,4 +65,36 @@
     height: 70%;
     aspect-ratio: 3/4;
     margin: 0 auto;
+}
+
+
+/* view story */
+
+.titleCont {
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+.descText {
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.highlighted {
+    color: var(--secondaryColor);
+    cursor: pointer;
+}
+
+
+/* make story */
+
+.bttnHolder {
+    opacity: 0;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
 }
