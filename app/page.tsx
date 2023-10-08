@@ -112,7 +112,8 @@ const ISLINKORBREAK = new RegExp(`(https?:\/\/[^\s]+\.(?:com|net|org|io)\/[^\s]+
 const ISLINK = /(https?:\/\/[^\s]+\.(?:com|net|org|io)\/[^\s]+)/g;
 const ISYTVID = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
 
-function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudio, storyId }: StoryData) {
+function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudio, storyId, fullData }: StoryData & { fullData?: StoryData }) {
+
   const [reading, readingSet] = useState(false)
   const [globalStories, globalStoriesSet] = useAtom(globalStorieArray)
 
@@ -135,9 +136,12 @@ function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudi
   }, [])
 
 
+  const [editClicked, editClickedSet] = useState(false)
 
   return (
-    <div style={{ width: "95%", margin: "0 auto", borderRadius: ".7rem", padding: "1rem", backgroundColor: "var(--backgroundColor)" }}>
+    <div style={{ width: "95%", margin: "0 auto", borderRadius: ".7rem", padding: "1rem", backgroundColor: "var(--backgroundColor)", position: "relative" }}>
+
+      {editClicked && <MakeStory passedData={fullData} editClickedSet={editClickedSet} />}
 
       <div className={styles.titleCont}>
 
@@ -173,14 +177,14 @@ function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudi
             readingSet(false)
           }}>close</button>
 
-          <h3 style={{ textAlign: "center" }}>{title}</h3>
+          <h3 style={{ textAlign: "center", fontSize: "2rem" }}>{title}</h3>
 
           {storyBoard?.map((eachElemnt, index) => {
 
             if (eachElemnt.boardType === "text") {
               return (
-                <div key={uuidv4()} className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column" }}>
-                  <p style={{ whiteSpace: "pre-wrap", padding: "1rem", borderRadius: ".7rem" }}>{eachElemnt.storedText}</p>
+                <div key={uuidv4()} className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <p style={{ whiteSpace: "pre-wrap", padding: "1rem", borderRadius: ".7rem", maxWidth: "750px", fontSize: "var(--medium-font-size)" }}>{eachElemnt.storedText}</p>
                 </div>
               )
             } else if (eachElemnt.boardType === "image") {
@@ -214,6 +218,8 @@ function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudi
         </div>
       )}
       {/* audio */}
+      <svg style={{ fill: "var(--secondaryColor)", width: "var(--nav-icon-size)", marginLeft: "auto" }} onClick={() => { editClickedSet(true) }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z" /></svg>
+
       <div style={{ display: "none", opacity: 0, userSelect: "none" }}>
         <ReactPlayer
           loop={true}
@@ -224,24 +230,37 @@ function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudi
   )
 }
 
-function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.SetStateAction<boolean>> }) {
+function MakeStory({ makingStorySet, editClickedSet, passedData }: { makingStorySet?: React.Dispatch<React.SetStateAction<boolean>>, editClickedSet?: React.Dispatch<React.SetStateAction<boolean>>, passedData?: StoryData }) {
 
   const [, storiesSet] = useAtom(globalStorieArray)
-  const [theme, themeSet] = useAtom(globalTheme)
 
-  const [storyTitle, storyTitleSet] = useState(`Story ${uuidv4()}`)
+  const [storyTitle, storyTitleSet] = useState(``)
   const storyId = useRef(uuidv4())
 
-  const [storyRating, storyRatingSet] = useState<undefined | number>(5)
+  const [storyRating, storyRatingSet] = useState<undefined | number>()
   const [storyBgAudio, storyBgAudioSet] = useState<undefined | string>()
-  const [storyShrtDescription, storyShrtDescriptionSet] = useState<undefined | string>("nice story")
+  const [storyShrtDescription, storyShrtDescriptionSet] = useState<undefined | string>("")
 
-  const [preProcessedText, preProcessedTextSet] = useState(`1 paragraph \n\n\n 2 paragraph \n\n\n 3 paragraph \n\n\n 4 paragraph \n\n\n 5 paragraph`)
+  const [preProcessedText, preProcessedTextSet] = useState("")
   const [storyBoards, storyBoardsSet] = useState<storyBoardType[]>()
 
   const [gmShowingArr, gmShowingArrSet] = useState<Boolean[]>(() => {
     return storyBoards?.map(eachBoard => false) ?? []
   })
+
+  //load data if passed - edit
+  useEffect(() => {
+    console.log(`$passed data`, JSON.stringify(passedData));
+    if (passedData) {
+      console.log(`$seeing passed data`);
+      storyTitleSet(passedData!.title)
+      storyId.current = passedData!.storyId
+      storyRatingSet(passedData!.rating)
+      storyBgAudioSet(passedData!.backgroundAudio)
+      storyShrtDescriptionSet(passedData!.shortDescription)
+      storyBoardsSet(passedData!.storyBoard)
+    }
+  }, [])
 
   //keey gmshowingarray mapped to the storyboard
   useEffect(() => {
@@ -462,16 +481,41 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
 
     console.log(`$new`, newStoryObj);
 
-    storiesSet(prevStoriesArr => {
-      console.log(`$got in set`);
-      if (prevStoriesArr) {
-        return [...prevStoriesArr, newStoryObj]
-      } else {
-        return [newStoryObj]
-      }
-    })
+    if (passedData !== undefined) {
+      storiesSet(prevStories => {
 
-    makingStorySet(false)
+        if (prevStories) {
+          const newStories = prevStories!.map(eachStory => {
+            if (eachStory.storyId === newStoryObj.storyId) {
+              return newStoryObj
+            } else {
+              return eachStory
+            }
+          })
+
+          return newStories
+
+        } else {
+          return [newStoryObj]
+        }
+      })
+
+    } else {
+      console.log(`$got in expected else`);
+      storiesSet(prevStoriesArr => {
+        if (prevStoriesArr) {
+          return [...prevStoriesArr, newStoryObj]
+        } else {
+          return [newStoryObj]
+        }
+      })
+    }
+
+    if (passedData !== undefined) {
+      editClickedSet!(false)
+    } else {
+      makingStorySet!(false)
+    }
   }
 
   const textAreaRefs = useRef<HTMLTextAreaElement[]>([])
@@ -482,7 +526,6 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
 
   //give textarea right size
   useEffect(() => {
-    console.log(`$tarefs`, textAreaRefs.current);
     textAreaRefs.current.forEach((eachRef) => {
       if (eachRef) {
         eachRef.style.height = 'auto';
@@ -490,39 +533,46 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
       }
     })
 
-    // return () => textAreaRefs.current = []
   }, [storyBoards])
 
 
   return (
-    <div className={styles.makeStoryMainDiv} style={{}}>
-      <button style={{ margin: ".5rem .5rem 0 auto" }} onClick={() => { makingStorySet(false) }}>Close</button>
+    <div className={styles.makeStoryMainDiv}>
+      <button style={{ margin: ".5rem .5rem 0 auto" }}
+        onClick={() => {
+          if (passedData !== undefined) {
+            editClickedSet!(false)
+          } else {
+            makingStorySet!(false)
+          }
+
+        }}>Close</button>
       <h3 style={{ color: "#fff", textAlign: "center" }}>Lets make a wonderful story</h3>
 
       <div className={styles.makeStoryLabelInputCont}>
         <label htmlFor='msTitle'>Title</label>
-        <input id='msTitle' type='text' placeholder='Enter a title: ' value={storyTitle} onChange={(e) => {
+        <input id='msTitle' type='text' placeholder='Enter a title ' value={storyTitle} onChange={(e) => {
           storyTitleSet(e.target.value)
         }} />
       </div>
 
       <div className={styles.makeStoryLabelInputCont}>
         <label htmlFor='msShDescription'>Short Description</label>
-        <input id='msShDescription' type='text' placeholder='Enter a Description: ' value={storyShrtDescription} onChange={(e) => {
+        <input id='msShDescription' type='text' placeholder='Enter a Description ' value={storyShrtDescription} onChange={(e) => {
           storyShrtDescriptionSet(e.target.value)
         }} />
       </div>
 
       <div className={styles.makeStoryLabelInputCont}>
         <label htmlFor='msRating'>Rating</label>
-        <input id='msRating' type='number' placeholder='Enter a Rating /5: ' value={storyRating} onChange={(e) => {
+        <input id='msRating' type='number' placeholder='Enter a Rating /5 ' value={storyRating} onChange={(e) => {
           storyRatingSet(parseInt(e.target.value))
         }} />
       </div>
 
       <div className={styles.makeStoryLabelInputCont}>
         <label htmlFor='msAudio'>Audio</label>
-        <input id='msAudio' type='text' placeholder='Background Music?: ' value={storyBgAudio} onChange={(e) => {
+        <input id='msAudio' type='text' placeholder='Background Music? ' value={storyBgAudio} onChange={(e) => {
           storyBgAudioSet(e.target.value)
         }} />
       </div>
@@ -533,7 +583,7 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
 
         {storyBoards === undefined ? (
           <>
-            <textarea className={styles.textAreaEdit} style={{ width: "100%", }} placeholder='Enter your story - image and Youtube urls will be automaitcally loaded' value={preProcessedText}
+            <textarea className={styles.textAreaEdit} style={{ width: "100%", }} placeholder='Enter your story - seen image and Youtube urls will be automaitcally loaded' value={preProcessedText}
 
               onChange={(e) => {
                 e.target.style.height = 'auto';
@@ -730,7 +780,16 @@ export default function Home() {
     }
   }, [])
 
+  // const [eachStoryCanEditArr, eachStoryCanEditArrSet] = useState<boolean[]>(() => {
+  //   return stories?.map(each => false) ?? [false]
+  // })
 
+  // //update list to story length
+  // useEffect(() => {
+  //   if (stories) {
+  //     eachStoryCanEditArrSet(stories.map(each => false))
+  //   }
+  // }, [stories?.length])
 
 
   return (
@@ -743,8 +802,8 @@ export default function Home() {
         : (<button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => { makingStorySet(true) }}>Add a Story</button>)
       }
 
-      {stories?.map(eachStory => (
-        <ViewStory key={eachStory.storyId} {...eachStory} />
+      {stories?.map((eachStory) => (
+        <ViewStory {...eachStory} fullData={eachStory} />
       ))}
 
     </main>
@@ -1098,19 +1157,6 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
                 {choices && choices[index] && (
 
                   <>
-                    <button className='secondButton' onClick={() => {
-                      choicesSet(prevArr => {
-                        const updatedChoices = prevArr!.map((arr, i) => {
-                          if (i === index) {
-                            return [...arr, ""];
-                          }
-                          return arr;
-                        });
-
-                        return updatedChoices;
-                      })
-                    }}>Add Answer</button>
-
 
                     <div className={styles.choicesDivCont}>
 
@@ -1134,7 +1180,18 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
                       ))}
 
                     </div>
+                    <button className='secondButton' onClick={() => {
+                      choicesSet(prevArr => {
+                        const updatedChoices = prevArr!.map((arr, i) => {
+                          if (i === index) {
+                            return [...arr, ""];
+                          }
+                          return arr;
+                        });
 
+                        return updatedChoices;
+                      })
+                    }}>Add Answer</button>
                   </>
 
 
@@ -1144,7 +1201,7 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
             ))
           }
 
-          <button className='secondButton' onClick={() => {
+          <button className='secondButton' style={{ borderRadius: ".2rem" }} onClick={() => {
             questionsSet(prev => {
               if (prev) {
                 return [...prev, ""]
