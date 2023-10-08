@@ -168,10 +168,13 @@ function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudi
 
       {/* storyboard container */}
       {reading && (
-        <div className={roboto.className} style={{ display: "flex", flexDirection: "column", gap: "1rem", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", overflowY: "auto", backgroundColor: "var(--backgroundColor)" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", overflowY: "auto", backgroundColor: "var(--backgroundColor)" }}>
           <button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => {
             readingSet(false)
           }}>close</button>
+
+          <h3 style={{ textAlign: "center" }}>{title}</h3>
+
           {storyBoard?.map((eachElemnt, index) => {
 
             if (eachElemnt.boardType === "text") {
@@ -181,7 +184,6 @@ function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudi
                 </div>
               )
             } else if (eachElemnt.boardType === "image") {
-              console.log(`$eachseen`, eachElemnt);
               return (
                 <DisplayImage key={uuidv4()} passedImageData={eachElemnt} />
               )
@@ -793,16 +795,20 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
       newItemObj[`container${index}`] = []
     })
 
-    const seenNewArr: string[] = []
+    const choicesStringArray: string[] = []
 
     gameData?.choicesArr?.forEach((choiceStrArr, index) => {
       choiceStrArr.forEach((strVal) => {
-        seenNewArr.push(strVal)
+        choicesStringArray.push(strVal)
       })
     })
 
-    newItemObj["root"] = seenNewArr
-    console.log(`$items`, newItemObj);
+    for (let i = choicesStringArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [choicesStringArray[i], choicesStringArray[j]] = [choicesStringArray[j], choicesStringArray[i]];
+    }
+
+    newItemObj["root"] = choicesStringArray
 
     return { ...newItemObj }
   });
@@ -1053,7 +1059,8 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
           >
             <div style={{
               display: "flex",
-              flexDirection: "row"
+              flexDirection: "row",
+              flexWrap: "wrap"
             }}>
               {questions!.map((eachQuestion, index) => {
                 return (
