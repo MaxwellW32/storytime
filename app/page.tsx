@@ -250,9 +250,7 @@ function MakeStory({ makingStorySet, editClickedSet, passedData }: { makingStory
 
   //load data if passed - edit
   useEffect(() => {
-    console.log(`$passed data`, JSON.stringify(passedData));
     if (passedData) {
-      console.log(`$seeing passed data`);
       storyTitleSet(passedData!.title)
       storyId.current = passedData!.storyId
       storyRatingSet(passedData!.rating)
