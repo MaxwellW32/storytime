@@ -6,16 +6,10 @@ import styles from "./style.module.css"
 import { atom, useAtom } from 'jotai'
 import ReactPlayer from "react-player/youtube";
 import updateBoardObjWithBoardDataGlobal from './Updater';
-import tempbddata from "../tempdbdata1.json"
-import { Roboto } from 'next/font/google'
+// import tempbddata from "../tempdbdata1.json"
 import { saveToLocalStorage, retreiveFromLocalStorage } from './utility/savestorage';
 import { globalTheme, globalStorieArray } from '@/app/utility/globalState'
-
-const roboto = Roboto({
-  subsets: ['latin'],
-  weight: ['400', '700']
-})
-
+ 
 import {
   DndContext,
   DragOverlay,
@@ -54,8 +48,8 @@ interface videoType {
 }
 
 export type gameDataType = matchupType | pronounceType | wordsToMeaningType | crosswordType
-
 export type gameSelectionTypes = "matchup" | "crossword" | "pronounce" | "wordmeaning"
+
 export interface gameObjType {
   boardObjId: string,
   gameSelection: gameSelectionTypes, //tell different types of gamemodes
@@ -800,8 +794,8 @@ export default function Home() {
         : (<button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => { makingStorySet(true) }}>Add a Story</button>)
       }
 
-      {stories?.map((eachStory) => (
-        <ViewStory {...eachStory} fullData={eachStory} />
+      {stories?.map((eachStory: StoryData) => (
+        <ViewStory key={uuidv4()} {...eachStory} fullData={eachStory} />
       ))}
 
     </main>
