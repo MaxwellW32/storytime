@@ -96,7 +96,7 @@ li {
   transition: all 400ms;
   white-space: nowrap;
   background-color: var(--primaryColor);
-  color: rgb(var(--textColorAnti));
+  color: var(--textColorAnti);
   font-size: var(--small-font-size);
   margin: .5rem;
 }
@@ -109,7 +109,7 @@ button {
   transition: all 400ms;
   white-space: nowrap;
   background-color: var(--secondaryColor);
-  color: rgb(var(--textColorAnti));
+  color: var(--textColorAnti);
 }
 
 button:hover {

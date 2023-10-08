@@ -168,8 +168,8 @@ function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudi
 
       {/* storyboard container */}
       {reading && (
-        <div className={roboto.className} style={{ display: "flex", flexDirection: "column", gap: "1rem", backgroundColor: "#aaa", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", overflowY: "auto" }}>
-          <button onClick={() => {
+        <div className={roboto.className} style={{ display: "flex", flexDirection: "column", gap: "1rem", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", overflowY: "auto", backgroundColor: "var(--backgroundColor)" }}>
+          <button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => {
             readingSet(false)
           }}>close</button>
           {storyBoard?.map((eachElemnt, index) => {
@@ -177,7 +177,7 @@ function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudi
             if (eachElemnt.boardType === "text") {
               return (
                 <div key={uuidv4()} className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column" }}>
-                  <p style={{ backgroundColor: "wheat", whiteSpace: "pre-wrap" }}>{eachElemnt.storedText}</p>
+                  <p style={{ whiteSpace: "pre-wrap", padding: "1rem", borderRadius: ".7rem" }}>{eachElemnt.storedText}</p>
                 </div>
               )
             } else if (eachElemnt.boardType === "image") {
@@ -194,7 +194,7 @@ function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudi
 
             } else if (eachElemnt.boardType === "gamemode") {
               return (
-                <div key={uuidv4()} className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", backgroundColor: "wheat" }} >
+                <div key={uuidv4()} className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", backgroundColor: "var(--backgroundColor)" }} >
 
                   {eachElemnt.gameSelection === "matchup" ? (
                     <MatchUpGM {...eachElemnt} storyId={storyId} />
@@ -237,14 +237,22 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
   const [preProcessedText, preProcessedTextSet] = useState(`1 paragraph \n\n\n 2 paragraph \n\n\n 3 paragraph \n\n\n 4 paragraph \n\n\n 5 paragraph`)
   const [storyBoards, storyBoardsSet] = useState<storyBoardType[]>()
 
+  const [gmShowingArr, gmShowingArrSet] = useState<Boolean[]>(() => {
+    return storyBoards?.map(eachBoard => false) ?? []
+  })
+
+  //keey gmshowingarray mapped to the storyboard
+  useEffect(() => {
+    if (storyBoards) {
+      gmShowingArrSet(storyBoards.map(each => false))
+    }
+  }, [storyBoards?.length])
+
 
   function convertTextToStoryBoards(passedText: string, indexToAdd?: number) {
     //sets up my original array from text only blank
 
     if (indexToAdd !== undefined) {
-      console.log(`$hi lets add to the array`);
-      console.clear()
-
       storyBoardsSet(prevStoryBoardArr => {
 
         const ObjsArray = makeLinksAndParagraphsArray(passedText).map(eachStr => {
@@ -483,12 +491,10 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
     // return () => textAreaRefs.current = []
   }, [storyBoards])
 
-  const [gameModeButtonClicked, gameModeButtonClickedSet] = useState(false)
-
 
   return (
     <div className={styles.makeStoryMainDiv} style={{}}>
-      <button style={{ marginLeft: "auto" }} onClick={() => { makingStorySet(false) }}>Close</button>
+      <button style={{ margin: ".5rem .5rem 0 auto" }} onClick={() => { makingStorySet(false) }}>Close</button>
       <h3 style={{ color: "#fff", textAlign: "center" }}>Lets make a wonderful story</h3>
 
       <div className={styles.makeStoryLabelInputCont}>
@@ -542,7 +548,7 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
               {storyBoards.map((eachElemnt, index) => {
 
                 return (
-                  <div key={uuidv4()} className={styles.addMore}>
+                  <div key={uuidv4()} tabIndex={0} className={styles.addMore}>
 
                     <svg className={styles.deleteBoardBttn} onClick={() => {
                       deleteBoardAtIndex(index)
@@ -557,7 +563,12 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
                           el.style.height = el.scrollHeight + 'px';
                         }}
                         onBlur={(e) => {
-                          convertTextToStoryBoards(e.target.value, index)
+                          const seenTextObj = storyBoards[index] as textType
+
+                          if (e.target.value !== seenTextObj.storedText) {
+                            console.log(`$seen as not equal`);
+                            convertTextToStoryBoards(e.target.value, index)
+                          }
                         }} />
 
                     ) : eachElemnt.boardType === "image" ? (
@@ -582,7 +593,7 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
                     ) : null}
 
 
-                    <div className={styles.bttnHolder} style={{}}>
+                    <div className={styles.bttnHolder}>
                       <button onClick={() => {
                         addSpecificStoryToBoard(index, "newstring")
                       }}>add new text</button>
@@ -594,32 +605,37 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
                       <button onClick={() => {
                         addSpecificStoryToBoard(index, "newvideo")
                       }}>add new youtube</button>
-                      <div style={{}}>
 
+                      <div>
                         <button onClick={() => {
-                          gameModeButtonClickedSet(prev => !prev)
+                          console.log(`$seen mouse click on AddMore`);
+                          gmShowingArrSet(prevArr => {
+                            prevArr[index] = true
+                            return [...prevArr]
+                          })
                         }}>add new gamemode</button>
 
-                        {gameModeButtonClicked && (
-                          <div style={{ display: "flex", flexWrap: "wrap" }}>
+                        {gmShowingArr[index] && (
+                          <div className={styles.gmChoiceCont} onClick={() => {
+                            gmShowingArrSet(prevArr => {
+                              prevArr[index] = false
+                              return [...prevArr]
+                            })
+                          }}>
                             <button className='secondButton' onClick={() => {
                               addSpecificStoryToBoard(index, "newgamemode", "matchup")
-                              gameModeButtonClickedSet(false)
                             }}>Matchup</button>
 
                             <button className='secondButton' onClick={() => {
                               addSpecificStoryToBoard(index, "newgamemode", "crossword")
-                              gameModeButtonClickedSet(false)
                             }}>Crossword</button>
 
                             <button className='secondButton' onClick={() => {
                               addSpecificStoryToBoard(index, "newgamemode", "pronounce")
-                              gameModeButtonClickedSet(false)
                             }}>Pronounciation</button>
 
                             <button className='secondButton' onClick={() => {
                               addSpecificStoryToBoard(index, "newgamemode", "wordmeaning")
-                              gameModeButtonClickedSet(false)
                             }}>Words to Meanings</button>
                           </div>
                         )}
@@ -642,7 +658,7 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
 
 export default function Home() {
   const [stories, storiesSet] = useAtom(globalStorieArray)
-  const [makingStory, makingStorySet] = useState(true)
+  const [makingStory, makingStorySet] = useState(false)
 
   const [theme, themeSet] = useAtom(globalTheme)
 
@@ -654,8 +670,8 @@ export default function Home() {
         "--primaryColor": "#ffb200",
         "--secondaryColor": "purple",
         "--backgroundColor": "#ffe9cb",
-        "--textColor": "0 0 0",
-        "--textColorAnti": "255 255 255",
+        "--textColor": "#000",
+        "--textColorAnti": "#fff",
         "--backdrop": `url(https://lh3.googleusercontent.com/fife/AK0iWDzq8om75zyiW7-rA4lFrq0ozmEAQ8zbPT12OE7Jx3hvuuTvcwFENpngXQSF1UpbTd4xsMsUc_INKL5LJF3Hnf-HeMbK57uFsdKLrMnJcWIbM3mMCeex8X0gS90NzJlblmuvLrN4G-EShyYOegMx9QcaAeQz18ton2JFmUprKgJUjJ-Hsm7fTND7eU-XmxUBh9crLBbjBTWQI4YS1Z-9euS_X2yJTf_DaOGA_zQ75Q5SqpF5COQYBrqR_q_6rI5IIWG3jwbcmVKFv7fobysTtcpuHCKIigYk_esdcxle34BOjs1fmz5c-BFeL_i9dUt3on_y8dU412uShQSWBcDyR_FcABMwbks1SJgxfr-1_vCEzO6UeYU-0LL7ZoopuewjHT7QuBRxskaZ2hcx54EkResnNvvAht-MT3UICnEOIeWH3GeRLqMQoUutpZ8308HwIYCjjgNUNm5lHtQkMdWhJX6BWLPx9VYNJgKlTmAo-Mbo16zClG-6XN8EPtnlnGtp3FiyYqHxOgTbdqQo3kGkO2eXhpsBuYL1XPmUbh1jOVpldgH1qTwa6TzIZ9EXc-gqbg1i1WVHVBBMD3r7tscdQY0bl8LhZMu5Wkg9U_kUhBE6hx6ufLWu0YF-atYhYws6bIn3pvyef85RyWfX9_zyfL-b-sl6rs8EyvOMPdng9JK6LyFogqIrNiRcRYJcLoB1IXOUB6ghQ_AD_ln5JfDdjyQyZeOkzi3lGtGORdCYppamgd411EAMgvR62kaqdgBAqaz0tjIPxSQ7wMvw7EZ2ZDhflFVpg_jRS5JhJNnYdxQIj3D9Z1hm0QoR8YkLPRUjpeyMvqNcEm-hAKaURuKce_JL7Vy764LUgF5ipm3mMUl40mQWLVCJkK4wsLMFIneDfvjlt6Xzo7xUW5koEDGfY1XbWwqezb3eHzZa6S7t9Ebw9OTLH8CBGjIqv6HrnO33ZU5C7tqnbM70fFFIbnOpQWcWDHBPFJQttX0FSxpOpPkSL-LYraS8mrAUI6EAJYpcVTEPIzuaeYpB11rVuvtAzQoFSqwnCO9FNBohcAhQVnD3ZXUrZ3SOsPncDr9YrlEeOJtxGiw_-q8-hJvZAyomAcKBWm44WAGbZHOnYPcdS38X5fp2N3gn9qrSq3deEDZb52JOhpdPUicXi-gcWwCl34anERVhT_yTcUcStsLT9C1IzLdyB1u4kzNHqFe2B8UgxvBnXh7zuqcdOZmB5A9YY5bYhiv-rU_LLbIn3GWJIvzk3as9hmqVH8ZKtc2BlNhvm-EGmkjEqMu21HnqLckjyWy1lwKEvnjzsCScH0WjF14kiOIboULrbLl_84Et68Rj5BJL7HCBBqqECdBZg0TyWCXHBLnaG2jmVnqUj-hUwcpsyxaPYhOYNtHFDZ9x9T5VKoerLCV-ENuBiOSz50YLmn3FM7mPbZgwg2PponFbrIPdxNpo8iv7DnVKBcPGCju0y4g86aP4fQ3uVedeLBlTFESDXNlECaZEAv1sr902t4xE7XnGelWiOZ6RXAsbimuRjR1nZytpNLRGO_brtT79GnWUiaFtzMe4PdRgklMM6mnvfdzSncvIffWV=w1920-h892)`,
         "--editStoryBackdrop": `url(https://lh3.googleusercontent.com/fife/AK0iWDzf9FJk7qMfdMz9X6ffg1vpN7p-XYt7Kw5entkUvacvjZaB-RCstfddrJXzgBMuhAMufsIP4uwrmtAVPhx7U1Nub5rgXrrC-nnFJErlCT71EK5sW_eah8RTHTAhNIhZSpk0IGmAssYl4GsVbddYizLGPWOfORThkMXex-5-YhFgXVQozIzJNMD57GdjpXiJMTKsFcBqNFV3YTwfvfArdXWZkUBtSwOPFtIfMR-ud_EGQHIuhrp13TnSBK_tAz_dg2sSqqrYR6p20eK6RJDT8JO8jXI4PrMY4iV9pKIRnMnS-SdoKnYYCmTDRQEv4A0oePLaNM9wuoFK5pp4fK-RNKWXoWcx-9uoU23heyJbdfwkspg1Cjqj2wI2cpMLls75GS4JV3x2k_n8qnJLtfDjUuBtK6uhYPH6qvzsepqaf3FVNjKaYzqDHo1Wh89qzcVVvffH8wF19QHImgsfBDyUzsXFppAYaQYnhl4MQAx4LRSKZgzdDlDskozbqu4weS54_Abi4EtTjh8PNnqSQ-7I0PpG47qkgLx0kFDusYGu3AQkNFNc6mT1Ugq_B_uZTTugPCF2hh5NGGPpIYBJ8wNkQ_0XS1mQXPJNk_ruEYIy5FpiI_JvdlIzIrHlKdiuPMEgI1QKadp2o6Bz_mm3syaYgIraQxukLNUvT16VspGCPNWo5WKizeL4hkiSAA4p9GxqzwOuGxUiVQVswMVByGeA_aA4DmpKwLh8zhdNJ_roxqvLMkfAMxcy-0EQkGjTQmPTWlsvwU_UDchqt4-303RaaPh49RJRqcptIpINhlVGJbFiXoROzZQAsl8sfq5RNlmhaez7T8Cv58fkEVV8SaXddt5DWqQq08BGjpGuSY_IMGbqGS0MZ5Hy3j40mIp4yVOKKVhP2MKXNtryTFaog40hM9CtthjAcCHKKlt94YwxwVZHjeUpyhT4rg0uOzW7fVqevlPld881fMYAzEMYpVGWExzD-MAkYgT6oYbSkk61wstNlEFRMrmzrdbGCMYy38zLBX-R1QF2eSE7wDp4lUS2u_U0gp-yS37gQZCIi_1LOSADUMdJ2gb5qQFiPqkGEHpFwrahb0fmZccDjVnX8KYrQdJ_L_ZOKHps3wMJnQ0J8NJ-87sPzZQEofDNdrYq8s17n0JHmPBuRVKBxwy-pK1MiFhxlyg2S0g5ZUqNDuX7--Jr38kRe61acg_fR_BH8WNaLv2DOInz6p9F5PFJchshPwDsIQ8Uz83-fvYt3SP_QJlNnC6z5guFR5jnYOeg-rGjc1NHi8rdoVb9GFlpAGMkNYl0hXL6wHdnOG6EPQGgrnsR_ZDAePPJUU2crPDXohOh0eZwV7lEXhDMeih8EWMksxRZSePvLX6k1megnB6FT6pJLgdqt0qZXZV99gBWIe5CUNesjQvtJ6GsFfgLmZye72fXZ2yj0mQxk1TYUdlLmvTlJefobspEom2gTSjqaMh12ZaoDHEc4SsOn5qe2dZHR4IKAr_ZG9Znpjiye02vdI03Hea2hmPX5fORYYUSsZUmrF4GKbqaZuWYWxD7MWcJsZ9j8-YhTzOW68FComN_csxidAHBSTYEAv-U=w1920-h892)`,
         "--seeThroughBg": "rgba(0,0,0, 0.553)"
@@ -666,8 +682,8 @@ export default function Home() {
         "--primaryColor": "#7777ff",
         "--secondaryColor": "orange",
         "--backgroundColor": "#23201d",
-        "--textColor": "255 255 255",
-        "--textColorAnti": "0 0 0",
+        "--textColor": "#fff",
+        "--textColorAnti": "#000",
         "--backdrop": `url(https://lh3.googleusercontent.com/fife/AK0iWDyDKJc9zISjiKJ0wzlhh38Dly1h35VA74rWHahC5r4jLoYoEjmA3kjw7A-1UHigxO1ybZlhIWdY5d8ki95nCylitjaxlhLUVL76hj-JX75RDRoOHEQZYpHfl4PRPVCbH1l6gdze6b9lzv9MvJLN_h8GKGteyfZrOiMc9j013IZ9sbIGzLs_NnNFUav0c_ZQS3XaTbOywRxKc2eDpHfIzPd9bNhKnT7rymJGyoy1-ljd8bllEVayuXHMDdJGx0vjIGpESxMvBlk6vBldNsOAbB2fXVwr_mLRKQ3Ma8mBlKqdNwn8W1OcT-LcAzsyE8YSVZykIEH9P9buBjGT7P4ZVz9gXGiMpTou32Jv10adiOnn-uLZdC41NfuMjPbuTHI8fe7nq2n3U8CRqn5mFfmpQ8-43otano_7kmQfDwKfRsVIR99_jRljgCK8et_pdCcxhXSiinRbCtKY43Dh-g7myGwATCecTGw6NTS_-vgPIhqi_ykboT9Kp_08dUMb8Alc6tvVrMCpA3_daJAhCLujfzf5Xg7v_k8vA5zh6CN7K9kZhptuIcYv_Thm7QBWYcGoUk2mycno87Vn88kkDvJ49Ap6sfb7HBAo8YnoP6yq8iW7E3JIhdiMKolsYkhO29lKxLl1GWgsg8inAICI_rAbHP-PahQcJyOiKZwaXTSN_1_WUsorTsDn6nfQvhrr4QUxvw4oRFoP8GEbcoAdcxOMRDvMHAY15qMI04pCwoiJFOtEJFeUJ0gCpi3MsWaC_L2OyiPei8jH46-3GYjhnIxQVeJIRBryGpb5JhfNKijCTIa91ddADdIpD9JLVHCe2vg2I4_7qGMCysL4Sfef_U0VbZdqlPu-NdjDrccUvLcle4bDCGse2pphIyG8BpadAFu_2UUUvv8erGJibzPcuWPWoSU6b_zxWzpYDiN-jH5F-mYwrRMmQ581_0NSaBNW6ln2YARWD3N524qe0VLyx5E-IFrsLx36_V3vJFPGil4COJ87omzd-0ge6Crtta30xclJyS8AKmsAyXCOYGG77VX73lS4NRBMyO4BxxhfSUBfh3_e7NGgvQFD0u64bZ5-x2bGMMZ_i0qMxeK4KRk4tkVA0qruk-qG9zzdTuw8N2yQiYz3hlRTdTwOTEQtgGi8KnW0zYY1IyCykgmG93B_Qj0JBiPu8Xeh1IVlYCw_STk8lcR9oD6B25OMA3Yqv8alWbxhsIUvoFMmBzzDzifgDJQDug9SvsBb1rfwrMzwerr_4XNyfudsyHo2pEhdFNryf1PwrLAtGWtwOuxTjT3IKoBS7q2cQIYCBJb6ERiAWb5oN_iF-4uuLxnJhdDnfnGOUIFS7R-TsuurQDSPmS1SqKXrmq-qVatgCfR5x8TN4GFcUVcP5RPiE_mc8I4w7gyyKzyC_1QuZPlFTHy0lEJPzSrx1gbNgLiqZum_TJknzV6HKnpx_hl01xDO_uRwn-Inm8R7SHrRW_lp4oI3UCWmtj9O35aiIDx5__7Wshe4ro5aiPxCzyMvhKV0R1TjD86eDsGpikPnoWqYKlKYG8QVQh-vtXpAWMqUYWiDnfElShWoKP9oRkOtehVUap7Y=w1920-h892)`,
         "--editStoryBackdrop": "url(https://lh3.googleusercontent.com/fife/AK0iWDyM9fOEkroiRFrQCnaITgrBP_iMVyqxvgb-XdahBL7CXwO8FXuH4ZM4-Xv0dgOIWrKocI7e6qZlQdF4AwhuzZ5AQTrIECKUyuCgz1xFQQBlW0Md3HCmQF2pODKF1xQdG6puwkzi_GDhD6FgLlFRVU8AYwxKBaYqBTcCu-Vw4QFmBrohkvaLRRouH3EtNnxTukVpNotWYbKOy2hBHnWtlyr25x-nNNw8hROw1p8kpiQkAyn6bIXDnyhgreWHLb5eSnxA5CHC5vTr3v3p6cDagpRoHJP-sH8UDeBJ_9-Fg07PmzitBZ3xbO9rSaJ0cRe-VHIAazdA9FLtVoGfMJJIMuCNEfkkXhxAEEEOxIIsC_cfE7fnQnElpIP4tutitGUq7i_T1zImzidvRA0yxbED34l4rjuQwoGSabM5sZvmRvqlZUILRe_aOF-YD5fIVEcuCBavcoPXyLiGNIeYboLkg5c4IFarCj4rkEwCJZTMcPdWRHZpXGSO2czgFwECIjzkp3Ea9pPFNOjfMTaAcH5GO6cQbDCcE4YQhaR6iKXL8IizqdV8xx0vU_bv-r8zv25ePzk6toUYLwcBJqmkN5FiUTLszGMU8YGuxxq_HKyPBYaokSXlLb4OnBqgu8gJIf4T7Djhdh0GxJxeaKMFCKqwmkIsAlDw1rJOJIKNzV74nq1zk-t8Kb3UYU33RPntnKMcBgEl1kgZEbzjhr6lxXr8cuSzZiWxuM-IbN2oyaNOUBv2Wd3WgnNOlQR7i2_OG6gPFY30RdZsFL6l4q03B1Oxt8KK9f3km_QK019sCdbESToVtXldNApyoLp_kUnwZO9SkSa4YQipplPyWmB9jQjQPylUsTx0YCzVd9w1ATdZoZMiB40-cDaqgqqqGWmBHEr9etPE16EmUu83h_Z00V6Uj1_11OC1LN_3rUw0DGESyUSAY83fwYqx3pWBCAUesDlmJfn1QbIBQ7myLVD57bb-gV_SipbVgh5mfjr0c3_gU-a0LAJytQIVAjOIEe5s5mRkZ_6iu2R-Dl2nORmhFxULm_pmsde9bhPj8WDoXZvfNvlIfn28by-lYcusl6goA8SZrbUxh44Z12hTcyFlB0wsKSctkRTIk_0euGHMvaAc-U093TAdwvhSwqyTTE-Wb4KyYODQkEjFmakscKrp24Z8VWKO3lHHcS2dhzSWK5CV2GXKypzxcDKu6omYjPjZqBpSI2lK_xGRIKKYdrbbkTNLQ-WdJS4nqotA1xE6o9uCXfK9MPDxwgjK8WIntbkjedMmikL9MPfhwNkr2g6WGBjiZ6OK20IZZuvNnjYTXu60eM0OAN8mkFDTUzF8YXWThbI7RKkHkmbrLp3CHReb6odwid9F_-T5oIxg5WCQ-pDE41XLPkbWD0dvQ9hRqTmrRS0eAtjKhlssDiV2hqFSNXowLYT-uwze4JzMmiN8PYnGcFtSjjyltdJ4uGggZEaJwp3VeDfgoqJFlZhQ8RRivIoUWO4qsgzMp3Fmr9FXsMM7ILrJj_QQFAixjFZTXKQVOogbLZe9r0pCAKhvdAqd8rMsIdZMWO4zLfcIVVXXJh04PPzj08bRCDIEyeRV=w1131-h892)",
         "--seeThroughBg": "rgba(255,255,255, 0.1)"
@@ -722,7 +738,7 @@ export default function Home() {
 
       {makingStory
         ? <MakeStory makingStorySet={makingStorySet} />
-        : (<button onClick={() => { makingStorySet(true) }}>Add a Story</button>)
+        : (<button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => { makingStorySet(true) }}>Add a Story</button>)
       }
 
       {stories?.map(eachStory => (
@@ -1051,9 +1067,9 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
 
 
           {!gameFinished ? (
-            <button onClick={checkAnswers}>Check Answers</button>
+            <button className='secondButton' onClick={checkAnswers}>Check Answers</button>
           ) : (
-            <button onClick={refreshGame}>Game Finished - refresh?</button>
+            <button className='secondButton' onClick={refreshGame}>Game Finished - refresh?</button>
           )}
         </>
       ) : (
@@ -1061,7 +1077,7 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
           {
             questions?.map((temp, index) => (
 
-              <div key={uuidv4()}>
+              <div className={styles.questionCont} key={uuidv4()}>
                 <label>Question {index + 1}</label>
                 <input style={{ width: "100%" }} type='text' placeholder={`Enter Question ${index + 1}`} defaultValue={questions ? questions[index] : ""} onBlur={(e) => {
                   questionsSet((prevQuestions) => {
@@ -1072,45 +1088,51 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
                   })
                 }} />
 
-                <div>
-                  {choices && choices[index] ? (
-                    choices[index].map((choice, smallerIndex) => (
-                      <input key={uuidv4()} type='text' placeholder={`Q${index + 1} - Answer ${smallerIndex + 1}`} defaultValue={choices && choices[index] && choices[index][smallerIndex] ? choices[index][smallerIndex] : ""}
-                        onBlur={(e) => {
-                          choicesSet(prevChoicesArr => {
-                            const updatedChoices = prevChoicesArr ?? [];
+                {choices && choices[index] && (
 
-                            if (!updatedChoices[index]) {
-                              updatedChoices[index] = [];
-                            }
-                            if (!updatedChoices[index][smallerIndex]) {
-                              updatedChoices[index][smallerIndex] = "";
-                            }
-                            updatedChoices[index][smallerIndex] = e.target.value;
-                            return [...updatedChoices];
-                          })
-                        }} />
+                  <>
+                    <button className='secondButton' onClick={() => {
+                      choicesSet(prevArr => {
+                        const updatedChoices = prevArr!.map((arr, i) => {
+                          if (i === index) {
+                            return [...arr, ""];
+                          }
+                          return arr;
+                        });
 
-                    ))
-                  ) :
-                    null
-                  }
-                </div>
-
-                <button className='secondButton' onClick={() => {
-                  choicesSet(prevArr => {
-                    const updatedChoices = prevArr!.map((arr, i) => {
-                      if (i === index) {
-                        return [...arr, ""];
-                      }
-                      return arr;
-                    });
-
-                    return updatedChoices;
-                  })
-                }}>Add Answer</button>
+                        return updatedChoices;
+                      })
+                    }}>Add Answer</button>
 
 
+                    <div className={styles.choicesDivCont}>
+
+                      {choices[index].map((choice, smallerIndex) => (
+                        <input key={uuidv4()} type='text' placeholder={`Answer ${smallerIndex + 1}`} defaultValue={choices && choices[index] && choices[index][smallerIndex] ? choices[index][smallerIndex] : ""}
+                          onBlur={(e) => {
+                            choicesSet(prevChoicesArr => {
+                              const updatedChoices = prevChoicesArr ?? [];
+
+                              if (!updatedChoices[index]) {
+                                updatedChoices[index] = [];
+                              }
+                              if (!updatedChoices[index][smallerIndex]) {
+                                updatedChoices[index][smallerIndex] = "";
+                              }
+                              updatedChoices[index][smallerIndex] = e.target.value;
+                              return [...updatedChoices];
+                            })
+                          }} />
+
+                      ))}
+
+                    </div>
+
+                  </>
+
+
+
+                )}
               </div>
             ))
           }
@@ -1135,8 +1157,7 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
 
 
           }}>Add Question</button>
-          <br />
-          {handleStoryBoard && <button onClick={submitNewGameModeObj}>Save</button>}
+          {handleStoryBoard && <button style={{ margin: "0 auto" }} onClick={submitNewGameModeObj}>Save GameMode</button>}
         </>
       )
       }
@@ -1148,7 +1169,7 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
 function CrosswordGM() {
   return (
     <div>
-      crossword
+      crossword - coming soon
     </div>
   )
 }
@@ -1156,7 +1177,7 @@ function CrosswordGM() {
 function WordsToMeaningGM() {
   return (
     <div>
-      WordsToMeaning
+      WordsToMeaning - coming soon
     </div>
   )
 }
@@ -1164,7 +1185,7 @@ function WordsToMeaningGM() {
 function PronounciationGM() {
   return (
     <div>
-      Pronounciation
+      Pronounciation - coming soon
     </div>
   )
 }
@@ -1178,13 +1199,17 @@ function DisplayImage({ passedImageData, editing = false, handleStoryBoard }: { 
     <>
 
       {editing ? (
-        <div style={{ color: "rgb(var(--textColor))" }}>
+        <div style={{ color: "var(--textColor)", backgroundColor: "var(--backgroundColor)", padding: "1rem", display: "grid", gap: "1rem" }}>
           <p>Add An Image</p>
-          <input placeholder='Enter an Image url' type='text' value={imageObj.imageUrl} onChange={(e) => {
+          <input style={{ width: '100%', color: "var(--textColor)", borderBottom: "2px solid var(--textColor)", backgroundColor: "var(--backgroundColor)" }} placeholder='Enter an Image url' type='text' value={imageObj.imageUrl} onChange={(e) => {
             imageObjSet(prevVideoObj => {
               prevVideoObj.imageUrl = e.target.value
               return { ...prevVideoObj }
             })
+          }} onBlur={() => {
+            if (handleStoryBoard) {
+              handleStoryBoard("update", imageObj.boardObjId, imageObj)
+            }
           }} />
 
           {imageObj.imageUrl !== undefined && (
@@ -1194,11 +1219,6 @@ function DisplayImage({ passedImageData, editing = false, handleStoryBoard }: { 
             </div>
           )}
 
-          <button className='secondButton' onClick={() => {
-            if (handleStoryBoard) {
-              handleStoryBoard("update", imageObj.boardObjId, imageObj)
-            }
-          }}>Save Changes</button>
         </div>
       ) : (
         <div className={styles.imageCont}>
@@ -1217,31 +1237,30 @@ function DisplayImage({ passedImageData, editing = false, handleStoryBoard }: { 
 function DisplayVideo({ passedVideoData, editing = false, handleStoryBoard }: { passedVideoData: videoType, editing?: boolean, handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void }) {
   const [videoObj, videoObjSet] = useState<videoType>({ ...passedVideoData })
 
-
   return (
     <div className={styles.videoCont}>
 
       {editing ? (
         <>
-          <p>Add some text</p>
-          <textarea value={videoObj.videoUrl} onChange={(e) => {
+          <p>Add A Video</p>
+          <input style={{ backgroundColor: "var(--backgroundColor)", color: "var(--textColor)", borderBottom: "2px solid var(--textColor)" }} type='text' placeholder='Enter a Youtube Url' value={videoObj.videoUrl} onChange={(e) => {
             videoObjSet(prevVideoObj => {
               prevVideoObj.videoUrl = e.target.value
               return { ...prevVideoObj }
             })
-          }} />
-
-          <ReactPlayer
-            loop={false}
-            playing={false}
-            url={videoObj.videoUrl}
-          />
-
-          <button onClick={() => {
+          }} onBlur={() => {
             if (handleStoryBoard) {
               handleStoryBoard("update", videoObj.boardObjId, videoObj)
             }
-          }}>Save Changes</button>
+          }} />
+
+          <div style={{ overflow: "hidden", maxWidth: "90dvw" }}>
+            <ReactPlayer
+              loop={false}
+              playing={false}
+              url={videoObj.videoUrl}
+            />
+          </div>
         </>
       ) : (
         <div style={{ overflow: "hidden", maxWidth: "100dvw" }}>

@@ -37,7 +37,7 @@ export default function Container(props: any) {
                 }}>
                 {questionAsked && <p>{questionAsked}</p>}
                 {items.map((itemText: any) => (
-                    <SortableItem key={uuidv4()} id={itemText} itemText={itemText} arrPos={arrPos} />
+                    <SortableItem key={itemText} id={itemText} itemText={itemText} arrPos={arrPos} />
                 ))}
             </div>
         </SortableContext>
