@@ -69,7 +69,6 @@
 
 
 /* view story */
-
 .titleCont {
     display: flex;
     align-items: flex-start;
@@ -91,10 +90,34 @@
 
 
 /* make story */
+.makeStoryMainDiv {
+    overflow-y: auto;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    /* background-image: url(../public/makestorybackground.png); */
+    background-color: rgb(123, 123, 123);
+    background-size: cover;
+    background-position: center;
+    color: var(--textColor);
+}
 
 .bttnHolder {
     opacity: 0;
     display: flex;
     gap: 1rem;
     align-items: flex-start;
+}
+
+@media screen and (max-width: 500px) {
+
+    .makeStoryMainDiv {
+        background-image: url(../public/makestorybackgroundphone.png);
+    }
 }

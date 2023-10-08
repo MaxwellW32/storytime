@@ -1,5 +1,7 @@
 import { atom, useAtom } from 'jotai'
-import { globalTheme, retreiveFromLocalStorage, saveToLocalStorage } from '../../page'
+import { globalTheme } from '../../page'
+import { saveToLocalStorage, retreiveFromLocalStorage } from '@/app/utility/savestorage'
+
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import styles from "./style.module.css"
 import Link from 'next/link'

@@ -1,6 +1,6 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import saveDataToFile from "./components/TempDb"
+import saveDataToFile from "./utility/TempDb"
 
 export const metadata: Metadata = {
   title: 'story Time',

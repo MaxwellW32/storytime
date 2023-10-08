@@ -8,6 +8,7 @@ import ReactPlayer from "react-player/youtube";
 import updateBoardObjWithBoardDataGlobal from './Updater';
 import tempbddata from "../tempdbdata1.json"
 import { Roboto } from 'next/font/google'
+import { saveToLocalStorage, retreiveFromLocalStorage } from './utility/savestorage';
 
 const roboto = Roboto({
   subsets: ['latin'],
@@ -31,7 +32,7 @@ import { request } from 'http';
 import NavBar from './components/navbar/NavBar';
 
 const globalStorieArray = atom<StoryData[] | undefined>(undefined)
-export const globalTheme = atom<boolean>(true)
+export const globalTheme = atom<boolean>(false)
 
 //this is the layout for the objects of each of my games that holds everything
 
@@ -99,24 +100,6 @@ interface crosswordType {
 
 }
 
-
-
-
-export function saveToLocalStorage(keyName: any, item: any) {
-  // localStorage.removeItem(keyName);
-  localStorage.setItem(keyName, JSON.stringify(item));
-}
-
-export function retreiveFromLocalStorage(keyName: string) {
-  const keyItem = localStorage.getItem(keyName);
-
-  if (keyItem) {
-    const keyItemParsed = JSON.parse(keyItem);
-    return keyItemParsed
-  } else {
-    return null
-  }
-}
 
 function makeLinksAndParagraphsArray(text: string) {
   return text.split(ISLINKORBREAK).map(item => item.trim()).filter(Boolean);
@@ -497,7 +480,7 @@ function MakeStory({ makingStorySet }: { makingStorySet: React.Dispatch<React.Se
   const [gameModeButtonClicked, gameModeButtonClickedSet] = useState(false)
 
   return (
-    <div style={{ overflowY: "auto", position: "fixed", top: 0, left: 0, zIndex: 1, height: "100dvh", width: "100%", backgroundColor: "blue", display: "flex", flexDirection: "column", gap: "2rem" }}>
+    <div className={styles.makeStoryMainDiv}>
       <button onClick={() => { makingStorySet(false) }}>Close</button>
       <p>Lets make a story</p>
 
