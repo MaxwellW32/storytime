@@ -13,8 +13,9 @@
   --font-family-main: cursive;
   --font-family-secondary: 'Roboto', sans-serif;
 
-  --small-font-size: .5em;
-  --medium-font-size: .7em;
+  --small-font-size: .7em;
+  --regular-font-size: 1em;
+  --medium-font-size: 1.15em;
   --large-font-size: 1.3em;
 
   --normal-font-weight: 400;
@@ -34,6 +35,7 @@
   --default-border-radius: 8px;
 
   --nav-icon-size: 1.5rem;
+  --normal-icon-size: 2rem;
 
   --z-indexNormal: 1;
   --z-indexPopUp: 998;
@@ -86,6 +88,19 @@ li {
   cursor: pointer;
 }
 
+.secondButton {
+  padding: .7rem;
+  border-radius: 5rem;
+  text-align: center;
+  width: min-content;
+  transition: all 400ms;
+  white-space: nowrap;
+  background-color: var(--primaryColor);
+  color: rgb(var(--textColorAnti));
+  font-size: var(--small-font-size);
+  margin: .5rem;
+}
+
 button {
   padding: .7rem;
   border-radius: .7rem;
@@ -94,7 +109,7 @@ button {
   transition: all 400ms;
   white-space: nowrap;
   background-color: var(--secondaryColor);
-  color: var(--textColorAnti);
+  color: rgb(var(--textColorAnti));
 }
 
 button:hover {
@@ -102,18 +117,30 @@ button:hover {
   scale: 1.025;
 }
 
-#homeDiv {
-  color: var(--textColor);
-  background-size: cover;
-  background-repeat: no-repeat;
-  height: 100dvh;
-  background-position-x: left;
-  max-width: 100dvw;
-  overflow: auto;
+label {
+  font-weight: var(--bold-font-weight);
+  font-size: var(--medium-font-size);
+  color: #fff;
+}
+
+textarea {
+  background-color: var(--backgroundColor);
+  padding: .5rem;
+  border-radius: .7rem;
+}
+
+input {
+  background-color: #ffe9cb;
+  color: #000;
+  padding: .5rem;
+  border-radius: .7rem;
+  margin-top: .2rem;
+  margin-bottom: .2rem;
 }
 
 
 
 body {
   font-family: var(--font-family-main);
+  font-size: var(--regular-font-size);
 }

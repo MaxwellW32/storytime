@@ -7,6 +7,7 @@ import {
 } from "@dnd-kit/sortable";
 
 import SortableItem from "./sortable_item";
+import { v4 as uuidv4 } from "uuid";
 
 
 
@@ -36,7 +37,7 @@ export default function Container(props: any) {
                 }}>
                 {questionAsked && <p>{questionAsked}</p>}
                 {items.map((itemText: any) => (
-                    <SortableItem key={itemText} id={itemText} itemText={itemText} arrPos={arrPos} />
+                    <SortableItem key={uuidv4()} id={itemText} itemText={itemText} arrPos={arrPos} />
                 ))}
             </div>
         </SortableContext>
