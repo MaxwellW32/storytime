@@ -1,5 +1,5 @@
 import { atom, useAtom } from 'jotai'
-import { globalTheme } from '../../page'
+import { globalTheme } from '@/app/utility/globalState'
 import { saveToLocalStorage, retreiveFromLocalStorage } from '@/app/utility/savestorage'
 
 import { useEffect, useLayoutEffect, useRef } from 'react'

@@ -9,6 +9,7 @@ import updateBoardObjWithBoardDataGlobal from './Updater';
 import tempbddata from "../tempdbdata1.json"
 import { Roboto } from 'next/font/google'
 import { saveToLocalStorage, retreiveFromLocalStorage } from './utility/savestorage';
+import { globalTheme, globalStorieArray } from '@/app/utility/globalState'
 
 const roboto = Roboto({
   subsets: ['latin'],
@@ -28,11 +29,8 @@ import {
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
 import Container from "./using/container";
-import { request } from 'http';
 import NavBar from './components/navbar/NavBar';
 
-const globalStorieArray = atom<StoryData[] | undefined>(undefined)
-export const globalTheme = atom<boolean>(false)
 
 //this is the layout for the objects of each of my games that holds everything
 
