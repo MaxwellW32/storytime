@@ -167,7 +167,7 @@ function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudi
 
       {/* storyboard container */}
       {reading && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", overflowY: "auto", backgroundColor: "var(--backgroundColor)" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", overflowY: "auto", backgroundColor: "var(--backgroundColor)", zIndex: 1 }}>
           <button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => {
             readingSet(false)
           }}>close</button>
@@ -827,18 +827,6 @@ export default function Home() {
       //   storiesSet(tempbddata as StoryData[])
     }
   }, [])
-
-  // const [eachStoryCanEditArr, eachStoryCanEditArrSet] = useState<boolean[]>(() => {
-  //   return stories?.map(each => false) ?? [false]
-  // })
-
-  // //update list to story length
-  // useEffect(() => {
-  //   if (stories) {
-  //     eachStoryCanEditArrSet(stories.map(each => false))
-  //   }
-  // }, [stories?.length])
-
 
   return (
     <main className={styles.homeDiv} style={{ backgroundImage: themeStyles['--backgroundColor'], ...themeStyles }}>
