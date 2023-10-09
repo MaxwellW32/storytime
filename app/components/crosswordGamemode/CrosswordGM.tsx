@@ -1,5 +1,4 @@
 "use client"
-import { title } from "process"
 import styles from "./style.module.css"
 import { useRef, useEffect, useState, useMemo } from "react"
 import { crosswordType, gameObjType, storyBoardType } from "@/app/page"
@@ -8,9 +7,7 @@ import { crosswordType, gameObjType, storyBoardType } from "@/app/page"
 export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoard }: { gameObj: gameObjType, isEditing?: boolean, handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void }) {
 
     const [wordsArray, wordsArraySet] = useState<string[]>(() => {
-        const gameObjGameData = gameObj.gameData as crosswordType
-
-        return gameObjGameData?.wordArray ?? []
+        return { ...gameObj?.gameData! as crosswordType }.wordArray ?? []
     })
 
     const spawnPointRef = useRef<HTMLDivElement>(null!)
