@@ -82,7 +82,6 @@
     background-image: var(--editStoryBackdrop);
     background-position: center;
     color: var(--textColor);
-    /* overflow-x: hidden; */
 }
 
 
@@ -212,3 +211,6 @@
 
 /* sortable items */
 /* .questionsContainer>* {} */
+
+
+/* Crossword gm */

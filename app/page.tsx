@@ -9,7 +9,7 @@ import updateBoardObjWithBoardDataGlobal from './Updater';
 // import tempbddata from "../tempdbdata1.json"
 import { saveToLocalStorage, retreiveFromLocalStorage } from './utility/savestorage';
 import { globalTheme, globalStorieArray } from '@/app/utility/globalState'
- 
+
 import {
   DndContext,
   DragOverlay,
@@ -24,6 +24,7 @@ import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
 import Container from "./using/container";
 import NavBar from './components/navbar/NavBar';
+import CrosswordGM from './components/crosswordGamemode/CrosswordGM';
 
 
 //this is the layout for the objects of each of my games that holds everything
@@ -87,9 +88,9 @@ interface wordsToMeaningType {
 
 }
 
-interface crosswordType {
+export interface crosswordType {
   gameDataFor: "crossword",
-
+  wordArray: string[] | undefined
 }
 
 
@@ -199,7 +200,7 @@ function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudi
                   {eachElemnt.gameSelection === "matchup" ? (
                     <MatchUpGM {...eachElemnt} storyId={storyId} />
                   ) : eachElemnt.gameSelection === "crossword" ? (
-                    <CrosswordGM />
+                    <CrosswordGM gameObj={eachElemnt} />
                   ) : eachElemnt.gameSelection === "wordmeaning" ? (
                     <WordsToMeaningGM />
                   ) : eachElemnt.gameSelection === "pronounce" ? (
@@ -625,7 +626,7 @@ function MakeStory({ makingStorySet, editClickedSet, passedData }: { makingStory
                         {eachElemnt.gameSelection === "matchup" ? (
                           <MatchUpGM {...eachElemnt} storyId={storyId.current} handleStoryBoard={handleStoryBoard} />
                         ) : eachElemnt.gameSelection === "crossword" ? (
-                          <CrosswordGM />
+                          <CrosswordGM gameObj={eachElemnt} isEditing={true} handleStoryBoard={handleStoryBoard} />
                         ) : eachElemnt.gameSelection === "wordmeaning" ? (
                           <WordsToMeaningGM />
                         ) : eachElemnt.gameSelection === "pronounce" ? (
@@ -1222,13 +1223,6 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
 
 }
 
-function CrosswordGM() {
-  return (
-    <div>
-      crossword - coming soon
-    </div>
-  )
-}
 
 function WordsToMeaningGM() {
   return (
