@@ -434,6 +434,7 @@ function MakeStory({ makingStorySet, editClickedSet, passedData }: { makingStory
   function handleStoryBoard(option: string, seenBoardId: string, newBoardData?: storyBoardType) {
 
     if (option === "update") {
+
       storyBoardsSet(prevStoryBoards => {
         const newArr = prevStoryBoards!.map(eachStoryBoard => {
           if (eachStoryBoard.boardObjId === seenBoardId) {
@@ -584,12 +585,66 @@ function MakeStory({ makingStorySet, editClickedSet, passedData }: { makingStory
 
                 preProcessedTextSet(e.target.value)
               }} />
-            <button onClick={() => { convertTextToStoryBoards(preProcessedText) }}>Process</button>
+            <button disabled={preProcessedText === ""} onClick={() => { convertTextToStoryBoards(preProcessedText) }}>{preProcessedText ? "Process" : "Enter text to Process"}</button>
           </>
         ) : (
 
           <>
             <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+
+              {/* if no storyboards still show options to add */}
+              {storyBoards.length === 0 && (
+                <div style={{ display: 'flex', flexWrap: "wrap" }}>
+                  <button onClick={() => {
+                    addSpecificStoryToBoard(0, "newstring")
+                  }}>add new text</button>
+                  <button onClick={() => {
+                    addSpecificStoryToBoard(0, "newimage")
+                  }}
+
+                  >add new image</button>
+                  <button onClick={() => {
+                    addSpecificStoryToBoard(0, "newvideo")
+                  }}>add new youtube</button>
+
+                  <div>
+                    <button onClick={() => {
+                      console.log(`$seen mouse click on AddMore`);
+                      gmShowingArrSet(prevArr => {
+                        prevArr[0] = true
+                        return [...prevArr]
+                      })
+                    }}>add new gamemode</button>
+
+                    {gmShowingArr[0] && (
+                      <div className={styles.gmChoiceCont} onClick={() => {
+                        gmShowingArrSet(prevArr => {
+                          prevArr[0] = false
+                          return [...prevArr]
+                        })
+                      }}>
+                        <button className='secondButton' onClick={() => {
+                          addSpecificStoryToBoard(0, "newgamemode", "matchup")
+                        }}>Matchup</button>
+
+                        <button className='secondButton' onClick={() => {
+                          addSpecificStoryToBoard(0, "newgamemode", "crossword")
+                        }}>Crossword</button>
+
+                        <button className='secondButton' onClick={() => {
+                          addSpecificStoryToBoard(0, "newgamemode", "pronounce")
+                        }}>Pronounciation</button>
+
+                        <button className='secondButton' onClick={() => {
+                          addSpecificStoryToBoard(0, "newgamemode", "wordmeaning")
+                        }}>Words to Meanings</button>
+                      </div>
+                    )}
+
+                  </div>
+                </div>
+              )}
+
               {storyBoards.map((eachElemnt, index) => {
 
                 return (
@@ -621,7 +676,7 @@ function MakeStory({ makingStorySet, editClickedSet, passedData }: { makingStory
                     ) : eachElemnt.boardType === "video" ? (
                       <DisplayVideo passedVideoData={eachElemnt} editing={true} handleStoryBoard={handleStoryBoard} />
                     ) : eachElemnt.boardType === "gamemode" ? (
-                      <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", backgroundColor: "wheat" }}>
+                      <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", backgroundColor: "var(--background)" }}>
 
                         {eachElemnt.gameSelection === "matchup" ? (
                           <MatchUpGM {...eachElemnt} storyId={storyId.current} handleStoryBoard={handleStoryBoard} />
@@ -692,7 +747,7 @@ function MakeStory({ makingStorySet, editClickedSet, passedData }: { makingStory
               })}
 
             </div>
-            <button onClick={handleSubmit}>Submit</button>
+            <button style={{ marginTop: "4rem" }} onClick={handleSubmit}>Submit Story</button>
           </>
         )}
       </div>
@@ -786,7 +841,7 @@ export default function Home() {
 
 
   return (
-    <main className={styles.homeDiv} style={{ backgroundImage: themeStyles['--backdrop'], ...themeStyles }}>
+    <main className={styles.homeDiv} style={{ backgroundImage: themeStyles['--backgroundColor'], ...themeStyles }}>
 
       <NavBar />
 

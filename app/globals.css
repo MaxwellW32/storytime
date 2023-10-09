@@ -127,6 +127,7 @@ textarea {
   background-color: var(--backgroundColor);
   padding: .5rem;
   border-radius: .7rem;
+  resize: none;
 }
 
 input {

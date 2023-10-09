@@ -1,14 +1,22 @@
+.crossWordMain {
+    color: var(--textColorAnti);
+}
+
+.crossWordMain p {
+    color: var(--textColor);
+
+}
+
 .spawnArea {
-    max-width: 400px;
     max-height: 400px;
-    width: 100%;
+    width: 90%;
     height: 100%;
     aspect-ratio: 1/1;
     background-color: aliceblue;
     display: grid;
     gap: .1rem;
     margin: 0 auto;
-    transform-style: preserve-3d;
+    /* transform-style: preserve-3d; */
 }
 
 .tile {

@@ -178,6 +178,10 @@
     .makeStoryMainDiv {
         background-image: url(../public/makestorybackgroundphone.png);
     }
+
+    .bttnHolder {
+        opacity: 1;
+    }
 }
 
 
