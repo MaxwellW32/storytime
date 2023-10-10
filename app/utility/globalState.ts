@@ -4,4 +4,15 @@ import { atom, useAtom } from 'jotai'
 import { StoryData } from '../page'
 
 export const globalStorieArray = atom<StoryData[] | undefined>(undefined)
-export const globalTheme = atom<boolean>(false)
+
+
+const myTheme: () => boolean = () => {
+    const savedTheme = localStorage.getItem('savedTheme');
+    if (savedTheme !== null) {
+        return JSON.parse(savedTheme);
+    }
+    return true
+}
+
+export const globalTheme = atom<boolean>(myTheme());
+

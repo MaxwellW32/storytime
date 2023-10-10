@@ -22,14 +22,6 @@ export default function RootLayout({
 
   const [theme, themeSet] = useAtom(globalTheme)
 
-  //load old theme settings from storage
-  useLayoutEffect(() => {
-    const seenTheme = retreiveFromLocalStorage("savedTheme")
-    if (seenTheme !== null) {
-      themeSet(seenTheme)
-    }
-  }, [])
-
 
   const didMount = useRef(false)
   //save theme settings to storage

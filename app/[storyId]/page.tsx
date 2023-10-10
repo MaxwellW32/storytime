@@ -18,7 +18,6 @@ export default function Page({ params }: { params: { storyId: string } }) {
         }
     }, [])
 
-    console.log(`$stories`, globalStories);
     const seenStoryArr = useMemo(() => {
         return globalStories?.filter(eachStory => eachStory.storyId === params.storyId)
     }, [globalStories])
