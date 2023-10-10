@@ -4,6 +4,7 @@ import { globalStorieArray } from '../utility/globalState'
 import { useEffect, useMemo, useState } from 'react'
 import { StoryData, ViewStory } from '../page'
 import { retreiveFromLocalStorage } from '../utility/savestorage'
+import { v4 as uuidv4 } from "uuid";
 
 export default function Page({ params }: { params: { storyId: string } }) {
     const [globalStories, globalStoriesSet] = useAtom(globalStorieArray)
@@ -28,7 +29,7 @@ export default function Page({ params }: { params: { storyId: string } }) {
     return (
         <div>
             {seenStoryArr.map(eachStory => (
-                <ViewStory {...eachStory} fullData={eachStory} params={params} />
+                <ViewStory key={uuidv4()} {...eachStory} fullData={eachStory} params={params} />
             ))}
         </div>
     )
