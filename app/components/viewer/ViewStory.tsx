@@ -25,6 +25,7 @@ export default function ViewStory({ title, rating, storyBoard, shortDescription,
             return false
         }
     })
+
     const [globalStories, globalStoriesSet] = useAtom(globalStorieArray)
 
     function deleteStory(id: string) {

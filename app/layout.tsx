@@ -11,8 +11,6 @@ import makeStoryBackgroundDark from "@/public/makestorybackgroundDark.png"
 import NavBar from './components/navbar/NavBar'
 import { retreiveFromLocalStorage, saveToLocalStorage } from './utility/savestorage'
 
-// saveDataToFile()
-
 export default function RootLayout({
   children,
 }: {
@@ -21,6 +19,14 @@ export default function RootLayout({
 
 
   const [theme, themeSet] = useAtom(globalTheme)
+
+  //load old theme settings from storage
+  useLayoutEffect(() => {
+    const seenTheme = retreiveFromLocalStorage("savedTheme")
+    if (seenTheme !== null) {
+      themeSet(seenTheme)
+    }
+  }, [])
 
 
   const didMount = useRef(false)
