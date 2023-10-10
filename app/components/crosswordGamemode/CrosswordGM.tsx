@@ -46,7 +46,7 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
         const newObj: gameObjType = {
             ...gameObj,
             gameFinished: gameFinished,
-            gameData: { ...gameObj?.gameData as crosswordType, wordArray: wordsArray }
+            gameData: { gameDataFor: "crossword", wordArray: wordsArray }
         }
 
         if (handleStoryBoard) {
@@ -327,17 +327,15 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
 
     }
 
-    const didMountCount = useRef(0)
     //monitor changes and save em
     useEffect(() => {
-        if (didMountCount.current >= 2) {
-            console.log(`$seen here with 2`);
-            console.log(`$reran in heeere`);
+        const passedArray: string[] = !gameObj.gameData ? [] : { ...gameObj.gameData as crosswordType }.wordArray ?? []
+
+        if (passedArray.length !== wordsArray.length) {
+            console.log(`$should reload`);
             handleSubmit()
         }
-
-        didMountCount.current++
-    }, [wordsArray])
+    }, [wordsArray.length])
 
     return (
         <div className={styles.crossWordMain} style={{ padding: "1rem" }}>
@@ -370,7 +368,6 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
                     <button onClick={addWord}>Submit Word</button>
                     {gameFinished && <p>Beat the Game!!!</p>}
                     <p>Words left to find {amtOfAnswersLeft}</p>
-                    <button onClick={handleSubmit}>Save Game</button>
                     <div ref={spawnPointRef} className={styles.spawnArea}></div>
                 </div>
             ) : (
