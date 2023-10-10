@@ -175,6 +175,10 @@
         background-image: url(../public/makestorybackgroundphone.png);
     }
 
+    .deleteBoardBttn {
+        opacity: 1;
+    }
+
     .bttnHolder {
         opacity: 1;
     }
