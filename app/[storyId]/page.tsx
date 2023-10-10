@@ -2,7 +2,8 @@
 import { atom, useAtom } from 'jotai'
 import { globalStorieArray } from '../utility/globalState'
 import { useEffect, useMemo, useState } from 'react'
-import { StoryData, ViewStory } from '../page'
+import { StoryData } from '../page'
+import ViewStory from '../components/viewer/ViewStory'
 import { retreiveFromLocalStorage } from '../utility/savestorage'
 import { v4 as uuidv4 } from "uuid";
 

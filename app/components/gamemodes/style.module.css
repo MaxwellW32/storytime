@@ -53,3 +53,35 @@
         rotate: -15deg;
     }
 }
+
+
+
+
+
+
+
+
+
+
+/* matchup gm */
+.gmMainDiv {
+    display: grid;
+    gap: 1rem;
+    padding: .5rem 0 .5rem 0;
+    border-radius: 1rem;
+}
+
+.gmMainDiv label {
+    color: var(--textColor);
+    margin: .2rem 0 .2rem 0;
+}
+
+.questionCont {
+    padding: .5rem;
+}
+
+.choicesDivCont {
+    display: flex;
+    column-gap: 1rem;
+    flex-wrap: wrap;
+}

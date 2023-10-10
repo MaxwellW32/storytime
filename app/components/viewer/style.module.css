@@ -1,0 +1,19 @@
+/* view story */
+.titleCont {
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+.descText {
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.highlighted {
+    color: var(--secondaryColor);
+    cursor: pointer;
+}

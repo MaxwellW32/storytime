@@ -1,0 +1,21 @@
+.imageCont {
+    height: 70dvh;
+    aspect-ratio: 4/3;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    object-fit: contain;
+}
+
+.imageCont>img {
+    max-height: 100%;
+}
+
+.videoCont {
+    margin: 0 auto;
+    background-color: var(--backgroundColor);
+    padding: 1rem;
+    display: grid;
+    gap: 1rem;
+}
