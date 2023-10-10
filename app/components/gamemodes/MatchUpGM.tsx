@@ -20,6 +20,7 @@ import {
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { updateStoryWithGameDataGlobal } from "@/app/utility/updater";
 import Container from "@/app/using/container";
+import { saveToLocalStorage } from "@/app/utility/savestorage";
 
 
 export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinished, storyId, gameData, isEditing = false, boardType, handleStoryBoard }: gameObjType & {
@@ -296,12 +297,12 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
 
         //save game finished globally
         if (gameFinishedState && !isEditing && !gameFinished) {
-            storiesSet(updateStoryWithGameDataGlobal(stories!, storyId, boardObjId, newObj))
+            saveToLocalStorage("storiesArr", updateStoryWithGameDataGlobal(stories!, storyId, boardObjId, newObj))
         }
 
         //refresh
         if (!gameFinishedState && !isEditing && gameFinished) {
-            storiesSet(updateStoryWithGameDataGlobal(stories!, storyId, boardObjId, newObj))
+            saveToLocalStorage("storiesArr", updateStoryWithGameDataGlobal(stories!, storyId, boardObjId, newObj))
         }
 
     }, [gameFinishedState])

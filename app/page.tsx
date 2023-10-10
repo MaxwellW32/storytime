@@ -125,7 +125,7 @@ export default function Home() {
       }
 
       {storiesGlobal?.map((eachStory: StoryData) => (
-        <ViewStory key={uuidv4()} {...eachStory} fullData={eachStory} />
+        <ViewStory key={uuidv4()} fullData={eachStory} />
       ))}
     </main>
   )

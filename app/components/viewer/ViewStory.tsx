@@ -16,17 +16,11 @@ import WordsToMeaningGM from '../gamemodes/WordsToMeaningGM';
 import PronounciationGM from '../gamemodes/PronounciationGM';
 import { StoryData } from '@/app/page';
 
-export default function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudio, storyId, fullData, paramSeen }: StoryData & { fullData?: StoryData, paramSeen?: string }) {
-
-    const [reading, readingSet] = useState(() => {
-        if (paramSeen) {
-            return true
-        } else {
-            return false
-        }
-    })
+export default function ViewStory({ fullData }: { fullData: StoryData }) {
 
     const [globalStories, globalStoriesSet] = useAtom(globalStorieArray)
+
+    const [reading, readingSet] = useState(false)
 
     function deleteStory(id: string) {
         globalStoriesSet(prevGlobalStoryArr => {
@@ -55,28 +49,24 @@ export default function ViewStory({ title, rating, storyBoard, shortDescription,
 
             <div className={styles.titleCont}>
 
-                <h3>{title}</h3>
+                <h3>{fullData.title}</h3>
 
                 <div className="flex flex-col gap-1 items-center">
-                    {rating && <p>{rating}/5</p>}
+                    {fullData.rating && <p>{fullData.rating}/5</p>}
                     <Image height={20} alt='ratingstars' src={require("../../../public/threestars.png")} style={{ objectFit: "contain" }} />
                 </div>
 
                 <div style={{ display: "flex", gap: "1rem" }}>
-                    <button onClick={() => { readingSet(true) }}>
-                        <Link href={`/${storyId}`}>
-                            Let&apos;s Read
-                        </Link>
-                    </button>
-                    <button style={{}} onClick={() => { deleteStory(storyId) }}>Delete Story</button>
+                    <button onClick={() => { readingSet(true) }}> Let&apos;s Read </button>
+                    <button style={{}} onClick={() => { deleteStory(fullData.storyId) }}>Delete Story</button>
                 </div>
             </div>
 
             <div className={`italic`} style={{ fontSize: ".9em", marginTop: "var(--medium-margin)", display: "grid", gap: ".3rem", alignSelf: "flex-end" }}>
-                {shortDescription && (
+                {fullData.shortDescription && (
                     <>
                         <p >Description -</p>
-                        <p ref={descRef} className={styles.descText} style={{ display: showDescriptionFull ? "block" : "-webkit-box" }}>{shortDescription}</p>
+                        <p ref={descRef} className={styles.descText} style={{ display: showDescriptionFull ? "block" : "-webkit-box" }}>{fullData.shortDescription}</p>
                         {descOverFlowing && <p className={styles.highlighted} onClick={() => {
                             showDescriptionFullSet(prev => !prev)
                         }}>{showDescriptionFull ? "Show Less" : "Show More"}</p>}
@@ -87,14 +77,10 @@ export default function ViewStory({ title, rating, storyBoard, shortDescription,
             {/* storyboard container */}
             {reading && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", overflowY: "auto", backgroundColor: "var(--backgroundColor)", zIndex: 1, color: "var(--textColor)" }}>
-                    <button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => {
-                        readingSet(false)
-                    }}>
-                        <Link href={`/`}>close</Link>
-                    </button>
-                    <h3 style={{ textAlign: "center", fontSize: "2rem" }}>{title}</h3>
+                    <button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => { readingSet(false) }}>close</button>
+                    <h3 style={{ textAlign: "center", fontSize: "2rem" }}>{fullData.title}</h3>
 
-                    {storyBoard?.map((eachElemnt, index) => {
+                    {fullData.storyBoard?.map((eachElemnt, index) => {
 
                         if (eachElemnt.boardType === "text") {
                             return (
@@ -118,7 +104,7 @@ export default function ViewStory({ title, rating, storyBoard, shortDescription,
                                 <div key={uuidv4()} className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", backgroundColor: "var(--backgroundColor)" }} >
 
                                     {eachElemnt.gameSelection === "matchup" ? (
-                                        <MatchUpGM {...eachElemnt} storyId={storyId} />
+                                        <MatchUpGM {...eachElemnt} storyId={fullData.storyId} />
                                     ) : eachElemnt.gameSelection === "crossword" ? (
                                         <CrosswordGM gameObj={eachElemnt} />
                                     ) : eachElemnt.gameSelection === "wordmeaning" ? (
@@ -139,7 +125,7 @@ export default function ViewStory({ title, rating, storyBoard, shortDescription,
                 <ReactPlayer
                     loop={true}
                     playing={reading}
-                    url={backgroundAudio ? backgroundAudio : "https://www.youtube.com/watch?v=NJuSStkIZBg"} />
+                    url={fullData.backgroundAudio ? fullData.backgroundAudio : "https://www.youtube.com/watch?v=NJuSStkIZBg"} />
             </div>
         </div>
     )
