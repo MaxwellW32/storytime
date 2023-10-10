@@ -29,7 +29,7 @@ export default function Page({ params }: { params: { storyId: string } }) {
     return (
         <div>
             {seenStoryArr.map(eachStory => (
-                <ViewStory key={uuidv4()} {...eachStory} fullData={eachStory} params={params} />
+                <ViewStory key={uuidv4()} {...eachStory} fullData={eachStory} paramSeen={params.storyId} />
             ))}
         </div>
     )

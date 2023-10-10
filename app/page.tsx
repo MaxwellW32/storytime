@@ -109,10 +109,10 @@ const ISLINKORBREAK = new RegExp(`(https?:\/\/[^\s]+\.(?:com|net|org|io)\/[^\s]+
 const ISLINK = /(https?:\/\/[^\s]+\.(?:com|net|org|io)\/[^\s]+)/g;
 const ISYTVID = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
 
-export function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudio, storyId, fullData, params }: StoryData & { fullData?: StoryData, params?: { storyId: string } }) {
+export function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudio, storyId, fullData, paramSeen }: StoryData & { fullData?: StoryData, paramSeen?: string }) {
 
   const [reading, readingSet] = useState(() => {
-    if (params?.storyId) {
+    if (paramSeen) {
       return true
     } else {
       return false
