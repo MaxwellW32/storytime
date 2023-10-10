@@ -54,12 +54,6 @@
 
 .homeDiv {
     color: var(--textColor);
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position-x: left;
-    height: 100dvh;
-    max-width: 100dvw;
-    overflow: auto;
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -146,6 +140,8 @@
 
 .textAreaEdit2 {
     width: 100%;
+    padding: 1rem;
+
 }
 
 
@@ -197,7 +193,7 @@
 }
 
 .gmMainDiv label {
-    color: #000;
+    color: var(--textColor);
     margin: .2rem 0 .2rem 0;
 }
 

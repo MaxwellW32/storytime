@@ -65,6 +65,15 @@ menu {
   list-style: none;
 }
 
+html {
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position-x: left;
+  height: 100dvh;
+  max-width: 100dvw;
+  overflow: auto;
+}
+
 img {
   max-inline-size: 100%;
   max-block-size: 100%;

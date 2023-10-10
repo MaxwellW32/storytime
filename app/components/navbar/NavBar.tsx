@@ -9,25 +9,6 @@ import Link from 'next/link'
 export default function NavBar() {
     const [theme, themeSet] = useAtom(globalTheme)
 
-
-    //load old theme settings from storage
-    useLayoutEffect(() => {
-        const seenTheme = retreiveFromLocalStorage("savedTheme")
-        if (seenTheme !== null) {
-            themeSet(seenTheme)
-        }
-    }, [])
-
-    //save theme settings to storage
-    const didMount = useRef(false)
-    useEffect(() => {
-        if (didMount.current) {
-            saveToLocalStorage("savedTheme", theme)
-        }
-
-        didMount.current = true
-    }, [theme])
-
     return (
         <nav className='grid gap-4 grid-flow-col p-3 w-full justify-items-center' style={{ backgroundColor: "var(--backgroundColor)" }}>
 

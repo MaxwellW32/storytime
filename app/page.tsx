@@ -8,11 +8,8 @@ import ReactPlayer from "react-player/youtube";
 import updateBoardObjWithBoardDataGlobal from './Updater';
 // import tempbddata from "../tempdbdata1.json"
 import { saveToLocalStorage, retreiveFromLocalStorage } from './utility/savestorage';
-import { globalTheme, globalStorieArray } from '@/app/utility/globalState'
-import homeBackgroundImage from "@/public/background.png"
-import homeBackgroundImageDark from "@/public/backgroundDark.png"
-import makeStoryBackground from "@/public/makestorybackground.png"
-import makeStoryBackgroundDark from "@/public/makestorybackgroundDark.png"
+import { globalStorieArray } from '@/app/utility/globalState'
+
 
 import {
   DndContext,
@@ -27,8 +24,9 @@ import {
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
 import Container from "./using/container";
-import NavBar from './components/navbar/NavBar';
 import CrosswordGM from './components/crosswordGamemode/CrosswordGM';
+import { updateStoryWithGameDataGlobal } from './utility/updater';
+import Link from 'next/link';
 
 
 //this is the layout for the objects of each of my games that holds everything
@@ -78,8 +76,8 @@ export interface StoryData {
 
 interface matchupType {
   gameDataFor: "matchup",
-  questionsArr: string[],
-  choicesArr: string[][],
+  questionsArr: string[] | undefined,
+  choicesArr: string[][] | undefined,
 }
 
 interface pronounceType {
@@ -111,9 +109,15 @@ const ISLINKORBREAK = new RegExp(`(https?:\/\/[^\s]+\.(?:com|net|org|io)\/[^\s]+
 const ISLINK = /(https?:\/\/[^\s]+\.(?:com|net|org|io)\/[^\s]+)/g;
 const ISYTVID = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i;
 
-function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudio, storyId, fullData }: StoryData & { fullData?: StoryData }) {
+export function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudio, storyId, fullData, params }: StoryData & { fullData?: StoryData, params?: { storyId: string } }) {
 
-  const [reading, readingSet] = useState(false)
+  const [reading, readingSet] = useState(() => {
+    if (params?.storyId) {
+      return true
+    } else {
+      return false
+    }
+  })
   const [globalStories, globalStoriesSet] = useAtom(globalStorieArray)
 
   function deleteStory(id: string) {
@@ -134,7 +138,6 @@ function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudi
     }
   }, [])
 
-
   const [editClicked, editClickedSet] = useState(false)
 
   return (
@@ -152,7 +155,11 @@ function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudi
         </div>
 
         <div style={{ display: "flex", gap: "1rem" }}>
-          <button onClick={() => { readingSet(true) }}>Let&apos;s Read</button>
+          <button onClick={() => { readingSet(true) }}>
+            <Link href={`/${storyId}`}>
+              Let&apos;s Read
+            </Link>
+          </button>
           <button style={{}} onClick={() => { deleteStory(storyId) }}>Delete Story</button>
         </div>
       </div>
@@ -171,11 +178,12 @@ function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudi
 
       {/* storyboard container */}
       {reading && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", overflowY: "auto", backgroundColor: "var(--backgroundColor)", zIndex: 1 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", overflowY: "auto", backgroundColor: "var(--backgroundColor)", zIndex: 1, color: "var(--textColor)" }}>
           <button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => {
             readingSet(false)
-          }}>close</button>
-
+          }}>
+            <Link href={`/`}>close</Link>
+          </button>
           <h3 style={{ textAlign: "center", fontSize: "2rem" }}>{title}</h3>
 
           {storyBoard?.map((eachElemnt, index) => {
@@ -229,7 +237,7 @@ function ViewStory({ title, rating, storyBoard, shortDescription, backgroundAudi
   )
 }
 
-function MakeStory({ makingStorySet, editClickedSet, passedData }: { makingStorySet?: React.Dispatch<React.SetStateAction<boolean>>, editClickedSet?: React.Dispatch<React.SetStateAction<boolean>>, passedData?: StoryData }) {
+export function MakeStory({ makingStorySet, editClickedSet, passedData }: { makingStorySet?: React.Dispatch<React.SetStateAction<boolean>>, editClickedSet?: React.Dispatch<React.SetStateAction<boolean>>, passedData?: StoryData }) {
 
   const [, storiesSet] = useAtom(globalStorieArray)
 
@@ -435,14 +443,14 @@ function MakeStory({ makingStorySet, editClickedSet, passedData }: { makingStory
 
   }
 
-  function handleStoryBoard(option: string, seenBoardId: string, newBoardData?: storyBoardType) {
+  function handleStoryBoard(option: string, seenBoardId: string, newBoard?: storyBoardType) {
 
     if (option === "update") {
 
       storyBoardsSet(prevStoryBoards => {
         const newArr = prevStoryBoards!.map(eachStoryBoard => {
           if (eachStoryBoard.boardObjId === seenBoardId) {
-            return { ...eachStoryBoard, ...newBoardData }
+            return { ...eachStoryBoard, ...newBoard }
           } else {
             return eachStoryBoard
           }
@@ -477,8 +485,6 @@ function MakeStory({ makingStorySet, editClickedSet, passedData }: { makingStory
       storyBoard: storyBoards
     }
 
-    console.log(`$new`, newStoryObj);
-
     if (passedData !== undefined) {
       storiesSet(prevStories => {
 
@@ -497,9 +503,10 @@ function MakeStory({ makingStorySet, editClickedSet, passedData }: { makingStory
           return [newStoryObj]
         }
       })
+      editClickedSet!(false)
 
     } else {
-      console.log(`$got in expected else`);
+
       storiesSet(prevStoriesArr => {
         if (prevStoriesArr) {
           return [...prevStoriesArr, newStoryObj]
@@ -507,28 +514,28 @@ function MakeStory({ makingStorySet, editClickedSet, passedData }: { makingStory
           return [newStoryObj]
         }
       })
-    }
-
-    if (passedData !== undefined) {
-      editClickedSet!(false)
-    } else {
       makingStorySet!(false)
     }
   }
 
   const textAreaRefs = useRef<HTMLTextAreaElement[]>([])
 
+  const makeRefCorrectSize = (ref: HTMLTextAreaElement) => {
+    if (ref) {
+      ref.style.height = 'auto';
+      ref.style.height = ref.scrollHeight + 'px';
+    }
+  }
+
   const addToTextAreaRefs = (ref: HTMLTextAreaElement, index: number) => {
     textAreaRefs.current[index] = ref
+    makeRefCorrectSize(ref)
   }
 
   //give textarea right size
   useEffect(() => {
     textAreaRefs.current.forEach((eachRef) => {
-      if (eachRef) {
-        eachRef.style.height = 'auto';
-        eachRef.style.height = eachRef.scrollHeight + 'px';
-      }
+      makeRefCorrectSize(eachRef)
     })
 
   }, [storyBoards])
@@ -680,10 +687,10 @@ function MakeStory({ makingStorySet, editClickedSet, passedData }: { makingStory
                     ) : eachElemnt.boardType === "video" ? (
                       <DisplayVideo passedVideoData={eachElemnt} editing={true} handleStoryBoard={handleStoryBoard} />
                     ) : eachElemnt.boardType === "gamemode" ? (
-                      <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", backgroundColor: "var(--background)" }}>
+                      <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", backgroundColor: "var(--backgroundColor)" }}>
 
                         {eachElemnt.gameSelection === "matchup" ? (
-                          <MatchUpGM {...eachElemnt} storyId={storyId.current} handleStoryBoard={handleStoryBoard} />
+                          <MatchUpGM isEditing={true} {...eachElemnt} storyId={storyId.current} handleStoryBoard={handleStoryBoard} />
                         ) : eachElemnt.gameSelection === "crossword" ? (
                           <CrosswordGM gameObj={eachElemnt} isEditing={true} handleStoryBoard={handleStoryBoard} />
                         ) : eachElemnt.gameSelection === "wordmeaning" ? (
@@ -761,56 +768,22 @@ function MakeStory({ makingStorySet, editClickedSet, passedData }: { makingStory
 }
 
 export default function Home() {
-  const [stories, storiesSet] = useAtom(globalStorieArray)
+  const [storiesGlobal, storiesGlobalSet] = useAtom(globalStorieArray)
+
   const [makingStory, makingStorySet] = useState(false)
-
-  const [theme, themeSet] = useAtom(globalTheme)
-
-
-  const themeStyles = useMemo(() => {
-
-    if (theme) {
-      return {
-        "--primaryColor": "#ffb200",
-        "--secondaryColor": "purple",
-        "--backgroundColor": "#ffe9cb",
-        "--textColor": "#000",
-        "--textColorAnti": "#fff",
-        "--backdrop": `url(${homeBackgroundImage.src})`,
-        "--editStoryBackdrop": `url(${makeStoryBackground.src})`,
-        "--seeThroughBg": "rgba(0,0,0, 0.553)"
-        // "--navBarColor": "#ffe9cb"
-      }
-    } else {
-      return {
-        "--primaryColor": "#7777ff",
-        "--secondaryColor": "orange",
-        "--backgroundColor": "#23201d",
-        "--textColor": "#fff",
-        "--textColorAnti": "#000",
-        "--backdrop": `url(${homeBackgroundImageDark.src})`,
-        "--editStoryBackdrop": `url(${makeStoryBackgroundDark.src})`,
-        "--seeThroughBg": "rgba(255,255,255, 0.1)"
-        // "--navBarColor": "#00132b"
-      }
-    }
-  }, [theme])
-
 
   //save stories
   useEffect(() => {
-    if (stories) {
-      console.log(`$reran`);
-      saveToLocalStorage("storiesArr", stories)
+    if (storiesGlobal) {
+      saveToLocalStorage("storiesArr", storiesGlobal)
     }
-  }, [stories])
+  }, [storiesGlobal])
 
+  //load
   useEffect(() => {
     const seenStories = retreiveFromLocalStorage("storiesArr") as StoryData[]
-    //load
     if (seenStories) {
-      storiesSet(seenStories)
-
+      storiesGlobalSet(seenStories)
       //   const seenStoriesClear = seenStories.filter(eachSeenStory => {
 
       //     let foundInArr = false
@@ -833,44 +806,45 @@ export default function Home() {
   }, [])
 
   return (
-    <main className={styles.homeDiv} style={{ backgroundImage: themeStyles['--backdrop'], ...themeStyles }}>
-
-      <NavBar />
+    <main className={styles.homeDiv}>
 
       {makingStory
         ? <MakeStory makingStorySet={makingStorySet} />
         : (<button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => { makingStorySet(true) }}>Add a Story</button>)
       }
 
-      {stories?.map((eachStory: StoryData) => (
+      {storiesGlobal?.map((eachStory: StoryData) => (
         <ViewStory key={uuidv4()} {...eachStory} fullData={eachStory} />
       ))}
-
     </main>
   )
 }
 
 
 
-function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinished, storyId, gameData, handleStoryBoard }: gameObjType & {
+function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinished, storyId, gameData, isEditing = false, boardType, handleStoryBoard }: gameObjType & {
   storyId: string,
-  gameData: gameDataType | undefined,
+  isEditing?: boolean
   handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void
 }) {
 
   const [stories, storiesSet] = useAtom(globalStorieArray)
 
-  const [questions, questionsSet] = useState<string[] | undefined>(["", "", "", ""])
-  const [choices, choicesSet] = useState<string[][] | undefined>(() => {
-    return questions!.map(eachItem => {
+  const [questions, questionsSet] = useState<string[]>(() => {
+
+    return { ...gameData as matchupType }.questionsArr ?? ["", "", "", ""]
+  })
+
+  const [choices, choicesSet] = useState<string[][]>(() => {
+
+    return { ...gameData as matchupType }.choicesArr ?? questions.map(eachItem => {
       return [""]
     })
   })
 
+  const [gameFinishedState, gameFinishedStateSet] = useState(gameFinished)
 
   const [userAnswers, userAnswersSet] = useState<string[][]>([])
-
-  const [dataSeen, dataSeenSet] = useState(false)
 
   const [activeId, setActiveId] = useState<null>();
 
@@ -881,27 +855,32 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
     })
   );
 
-  const [items, setItems] = useState<any>(() => {
+  const handleItemsWithChanges = () => {
+
     //get all data, questions, choices, display em
     let newItemObj: {
       [key: string]: any
-    } = {}
+    } = {
 
-    gameData = gameData as matchupType
+    }
 
-
-    gameData?.questionsArr?.forEach((eachQuestion, index) => {
+    questions.forEach((eachQuestion, index) => {
       newItemObj[`container${index}`] = []
     })
 
     const choicesStringArray: string[] = []
 
-    gameData?.choicesArr?.forEach((choiceStrArr, index) => {
+    //flatten the array of arrays into 1 string array
+    choices.forEach((choiceStrArr, index) => {
       choiceStrArr.forEach((strVal) => {
-        choicesStringArray.push(strVal)
+
+        if (strVal !== "") {
+          choicesStringArray.push(strVal)
+        }
       })
     })
 
+    //randomize string arrays
     for (let i = choicesStringArray.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [choicesStringArray[i], choicesStringArray[j]] = [choicesStringArray[j], choicesStringArray[i]];
@@ -910,20 +889,9 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
     newItemObj["root"] = choicesStringArray
 
     return { ...newItemObj }
-  });
+  }
 
-  useEffect(() => {
-    if (gameData !== undefined) {
-      gameData = gameData as matchupType
-
-      dataSeenSet(true)
-      questionsSet(gameData.questionsArr)
-      choicesSet(gameData.choicesArr)
-
-      // console.log(`$carr`, gameData.choicesArr);
-    }
-  }, [])
-
+  const [items, setItems] = useState<any>(() => handleItemsWithChanges());
 
   function submitNewGameModeObj() {
     //local submit to parent make Story - saved to the storyTextboard
@@ -931,9 +899,10 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
     const newGameMode: gameObjType = {
       gameSelection: gameSelection,
       gameData: {
-        choicesArr: choices,
-        questionsArr: questions
-      } as matchupType,
+        gameDataFor: "matchup",
+        choicesArr: choices!,
+        questionsArr: questions!
+      },
       gameFinished: gameFinished,
       shouldStartOnNewPage: shouldStartOnNewPage,
       boardType: "gamemode",
@@ -945,37 +914,14 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
     }
   }
 
-  function updateGameModeObjGlobal() {
-    //for updates to gameFinished
-
-    const newGameModeData: gameObjType = {
-      boardObjId: boardObjId,
-      boardType: "gamemode",
-      gameSelection: gameSelection,
-      gameData: {
-        choicesArr: choices,
-        questionsArr: questions
-      } as matchupType,
-      gameFinished: gameFinished,
-      shouldStartOnNewPage: shouldStartOnNewPage
-    }
-
-    storiesSet(updateBoardObjWithBoardDataGlobal(stories!, storyId, boardObjId, newGameModeData))
-  }
-
   function checkAnswers() {
-    // console.table(`usernanswer`, userAnswers);
-    // console.table(`correct`, answers);
 
-    //go through each useAnswers arr, in each value compare it to be found in the answers arr at that same index pos
-    //if the amount found == the amount of answers in that index, got correct = true
-    //then can look at the amount correct
     let globalAmtCorrect = 0
 
     userAnswers.forEach((userAnsStrArr, index) => {
       let correctCount = 0
       userAnsStrArr.forEach((eachAnsStr, smallIndex) => {
-        choices![index].forEach(eachChoiceStr => {
+        choices[index].forEach(eachChoiceStr => {
           if (eachAnsStr === eachChoiceStr) {
             correctCount++
           }
@@ -983,22 +929,19 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
 
       })
 
-      if (correctCount === choices![index].length) {
+      if (correctCount === choices[index].length) {
         globalAmtCorrect++
       }
 
     })
 
-
-    if (globalAmtCorrect === questions!.length) {
-      gameFinished = true
-      updateGameModeObjGlobal()
+    if (globalAmtCorrect === questions.length) {
+      gameFinishedStateSet(true)
     }
   }
 
   function refreshGame() {
-    gameFinished = false
-    updateGameModeObjGlobal()
+    gameFinishedStateSet(false)
   }
 
   function findContainer(id: any) {
@@ -1090,20 +1033,15 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
         //its empty
         if (!newArr[containerIndex]) {
           newArr[containerIndex] = [seenText]
-          console.log(`$sempty`, newArr);
           return newArr
 
         } else {
-          //has string values
-          //scan items inside, ensure it doesnt have seenText already
           const clearUsrAnsArr = newArr.map((eachStrArr, index) => {
             if (!eachStrArr) {
-              // console.log(`$didnt see arr pos ${index}, added ""`);
               return [""]
 
             } else {
               return eachStrArr.filter(eachStr => {
-                // console.log(`$str seen to filter `, eachStr);
                 if (eachStr !== seenText) {
                   return eachStr
                 } else {
@@ -1115,7 +1053,6 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
 
           clearUsrAnsArr[containerIndex] = [...clearUsrAnsArr[containerIndex], seenText]
 
-          // console.log(`$final, `, clearUsrAnsArr);
           return clearUsrAnsArr
         }
       })
@@ -1141,104 +1078,92 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
 
     setActiveId(null);
   }
-  //add on to choice arr with a new element
-  //add onto question arr
+
+  useEffect(() => {
+    setItems(handleItemsWithChanges())
+  }, [questions, choices])
+
+  //update global state if in final view and game finished
+  useEffect(() => {
+    const newObj: gameObjType = {
+      boardObjId,
+      gameSelection,
+      shouldStartOnNewPage,
+      gameData,
+      boardType,
+      gameFinished: gameFinishedState
+    }
+
+    //save game finished globally
+    if (gameFinishedState && !isEditing && !gameFinished) {
+      storiesSet(updateStoryWithGameDataGlobal(stories!, storyId, boardObjId, newObj))
+    }
+
+    //refresh
+    if (!gameFinishedState && !isEditing && gameFinished) {
+      storiesSet(updateStoryWithGameDataGlobal(stories!, storyId, boardObjId, newObj))
+    }
+
+  }, [gameFinishedState])
+
 
   return (
-    <div className={styles.gmMainDiv} style={{ scale: gameFinished ? .9 : 1 }}>
-      {dataSeen ? (
+    <div className={styles.gmMainDiv} style={{ scale: gameFinishedState ? .9 : 1 }}>
+      {isEditing ? (
         <>
-          <DndContext
-            // announcements={defaultAnnouncements}
-            sensors={sensors}
-            collisionDetection={closestCorners}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-          >
-            <div style={{
-              display: "flex",
-              flexDirection: "row",
-              flexWrap: "wrap"
-            }}>
-              {questions!.map((eachQuestion, index) => {
-                return (
-                  <Container key={uuidv4()} id={`container${index}`} items={items[`container${index}`]} arrPos={index} questionAsked={eachQuestion} />
-                )
-              })}
-            </div>
-            <Container id="root" items={items.root} arrPos={4} />
-            {/* <DragOverlay>{activeId ? <Item id={activeId} /> : null}</DragOverlay> */}
-          </DndContext>
+          {questions?.map((temp, index) => (
+            <div className={styles.questionCont} key={uuidv4()}>
+              <label>Question {index + 1}</label>
+              <input style={{ width: "100%" }} type='text' placeholder={`Enter Question ${index + 1}`} defaultValue={questions[index]} onBlur={(e) => {
+                questionsSet((prevQuestions) => {
+                  prevQuestions[index] = e.target.value
+                  return [...prevQuestions]
+                })
+              }} />
 
 
-          {!gameFinished ? (
-            <button className='secondButton' onClick={checkAnswers}>Check Answers</button>
-          ) : (
-            <button className='secondButton' onClick={refreshGame}>Game Finished - refresh?</button>
-          )}
-        </>
-      ) : (
-        <>
-          {
-            questions?.map((temp, index) => (
 
-              <div className={styles.questionCont} key={uuidv4()}>
-                <label>Question {index + 1}</label>
-                <input style={{ width: "100%" }} type='text' placeholder={`Enter Question ${index + 1}`} defaultValue={questions ? questions[index] : ""} onBlur={(e) => {
-                  questionsSet((prevQuestions) => {
-                    let newQuestionsArr: string[] = []
-                    if (prevQuestions) newQuestionsArr = [...prevQuestions]
-                    newQuestionsArr[index] = e.target.value
-                    return newQuestionsArr
-                  })
-                }} />
+              {choices && choices[index] && (
+                <>
+                  <div className={styles.choicesDivCont}>
+                    {choices[index].map((choice, smallerIndex) => (
+                      <input key={uuidv4()} type='text' placeholder={`Answer ${smallerIndex + 1}`} defaultValue={choices[index][smallerIndex]}
+                        onBlur={(e) => {
+                          choicesSet(prevChoicesArr => {
+                            const newarray = prevChoicesArr.map(e => e)
 
-                {choices && choices[index] && (
+                            if (!newarray[index]) {
+                              newarray[index] = [];
+                            }
+                            if (!newarray[index][smallerIndex]) {
+                              newarray[index][smallerIndex] = "";
+                            }
 
-                  <>
+                            newarray[index][smallerIndex] = e.target.value;
+                            return newarray;
+                          })
+                        }} />
+                    ))}
+                  </div>
 
-                    <div className={styles.choicesDivCont}>
-
-                      {choices[index].map((choice, smallerIndex) => (
-                        <input key={uuidv4()} type='text' placeholder={`Answer ${smallerIndex + 1}`} defaultValue={choices && choices[index] && choices[index][smallerIndex] ? choices[index][smallerIndex] : ""}
-                          onBlur={(e) => {
-                            choicesSet(prevChoicesArr => {
-                              const updatedChoices = prevChoicesArr ?? [];
-
-                              if (!updatedChoices[index]) {
-                                updatedChoices[index] = [];
-                              }
-                              if (!updatedChoices[index][smallerIndex]) {
-                                updatedChoices[index][smallerIndex] = "";
-                              }
-                              updatedChoices[index][smallerIndex] = e.target.value;
-                              return [...updatedChoices];
-                            })
-                          }} />
-
-                      ))}
-
-                    </div>
-                    <button className='secondButton' onClick={() => {
-                      choicesSet(prevArr => {
-                        const updatedChoices = prevArr!.map((arr, i) => {
-                          if (i === index) {
-                            return [...arr, ""];
-                          }
+                  <button className='secondButton' onClick={() => {
+                    choicesSet(prevArr => {
+                      const updatedChoices = prevArr.map((arr, i) => {
+                        if (i === index) {
+                          return [...arr, ""];
+                        } else {
                           return arr;
-                        });
+                        }
 
-                        return updatedChoices;
-                      })
-                    }}>Add Answer</button>
-                  </>
+                      });
 
-
-
-                )}
-              </div>
-            ))
+                      return updatedChoices;
+                    })
+                  }}>Add Answer</button>
+                </>
+              )}
+            </div>
+          ))
           }
 
           <button className='secondButton' style={{ borderRadius: ".2rem" }} onClick={() => {
@@ -1261,7 +1186,72 @@ function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinish
 
 
           }}>Add Question</button>
+
           {handleStoryBoard && <button style={{ margin: "0 auto" }} onClick={submitNewGameModeObj}>Save GameMode</button>}
+
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            <div style={{
+              display: "flex",
+              flexDirection: "row",
+              flexWrap: "wrap"
+            }}>
+
+              {questions.map((eachQuestion, index) => {
+                return (
+                  <Container key={uuidv4()} id={`container${index}`} items={items[`container${index}`]} arrPos={index} questionAsked={eachQuestion} />
+                )
+              })}
+            </div>
+            <Container id="root" items={items.root} arrPos={4} />
+
+          </DndContext>
+
+          {gameFinishedState ? (
+            <button className='secondButton' onClick={refreshGame}>Game Finished - refresh?</button>
+          ) : (
+            <button className='secondButton' onClick={checkAnswers}>Check Answers</button>
+          )}
+
+        </>
+      ) : (
+
+
+        <>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            <div style={{
+              display: "flex",
+              flexDirection: "row",
+              flexWrap: "wrap"
+            }}>
+              {questions!.map((eachQuestion, index) => {
+                return (
+                  <Container key={uuidv4()} id={`container${index}`} items={items[`container${index}`]} arrPos={index} questionAsked={eachQuestion} />
+                )
+              })}
+            </div>
+            <Container id="root" items={items.root} arrPos={4} />
+            {/* <DragOverlay>{activeId ? <Item id={activeId} /> : null}</DragOverlay> */}
+          </DndContext>
+
+
+
+          {gameFinishedState ? (
+            <button className='secondButton' onClick={refreshGame}>Game Finished - refresh?</button>
+          ) : (
+            <button className='secondButton' onClick={checkAnswers}>Check Answers</button>
+          )}
         </>
       )
       }
