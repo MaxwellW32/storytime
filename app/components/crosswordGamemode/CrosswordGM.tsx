@@ -315,7 +315,7 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
         <div className={styles.crossWordMain} style={{ padding: "1rem" }}>
             {isEditing ? (
                 <div >
-                    <label>Enter Words you'd like to appear in the Crossword</label>
+                    <label>Enter Words you&apos;d like to appear in the Crossword</label>
                     <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
                         {wordsArray.map((eachWord, index) => {
                             return (
