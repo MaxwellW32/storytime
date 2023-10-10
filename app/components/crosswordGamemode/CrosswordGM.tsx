@@ -7,7 +7,9 @@ import { crosswordType, gameObjType, storyBoardType } from "@/app/page"
 export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoard }: { gameObj: gameObjType, isEditing?: boolean, handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void }) {
 
     const [wordsArray, wordsArraySet] = useState<string[]>(() => {
-        return { ...gameObj?.gameData! as crosswordType }.wordArray ?? []
+        const gameObjGameData = gameObj.gameData as crosswordType
+
+        return gameObjGameData?.wordArray ?? []
     })
 
     const spawnPointRef = useRef<HTMLDivElement>(null!)
@@ -20,6 +22,7 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
     }
     const [xyCoords, xyCoordsSet] = useState({ ...initialXYCoordsValue })
     const [clickedOnBoardAmt, clickedOnBoardAmtSet] = useState(0)
+    const [wordsMatchedAlready, wordsMatchedAlreadySet] = useState<string[]>([])
 
     const [userChosenWord, userChosenWordSet] = useState("")
 
@@ -46,7 +49,9 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
             gameData: { ...gameObj?.gameData as crosswordType, wordArray: wordsArray }
         }
 
-        handleStoryBoard!("update", gameObj!.boardObjId, newObj)
+        if (handleStoryBoard) {
+            handleStoryBoard!("update", gameObj!.boardObjId, newObj)
+        }
     }
 
     const handleFinishedUpdate = () => {
@@ -97,10 +102,21 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
 
             wordsArray.forEach(eachWord => {
                 const reversedUserChosenWord = userChosenWord.split('').reverse().join('')
-                if (userChosenWord === eachWord || reversedUserChosenWord === eachWord) {
+                if ((userChosenWord === eachWord || reversedUserChosenWord === eachWord)) {
                     //apply correct
-                    userAmountCorrectSet(prev => prev + 1)
+                    if (!wordsMatchedAlready.includes(userChosenWord)) {
+
+                        userAmountCorrectSet(prev => prev + 1)
+                    }
                     applyStylesToTiles("correct")
+
+                    wordsMatchedAlreadySet(prevWords => {
+                        const newarr = [...prevWords] ?? []
+                        newarr.push(userChosenWord)
+
+                        return newarr
+                    })
+
                     gotCorrect = true
                 }
             })
@@ -310,6 +326,18 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
         })
 
     }
+
+    const didMountCount = useRef(0)
+    //monitor changes and save em
+    useEffect(() => {
+        if (didMountCount.current >= 2) {
+            console.log(`$seen here with 2`);
+            console.log(`$reran in heeere`);
+            handleSubmit()
+        }
+
+        didMountCount.current++
+    }, [wordsArray])
 
     return (
         <div className={styles.crossWordMain} style={{ padding: "1rem" }}>
