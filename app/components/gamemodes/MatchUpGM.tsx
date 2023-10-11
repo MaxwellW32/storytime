@@ -2,8 +2,6 @@
 import { useState, useEffect } from "react"
 import { v4 as uuidv4 } from "uuid";
 import styles from "./style.module.css"
-import { useAtom } from 'jotai'
-import { globalStorieArray } from '@/app/utility/globalState'
 import { gameObjType, matchupType, storyBoardType } from "@/app/page";
 
 
@@ -18,9 +16,7 @@ import {
 } from "@dnd-kit/core";
 
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { updateStoryWithGameDataGlobal } from "@/app/utility/updater";
 import Container from "@/app/using/container";
-import { saveToLocalStorage } from "@/app/utility/savestorage";
 
 
 export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinished, storyId, gameData, isEditing = false, boardType, handleStoryBoard }: gameObjType & {
@@ -29,7 +25,6 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
     handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void
 }) {
 
-    const [stories, storiesSet] = useAtom(globalStorieArray)
 
     const [questions, questionsSet] = useState<string[]>(() => {
 
@@ -296,14 +291,14 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
         }
 
         //save game finished globally
-        if (gameFinishedState && !isEditing && !gameFinished) {
-            saveToLocalStorage("storiesArr", updateStoryWithGameDataGlobal(stories!, storyId, boardObjId, newObj))
-        }
+        // if (gameFinishedState && !isEditing && !gameFinished) {
+        //     saveToLocalStorage("storiesArr", updateStoryWithGameDataGlobal(stories!, storyId, boardObjId, newObj))
+        // }
 
-        //refresh
-        if (!gameFinishedState && !isEditing && gameFinished) {
-            saveToLocalStorage("storiesArr", updateStoryWithGameDataGlobal(stories!, storyId, boardObjId, newObj))
-        }
+        // //refresh
+        // if (!gameFinishedState && !isEditing && gameFinished) {
+        //     saveToLocalStorage("storiesArr", updateStoryWithGameDataGlobal(stories!, storyId, boardObjId, newObj))
+        // }
 
     }, [gameFinishedState])
 

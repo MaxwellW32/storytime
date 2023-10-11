@@ -1,13 +1,10 @@
 "use client"
 import Image from 'next/image'
-import { useMemo, useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect } from "react"
 import { v4 as uuidv4 } from "uuid";
 import styles from "./style.module.css"
-import { atom, useAtom } from 'jotai'
 import ReactPlayer from "react-player/youtube";
-import { globalStorieArray } from '@/app/utility/globalState'
 import MakeStory from '../maker/MakeStory';
-import Link from 'next/link';
 import DisplayImage from '../display/DisplayImage';
 import DisplayVideo from '../display/DisplayVideo';
 import MatchUpGM from '../gamemodes/MatchUpGM';
@@ -16,18 +13,10 @@ import WordsToMeaningGM from '../gamemodes/WordsToMeaningGM';
 import PronounciationGM from '../gamemodes/PronounciationGM';
 import { StoryData } from '@/app/page';
 
-export default function ViewStory({ fullData }: { fullData: StoryData }) {
+export default function ViewStory({ fullData, updateStory, deleteStory }: { fullData: StoryData, updateStory: (seeBoard: StoryData) => Promise<void>, deleteStory: (seenId: string) => Promise<void> }) {
 
-    const [globalStories, globalStoriesSet] = useAtom(globalStorieArray)
-
+    // console.log(`$called viewstory`, fullData);
     const [reading, readingSet] = useState(false)
-
-    function deleteStory(id: string) {
-        globalStoriesSet(prevGlobalStoryArr => {
-            const newGlobalArr = prevGlobalStoryArr!.filter(eachStory => eachStory.storyId !== id)
-            return newGlobalArr
-        })
-    }
 
     const descRef = useRef<HTMLParagraphElement>(null)
     const [showDescriptionFull, showDescriptionFullSet] = useState(false)
@@ -45,7 +34,7 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
     return (
         <div style={{ width: "95%", margin: "0 auto", borderRadius: ".7rem", padding: "1rem", backgroundColor: "var(--backgroundColor)", position: "relative" }}>
 
-            {editClicked && <MakeStory passedData={fullData} editClickedSet={editClickedSet} />}
+            {editClicked && <MakeStory updateStory={updateStory} passedData={fullData} editClickedSet={editClickedSet} />}
 
             <div className={styles.titleCont}>
 
@@ -58,15 +47,15 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
 
                 <div style={{ display: "flex", gap: "1rem" }}>
                     <button onClick={() => { readingSet(true) }}> Let&apos;s Read </button>
-                    <button style={{}} onClick={() => { deleteStory(fullData.storyId) }}>Delete Story</button>
+                    <button style={{}} onClick={() => { deleteStory(fullData.storyid!) }}>Delete Story</button>
                 </div>
             </div>
 
             <div className={`italic`} style={{ fontSize: ".9em", marginTop: "var(--medium-margin)", display: "grid", gap: ".3rem", alignSelf: "flex-end" }}>
-                {fullData.shortDescription && (
+                {fullData.shortdescription && (
                     <>
                         <p >Description -</p>
-                        <p ref={descRef} className={styles.descText} style={{ display: showDescriptionFull ? "block" : "-webkit-box" }}>{fullData.shortDescription}</p>
+                        <p ref={descRef} className={styles.descText} style={{ display: showDescriptionFull ? "block" : "-webkit-box" }}>{fullData.shortdescription}</p>
                         {descOverFlowing && <p className={styles.highlighted} onClick={() => {
                             showDescriptionFullSet(prev => !prev)
                         }}>{showDescriptionFull ? "Show Less" : "Show More"}</p>}
@@ -80,7 +69,7 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
                     <button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => { readingSet(false) }}>close</button>
                     <h3 style={{ textAlign: "center", fontSize: "2rem" }}>{fullData.title}</h3>
 
-                    {fullData.storyBoard?.map((eachElemnt, index) => {
+                    {fullData.storyboard?.map((eachElemnt, index) => {
 
                         if (eachElemnt.boardType === "text") {
                             return (
@@ -104,7 +93,7 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
                                 <div key={uuidv4()} className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", backgroundColor: "var(--backgroundColor)" }} >
 
                                     {eachElemnt.gameSelection === "matchup" ? (
-                                        <MatchUpGM {...eachElemnt} storyId={fullData.storyId} />
+                                        <MatchUpGM {...eachElemnt} storyId={fullData.storyid!} />
                                     ) : eachElemnt.gameSelection === "crossword" ? (
                                         <CrosswordGM gameObj={eachElemnt} />
                                     ) : eachElemnt.gameSelection === "wordmeaning" ? (
@@ -125,7 +114,7 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
                 <ReactPlayer
                     loop={true}
                     playing={reading}
-                    url={fullData.backgroundAudio ? fullData.backgroundAudio : "https://www.youtube.com/watch?v=NJuSStkIZBg"} />
+                    url={fullData.backgroundaudio ? fullData.backgroundaudio : "https://www.youtube.com/watch?v=NJuSStkIZBg"} />
             </div>
         </div>
     )

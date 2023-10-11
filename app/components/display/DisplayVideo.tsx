@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react"
 import styles from "./style.module.css"
-import { imageType, storyBoardType, videoType } from "@/app/page"
+import { storyBoardType, videoType } from "@/app/page"
 import ReactPlayer from "react-player"
 
 
@@ -14,7 +14,7 @@ export default function DisplayVideo({ passedVideoData, editing = false, handleS
             {editing ? (
                 <>
                     <p>Add A Video</p>
-                    <input style={{ backgroundColor: "var(--backgroundColor)", color: "var(--textColor)", borderBottom: "2px solid var(--textColor)" }} type='text' placeholder='Enter a Youtube Url' value={videoObj.videoUrl} onChange={(e) => {
+                    <input style={{ backgroundColor: "var(--backgroundColor)", color: "var(--textColor)", borderBottom: "2px solid var(--textColor)" }} type='text' placeholder='Enter a Youtube Url' value={videoObj.videoUrl ?? ""} onChange={(e) => {
                         videoObjSet(prevVideoObj => {
                             prevVideoObj.videoUrl = e.target.value
                             return { ...prevVideoObj }
@@ -29,7 +29,7 @@ export default function DisplayVideo({ passedVideoData, editing = false, handleS
                         <ReactPlayer
                             loop={false}
                             playing={false}
-                            url={videoObj.videoUrl}
+                            url={videoObj.videoUrl ?? ""}
                         />
                     </div>
                 </>

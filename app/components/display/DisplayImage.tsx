@@ -13,7 +13,7 @@ export default function DisplayImage({ passedImageData, editing = false, handleS
             {editing ? (
                 <div style={{ color: "var(--textColor)", backgroundColor: "var(--backgroundColor)", padding: "1rem", display: "grid", gap: "1rem" }}>
                     <p>Add An Image</p>
-                    <input style={{ width: '100%', color: "var(--textColor)", borderBottom: "2px solid var(--textColor)", backgroundColor: "var(--backgroundColor)" }} placeholder='Enter an Image url' type='text' value={imageObj.imageUrl} onChange={(e) => {
+                    <input style={{ width: '100%', color: "var(--textColor)", borderBottom: "2px solid var(--textColor)", backgroundColor: "var(--backgroundColor)" }} placeholder='Enter an Image url' type='text' value={imageObj.imageUrl ?? ""} onChange={(e) => {
                         imageObjSet(prevVideoObj => {
                             prevVideoObj.imageUrl = e.target.value
                             return { ...prevVideoObj }
@@ -26,7 +26,7 @@ export default function DisplayImage({ passedImageData, editing = false, handleS
 
                     {imageObj.imageUrl !== undefined && (
                         <div className={styles.imageCont}>
-                            <img src={imageObj.imageUrl}
+                            <img src={imageObj.imageUrl ?? ""}
                             />
                         </div>
                     )}

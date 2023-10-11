@@ -2,9 +2,7 @@
 import { useState, useRef, useEffect } from "react"
 import { v4 as uuidv4 } from "uuid";
 import styles from "./style.module.css"
-import { useAtom } from 'jotai'
-import { globalStorieArray } from '@/app/utility/globalState'
-import { StoryData, gameObjType, gameSelectionTypes, imageType, storyBoardType, textType, videoType } from "@/app/page";
+import { StoryData, StoryDataSend, gameObjType, gameSelectionTypes, imageType, storyBoardType, textType, videoType } from "@/app/page";
 import DisplayImage from "../display/DisplayImage";
 import DisplayVideo from "../display/DisplayVideo";
 import MatchUpGM from "../gamemodes/MatchUpGM";
@@ -28,19 +26,17 @@ const ISYTVID = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/
 
 
 
-export default function MakeStory({ makingStorySet, editClickedSet, passedData }: { makingStorySet?: React.Dispatch<React.SetStateAction<boolean>>, editClickedSet?: React.Dispatch<React.SetStateAction<boolean>>, passedData?: StoryData }) {
-
-    const [, storiesSet] = useAtom(globalStorieArray)
+export default function MakeStory({ makingStorySet, editClickedSet, passedData, newStory, updateStory }: { makingStorySet?: React.Dispatch<React.SetStateAction<boolean>>, editClickedSet?: React.Dispatch<React.SetStateAction<boolean>>, newStory?: (newStory: StoryDataSend) => Promise<void>, updateStory?: (seeBoard: StoryData) => Promise<void>, passedData?: StoryData, }) {
 
     const [storyTitle, storyTitleSet] = useState(``)
-    const storyId = useRef(uuidv4())
+    const [storyId, storyIdSet] = useState("")
 
-    const [storyRating, storyRatingSet] = useState<undefined | number>()
-    const [storyBgAudio, storyBgAudioSet] = useState<undefined | string>()
-    const [storyShrtDescription, storyShrtDescriptionSet] = useState<undefined | string>("")
+    const [storyRating, storyRatingSet] = useState<number | null>(null)
+    const [storyBgAudio, storyBgAudioSet] = useState<null | string>(null)
+    const [storyShrtDescription, storyShrtDescriptionSet] = useState<null | string>("")
 
     const [preProcessedText, preProcessedTextSet] = useState("")
-    const [storyBoards, storyBoardsSet] = useState<storyBoardType[]>()
+    const [storyBoards, storyBoardsSet] = useState<storyBoardType[] | null>(null)
 
     const [gmShowingArr, gmShowingArrSet] = useState<Boolean[]>(() => {
         return storyBoards?.map(eachBoard => false) ?? []
@@ -49,12 +45,12 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData }
     //load data if passed - edit
     useEffect(() => {
         if (passedData) {
-            storyTitleSet(passedData!.title)
-            storyId.current = passedData!.storyId
-            storyRatingSet(passedData!.rating)
-            storyBgAudioSet(passedData!.backgroundAudio)
-            storyShrtDescriptionSet(passedData!.shortDescription)
-            storyBoardsSet(passedData!.storyBoard)
+            storyTitleSet(passedData.title)
+            storyIdSet(passedData.storyid)
+            storyRatingSet(passedData.rating)
+            storyBgAudioSet(passedData.backgroundaudio)
+            storyShrtDescriptionSet(passedData.shortdescription)
+            storyBoardsSet(passedData.storyboard)
         }
     }, [])
 
@@ -69,7 +65,7 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData }
     function convertTextToStoryBoards(passedText: string, indexToAdd?: number) {
         //sets up my original array from text only blank
 
-        if (indexToAdd !== undefined) {
+        if (indexToAdd !== null) {
             storyBoardsSet(prevStoryBoardArr => {
 
                 const ObjsArray = makeLinksAndParagraphsArray(passedText).map(eachStr => {
@@ -115,11 +111,11 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData }
                     //check eachStr if 
                 })
 
-                const newArr = prevStoryBoardArr!.map(each => each)
-                newArr.splice(indexToAdd, 1);
+                const newArr = prevStoryBoardArr?.map(each => each) ?? []
+                newArr.splice(indexToAdd as number, 1);
 
                 ObjsArray.forEach((eachObj, smallIndex) => {
-                    newArr.splice(indexToAdd + smallIndex, 0, eachObj);
+                    newArr.splice(indexToAdd as number + smallIndex, 0, eachObj);
                 })
 
                 return newArr
@@ -182,7 +178,7 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData }
                 const newBoard = [...prevStoryBoard!]
                 const newStrObj: textType = {
                     boardType: "text",
-                    storedText: undefined,
+                    storedText: null,
                     boardObjId: uuidv4()
                 }
                 newBoard.splice(index + 1, 0, newStrObj)
@@ -193,7 +189,7 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData }
                 const newBoard = [...prevStoryBoard!]
                 const newVidObj: videoType = {
                     boardType: "video",
-                    videoUrl: undefined,
+                    videoUrl: null,
                     boardObjId: uuidv4()
                 }
                 newBoard.splice(index + 1, 0, newVidObj)
@@ -204,7 +200,7 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData }
                 const newBoard = [...prevStoryBoard!]
                 const newImgObj: imageType = {
                     boardType: "image",
-                    imageUrl: undefined,
+                    imageUrl: null,
                     boardObjId: uuidv4()
                 }
                 newBoard.splice(index + 1, 0, newImgObj)
@@ -218,8 +214,8 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData }
                     boardType: "gamemode", //gives appropriate name
                     gameFinished: false,
                     boardObjId: uuidv4(),
-                    shouldStartOnNewPage: undefined,
-                    gameData: undefined
+                    shouldStartOnNewPage: null,
+                    gameData: null
                 }
 
                 storyBoardsSet((prevStoryBoard) => {
@@ -267,46 +263,44 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData }
     }
 
     function handleSubmit() {
-        const newStoryObj: StoryData = {
-            storyId: storyId.current,
-            title: storyTitle,
-            backgroundAudio: storyBgAudio,
-            rating: storyRating,
-            shortDescription: storyShrtDescription,
-            storyBoard: storyBoards
+
+        if (updateStory) {
+            const updatedStoryObj: StoryData = {
+                storyid: passedData!.storyid,
+                createdat: passedData!.createdat,
+                likes: passedData!.likes,
+                title: storyTitle,
+                backgroundaudio: storyBgAudio,
+                rating: storyRating,
+                shortdescription: storyShrtDescription,
+                storyboard: storyBoards
+            }
+            updateStory(updatedStoryObj)
         }
 
-        if (passedData !== undefined) {
-            storiesSet(prevStories => {
+        if (newStory) {
+            const newStoryObj: StoryDataSend = {
+                storyid: undefined,
+                createdat: undefined,
+                likes: undefined,
+                title: storyTitle,
+                backgroundaudio: storyBgAudio,
+                rating: storyRating,
+                shortdescription: storyShrtDescription,
+                storyboard: JSON.stringify(storyBoards)
+            }
 
-                if (prevStories) {
-                    const newStories = prevStories!.map(eachStory => {
-                        if (eachStory.storyId === newStoryObj.storyId) {
-                            return newStoryObj
-                        } else {
-                            return eachStory
-                        }
-                    })
-
-                    return newStories
-
-                } else {
-                    return [newStoryObj]
-                }
-            })
-            editClickedSet!(false)
-
-        } else {
-
-            storiesSet(prevStoriesArr => {
-                if (prevStoriesArr) {
-                    return [...prevStoriesArr, newStoryObj]
-                } else {
-                    return [newStoryObj]
-                }
-            })
-            makingStorySet!(false)
+            newStory(newStoryObj)
         }
+
+        if (editClickedSet) {
+            editClickedSet(false)
+        }
+
+        if (makingStorySet) {
+            makingStorySet(false)
+        }
+
     }
 
     const textAreaRefs = useRef<HTMLTextAreaElement[]>([])
@@ -336,7 +330,7 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData }
         <div className={styles.makeStoryMainDiv}>
             <button style={{ margin: ".5rem .5rem 0 auto" }}
                 onClick={() => {
-                    if (passedData !== undefined) {
+                    if (passedData !== null) {
                         editClickedSet!(false)
                     } else {
                         makingStorySet!(false)
@@ -354,21 +348,21 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData }
 
             <div className={styles.makeStoryLabelInputCont}>
                 <label htmlFor='msShDescription'>Short Description</label>
-                <input id='msShDescription' type='text' placeholder='Enter a Description ' value={storyShrtDescription} onChange={(e) => {
+                <input id='msShDescription' type='text' placeholder='Enter a Description ' value={storyShrtDescription ?? ""} onChange={(e) => {
                     storyShrtDescriptionSet(e.target.value)
                 }} />
             </div>
 
             <div className={styles.makeStoryLabelInputCont}>
                 <label htmlFor='msRating'>Rating</label>
-                <input id='msRating' type='number' placeholder='Enter a Rating /5 ' value={storyRating} onChange={(e) => {
+                <input id='msRating' type='number' placeholder='Enter a Rating /5 ' value={storyRating ?? undefined} onChange={(e) => {
                     storyRatingSet(parseInt(e.target.value))
                 }} />
             </div>
 
             <div className={styles.makeStoryLabelInputCont}>
                 <label htmlFor='msAudio'>Audio</label>
-                <input id='msAudio' type='text' placeholder='Background Music? ' value={storyBgAudio} onChange={(e) => {
+                <input id='msAudio' type='text' placeholder='Background Music? ' value={storyBgAudio ?? ""} onChange={(e) => {
                     storyBgAudioSet(e.target.value)
                 }} />
             </div>
@@ -377,7 +371,7 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData }
             <div className={styles.storyBoardCont}>
                 <h3 style={{ color: "#fff", textAlign: "center" }}>Story Board</h3>
 
-                {storyBoards === undefined ? (
+                {!storyBoards ? (
                     <>
                         <textarea className={styles.textAreaEdit} style={{ width: "100%", }} placeholder='Enter your story - seen image and Youtube urls will be automaitcally loaded' value={preProcessedText}
 
@@ -458,7 +452,7 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData }
 
                                         {eachElemnt.boardType === "text" ? (
 
-                                            <textarea key={uuidv4()} className={styles.textAreaEdit2} defaultValue={eachElemnt.storedText} ref={(e: HTMLTextAreaElement) => { addToTextAreaRefs(e, index) }}
+                                            <textarea key={uuidv4()} className={styles.textAreaEdit2} defaultValue={eachElemnt.storedText ?? ""} ref={(e: HTMLTextAreaElement) => { addToTextAreaRefs(e, index) }}
                                                 onInput={(e) => {
                                                     const el = e.target as HTMLTextAreaElement
                                                     el.style.height = 'auto';
@@ -481,7 +475,7 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData }
                                             <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", backgroundColor: "var(--backgroundColor)" }}>
 
                                                 {eachElemnt.gameSelection === "matchup" ? (
-                                                    <MatchUpGM isEditing={true} {...eachElemnt} storyId={storyId.current} handleStoryBoard={handleStoryBoard} />
+                                                    <MatchUpGM isEditing={true} {...eachElemnt} storyId={storyId} handleStoryBoard={handleStoryBoard} />
                                                 ) : eachElemnt.gameSelection === "crossword" ? (
                                                     <CrosswordGM gameObj={eachElemnt} isEditing={true} handleStoryBoard={handleStoryBoard} />
                                                 ) : eachElemnt.gameSelection === "wordmeaning" ? (
