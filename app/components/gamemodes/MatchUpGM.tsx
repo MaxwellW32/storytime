@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect, useMemo, useRef } from "react"
+import { useState, useEffect, useMemo, useRef, ReactNode } from "react"
 import { v4 as uuidv4 } from "uuid";
 import styles from "./style.module.css"
 import { gameObjType, matchupType, storyBoardType } from "@/app/page";
@@ -17,12 +17,14 @@ import {
 
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import Container from "@/app/using/container";
+import { handleStoriesWhereGameOver } from "@/app/utility/savestorage";
+import DisplayGameOVer from "../useful/DisplayGameOver";
 
 
-export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinished, gameData, isEditing = false, handleStoryBoard, sendUpdatedGameOver }: gameObjType & {
-    isEditing?: boolean
+export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameData, isEditing = false, storyid, handleStoryBoard }: gameObjType & {
+    isEditing?: boolean,
+    storyid?: string,
     handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void,
-    sendUpdatedGameOver?: (seenObjId: string) => void
 }) {
 
 
@@ -38,7 +40,14 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
         })
     })
 
-    const [gameFinishedState, gameFinishedStateSet] = useState(gameFinished)
+    const [gameFinishedState, gameFinishedStateSet] = useState<boolean>(() => {
+        if (!isEditing) {
+            const isGameOver = handleStoriesWhereGameOver(storyid!, boardObjId, "read")
+            return isGameOver!
+        } else {
+            return false
+        }
+    })
 
     const [userAnswers, userAnswersSet] = useState<string[][]>([])
 
@@ -98,7 +107,6 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
                 choicesArr: choices!,
                 questionsArr: questions!
             },
-            gameFinished: gameFinished,
             shouldStartOnNewPage: shouldStartOnNewPage,
             boardType: "gamemode",
             boardObjId: boardObjId
@@ -288,12 +296,20 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
 
     }, [loadButtonClicked])
 
-    //update global state if in final view and game finished
+    //write change to local storage
+    const gameFinishedOnce = useRef(false)
     useEffect(() => {
-        if (gameFinishedState !== gameFinished && sendUpdatedGameOver) {
-            sendUpdatedGameOver(boardObjId)
+        if (gameFinishedState) {
+            gameFinishedOnce.current = true
         }
+
+        if (gameFinishedOnce.current && !isEditing) {
+            handleStoriesWhereGameOver(storyid!, boardObjId, "update")
+        }
+
     }, [gameFinishedState])
+
+
 
     const questionInputRefs = useRef<HTMLInputElement[]>([null!])
     const addQuestionInputsToRef = (ref: HTMLInputElement | null, indexToAdd: number) => {
@@ -484,28 +500,30 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
 
 
                 <>
-                    <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCorners}
-                        onDragStart={handleDragStart}
-                        onDragOver={handleDragOver}
-                        onDragEnd={handleDragEnd}
-                    >
-                        <div style={{
-                            display: "flex",
-                            flexDirection: "row",
-                            flexWrap: "wrap"
-                        }}>
-                            {questions!.map((eachQuestion, index) => {
-                                return (
-                                    <Container key={uuidv4()} id={`container${index}`} items={items[`container${index}`]} arrPos={index} questionAsked={eachQuestion} />
-                                )
-                            })}
-                        </div>
-                        <Container id="root" items={items.root} arrPos={4} />
-                        {/* <DragOverlay>{activeId ? <Item id={activeId} /> : null}</DragOverlay> */}
-                    </DndContext>
+                    <DisplayGameOVer gameOver={gameFinishedState}>
 
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCorners}
+                            onDragStart={handleDragStart}
+                            onDragOver={handleDragOver}
+                            onDragEnd={handleDragEnd}
+                        >
+                            <div style={{
+                                display: "flex",
+                                flexDirection: "row",
+                                flexWrap: "wrap"
+                            }}>
+                                {questions!.map((eachQuestion, index) => {
+                                    return (
+                                        <Container key={uuidv4()} id={`container${index}`} items={items[`container${index}`]} arrPos={index} questionAsked={eachQuestion} />
+                                    )
+                                })}
+                            </div>
+                            <Container id="root" items={items.root} arrPos={4} />
+                        </DndContext>
+
+                    </DisplayGameOVer>
 
 
                     {gameFinishedState ? (
@@ -520,3 +538,5 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
     )
 
 }
+
+

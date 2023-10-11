@@ -4,32 +4,21 @@ import { Prisma, PrismaClient, story } from "@prisma/client";
 
 const prisma = new PrismaClient()
 
-async function updateStory(option: string, seenStory: StoryData) {
+async function updateStory(seenStory: StoryData) {
   "use server";
 
   const savableStory: story = { ...seenStory, storyboard: JSON.stringify(seenStory.storyboard) }
 
-  if (option === "story") {
 
-    await prisma.story.update({
-      where: {
-        storyid: seenStory.storyid,
-      },
-      data: savableStory,
-    })
+  await prisma.story.update({
+    where: {
+      storyid: seenStory.storyid,
+    },
+    data: savableStory,
+  })
 
-    revalidatePath("/")
+  revalidatePath("/")
 
-  } else if (option === "gamemode") {
-
-    await prisma.story.update({
-      where: {
-        storyid: seenStory.storyid,
-      },
-      data: savableStory,
-    })
-
-  }
 }
 
 async function newStory(newStory: StoryDataSend) {
@@ -138,7 +127,6 @@ export type gameSelectionTypes = "matchup" | "crossword" | "pronounce" | "wordme
 export interface gameObjType {
   boardObjId: string,
   gameSelection: gameSelectionTypes, //tell different types of gamemodes
-  gameFinished: boolean,
   boardType: "gamemode",
   shouldStartOnNewPage: boolean | null,
   gameData: gameDataType | null,

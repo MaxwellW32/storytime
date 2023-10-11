@@ -26,7 +26,7 @@ const ISYTVID = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/
 
 
 
-export default function MakeStory({ makingStorySet, editClickedSet, passedData, newStory, updateStory }: { makingStorySet?: React.Dispatch<React.SetStateAction<boolean>>, editClickedSet?: React.Dispatch<React.SetStateAction<boolean>>, newStory?: (newStory: StoryDataSend) => Promise<void>, updateStory?: (option: string, seeBoard: StoryData) => Promise<void>, passedData?: StoryData, }) {
+export default function MakeStory({ makingStorySet, editClickedSet, passedData, newStory, updateStory }: { makingStorySet?: React.Dispatch<React.SetStateAction<boolean>>, editClickedSet?: React.Dispatch<React.SetStateAction<boolean>>, newStory?: (newStory: StoryDataSend) => Promise<void>, updateStory?: (seeBoard: StoryData) => Promise<void>, passedData?: StoryData, }) {
 
     const [storyTitle, storyTitleSet] = useState(``)
     const [storyId, storyIdSet] = useState("")
@@ -212,7 +212,6 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData, 
                 const gameModeObj: gameObjType = {
                     gameSelection: gmOption,
                     boardType: "gamemode", //gives appropriate name
-                    gameFinished: false,
                     boardObjId: uuidv4(),
                     shouldStartOnNewPage: null,
                     gameData: null
@@ -275,7 +274,7 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData, 
                 shortdescription: storyShrtDescription,
                 storyboard: storyBoards
             }
-            updateStory("story", updatedStoryObj)
+            updateStory(updatedStoryObj)
         }
 
         if (newStory) {

@@ -2,14 +2,14 @@
 import styles from "./style.module.css"
 import { useRef, useEffect, useState, useMemo } from "react"
 import { crosswordType, gameObjType, storyBoardType } from "@/app/page"
+import { handleStoriesWhereGameOver } from "@/app/utility/savestorage"
+import DisplayGameOVer from "../useful/DisplayGameOver"
 
 
-export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoard, sendUpdatedGameOver }:
+export default function CrosswordGM({ gameObj, isEditing = false, storyid, handleStoryBoard }:
     {
-        gameObj: gameObjType, isEditing?: boolean,
+        gameObj: gameObjType, isEditing?: boolean, storyid?: string
         handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void,
-        sendUpdatedGameOver?: (seenObjId: string) => void
-
     }) {
 
     const [wordsArray, wordsArraySet] = useState<string[]>(() => {
@@ -34,7 +34,16 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
 
     const [userChosenTileArray, userChosenTileArraySet] = useState<number[]>([])
     const [userAmountCorrect, userAmountCorrectSet] = useState(0)
-    const [gameFinishedState, gameFinishedStateSet] = useState(gameObj.gameFinished)
+    const [gameFinishedState, gameFinishedStateSet] = useState(() => {
+        if (!isEditing) {
+            const isGameOver = handleStoriesWhereGameOver(storyid!, gameObj.boardObjId, "read")
+            return isGameOver!
+        } else {
+            return false
+        }
+    })
+    //function that gets current value from local storage
+    //allow freely to switch back and forth
 
 
     const amtOfAnswersLeft = useMemo(() => {
@@ -42,10 +51,10 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
     }, [userAmountCorrect, wordsArray.length])
 
     const handleSubmit = () => {
+        //local submit to storyboard
 
         const newObj: gameObjType = {
             ...gameObj,
-            gameFinished: gameFinishedState,
             gameData: { gameDataFor: "crossword", wordArray: wordsArray }
         }
 
@@ -54,11 +63,18 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
         }
     }
 
-    //update global state if in final view and game finished
+    //write change to local storage
+    const gameFinishedOnce = useRef(false)
     useEffect(() => {
-        if (gameFinishedState !== gameObj.gameFinished && sendUpdatedGameOver) {
-            sendUpdatedGameOver(gameObj.boardObjId)
+        if (gameFinishedState) {
+            gameFinishedOnce.current = true
         }
+
+        if (gameFinishedOnce.current && !isEditing) {
+            handleStoriesWhereGameOver(storyid!, gameObj.boardObjId, "update")
+
+        }
+
     }, [gameFinishedState])
 
     //check tiles intersection with selection
@@ -299,7 +315,7 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
                 tileRefs.current[randSafeXIndexToStart + ranDomBuffer + wordIndex].setAttribute('data-seenLetter', eachWord[wordIndex])
 
                 if (isEditing) {
-                    tileRefs.current[randSafeXIndexToStart + ranDomBuffer + wordIndex].style.backgroundColor = "yellow"
+                    tileRefs.current[randSafeXIndexToStart + ranDomBuffer + wordIndex].style.backgroundColor = "var(--secondaryColor)"
                 }
             }
             randSafeXIndexToStart += longestWordNum
@@ -313,7 +329,7 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
             tileRefs.current[randSafeYIndexToStart + ranDomBuffer].innerText = newtwoItemArr[0][wordIndex]
             tileRefs.current[randSafeYIndexToStart + ranDomBuffer].setAttribute('data-seenLetter', newtwoItemArr[0][wordIndex])
             if (isEditing) {
-                tileRefs.current[randSafeYIndexToStart + ranDomBuffer].style.backgroundColor = "yellow"
+                tileRefs.current[randSafeYIndexToStart + ranDomBuffer].style.backgroundColor = "var(--secondaryColor)"
             }
 
             randSafeYIndexToStart += longestWordNum //everytime you add longest word num you skip a line
@@ -326,7 +342,7 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
             tileRefs.current[randSafeYIndexToStart + ranDomBuffer].innerText = newtwoItemArr[1][wordIndex]
             tileRefs.current[randSafeYIndexToStart + ranDomBuffer].setAttribute('data-seenLetter', newtwoItemArr[1][wordIndex])
             if (isEditing) {
-                tileRefs.current[randSafeYIndexToStart + ranDomBuffer].style.backgroundColor = "yellow"
+                tileRefs.current[randSafeYIndexToStart + ranDomBuffer].style.backgroundColor = "var(--secondaryColor)"
             }
 
             randSafeYIndexToStart += longestWordNum //everytime you add longest word num you skip a line
@@ -338,6 +354,8 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
     //load up tiles
     const didMount = useRef(false)
     useEffect(() => {
+        didMount.current = true
+
         if (didMount.current) {
             loadUpTiles([...wordsArray])
 
@@ -345,8 +363,6 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
                 inputRef.current.value = ""
             }
         }
-
-        didMount.current = true
     }, [wordsArray])
 
     const inputRef = useRef<HTMLInputElement>(null!)
@@ -380,10 +396,10 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
             {isEditing ? (
                 <div >
                     <label>Enter Words you&apos;d like to appear in the Crossword</label>
-                    <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", margin: "1rem" }}>
                         {wordsArray.map((eachWord, index) => {
                             return (
-                                <div key={index} style={{ position: "relative", backgroundColor: "blue", borderRadius: ".7rem", borderTopRightRadius: 0, padding: ".5rem" }}>
+                                <div key={index} style={{ position: "relative", backgroundColor: "var(--primaryColor)", borderRadius: ".7rem", borderTopRightRadius: 0, padding: ".5rem" }}>
 
                                     <svg style={{ position: "absolute", top: 0, right: 0, width: ".8rem", fill: "white" }} onClick={() => {
                                         wordsArraySet(prevWordsArr => {
@@ -413,7 +429,9 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
                     {gameFinishedState && <p>Beat the Game!!!</p>}
                     <p className={styles.leftToFind}>Words left to find {amtOfAnswersLeft}</p>
                     <p onClick={showHints} style={{ textAlign: "end", marginBottom: "1rem", cursor: "pointer" }}>hint?</p>
-                    <div ref={spawnPointRef} className={styles.spawnArea}></div>
+                    <DisplayGameOVer gameOver={gameFinishedState}>
+                        <div ref={spawnPointRef} className={styles.spawnArea}></div>
+                    </DisplayGameOVer>
                 </>
             )}
 
