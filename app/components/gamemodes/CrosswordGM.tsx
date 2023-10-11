@@ -426,12 +426,17 @@ export default function CrosswordGM({ gameObj, isEditing = false, storyid, handl
                 </div>
             ) : (
                 <>
-                    {gameFinishedState && <p>Beat the Game!!!</p>}
                     <p className={styles.leftToFind}>Words left to find {amtOfAnswersLeft}</p>
                     <p onClick={showHints} style={{ textAlign: "end", marginBottom: "1rem", cursor: "pointer" }}>hint?</p>
                     <DisplayGameOVer gameOver={gameFinishedState}>
                         <div ref={spawnPointRef} className={styles.spawnArea}></div>
                     </DisplayGameOVer>
+                    {gameFinishedState && (
+                        <>
+                            <p>Beat the Game!!!</p>
+                            <button onClick={() => { gameFinishedStateSet(false) }}>Refresh</button>
+                        </>
+                    )}
                 </>
             )}
 

@@ -18,3 +18,10 @@
     color: var(--secondaryColor);
     cursor: pointer;
 }
+
+
+.storyTextboardHolder {
+    width: 100%;
+    max-width: 750px;
+    margin: 0 auto;
+}
