@@ -24,9 +24,9 @@ export default function DisplayImage({ passedImageData, editing = false, handleS
                         }
                     }} />
 
-                    {imageObj.imageUrl !== undefined && (
+                    {imageObj.imageUrl !== null && imageObj.imageUrl !== "" && (
                         <div className={styles.imageCont}>
-                            <img src={imageObj.imageUrl ?? ""}
+                            <img src={imageObj.imageUrl}
                             />
                         </div>
                     )}

@@ -4,7 +4,13 @@ import { useRef, useEffect, useState, useMemo } from "react"
 import { crosswordType, gameObjType, storyBoardType } from "@/app/page"
 
 
-export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoard }: { gameObj: gameObjType, isEditing?: boolean, handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void }) {
+export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoard, sendUpdatedGameOver }:
+    {
+        gameObj: gameObjType, isEditing?: boolean,
+        handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void,
+        sendUpdatedGameOver?: (seenObjId: string) => void
+
+    }) {
 
     const [wordsArray, wordsArraySet] = useState<string[]>(() => {
         const gameObjGameData = gameObj.gameData as crosswordType
@@ -28,7 +34,8 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
 
     const [userChosenTileArray, userChosenTileArraySet] = useState<number[]>([])
     const [userAmountCorrect, userAmountCorrectSet] = useState(0)
-    const [gameFinished, gameFinishedSet] = useState(false)
+    const [gameFinishedState, gameFinishedStateSet] = useState(gameObj.gameFinished)
+
 
     const amtOfAnswersLeft = useMemo(() => {
         return wordsArray.length - userAmountCorrect
@@ -38,7 +45,7 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
 
         const newObj: gameObjType = {
             ...gameObj,
-            gameFinished: gameFinished,
+            gameFinished: gameFinishedState,
             gameData: { gameDataFor: "crossword", wordArray: wordsArray }
         }
 
@@ -47,9 +54,12 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
         }
     }
 
-    const handleFinishedUpdate = () => {
-        //globally save to stories that gamemode finished
-    }
+    //update global state if in final view and game finished
+    useEffect(() => {
+        if (gameFinishedState !== gameObj.gameFinished && sendUpdatedGameOver) {
+            sendUpdatedGameOver(gameObj.boardObjId)
+        }
+    }, [gameFinishedState])
 
     //check tiles intersection with selection
     useEffect(() => {
@@ -120,22 +130,51 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
         }
     }, [userChosenWord])
 
+
+    const showHints = () => {
+
+        const wordsNotFoundAlready: string[] = []
+
+        wordsArray.forEach(eachWord => {
+            if (!wordsMatchedAlready.includes(eachWord)) {
+                wordsNotFoundAlready.push(eachWord)
+            }
+        })
+
+        if (wordsNotFoundAlready.length === 0) return
+
+        const randIndex = Math.floor(Math.random() * wordsNotFoundAlready.length)
+        const randomWordChosen = wordsNotFoundAlready[randIndex]
+        const letterToShake = randomWordChosen[0]
+
+        tileRefs.current.forEach(eachTileRef => {
+            if (eachTileRef.innerText === letterToShake) {
+                eachTileRef.classList.add(styles.quickShake)
+
+                setTimeout(() => {
+                    eachTileRef.classList.remove(styles.quickShake)
+                }, 2000)
+            }
+        })
+
+
+    }
+
+
     const applyStylesToTiles = (option: "correct" | "incorrect") => {
 
         if (option === "correct") {
             userChosenTileArray.forEach(eachIndexSeen => {
-                tileRefs.current[eachIndexSeen].style.backgroundColor = "pink"
+                tileRefs.current[eachIndexSeen].style.backgroundColor = "var(--secondaryColor)"
                 tileRefs.current[eachIndexSeen].classList.add(styles.correct)
             })
 
         } else {
             userChosenTileArray.forEach(eachIndexSeen => {
-                tileRefs.current[eachIndexSeen].style.backgroundColor = "grey"
                 tileRefs.current[eachIndexSeen].classList.add(styles.incorrect)
 
                 setTimeout(() => {
                     userChosenTileArray.forEach(eachIndexSeen => {
-                        tileRefs.current[eachIndexSeen].style.backgroundColor = "green"
                         tileRefs.current[eachIndexSeen].classList.remove(styles.incorrect)
                     })
 
@@ -147,7 +186,7 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
     //check if user got all correct
     useEffect(() => {
         if (userAmountCorrect === wordsArray.length) {
-            gameFinishedSet(true)
+            gameFinishedStateSet(true)
         }
     }, [userAmountCorrect])
 
@@ -332,7 +371,6 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
         const passedArray: string[] = !gameObj.gameData ? [] : { ...gameObj.gameData as crosswordType }.wordArray ?? []
 
         if (passedArray.length !== wordsArray.length) {
-            console.log(`$should reload`);
             handleSubmit()
         }
     }, [wordsArray.length])
@@ -366,14 +404,15 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
                         }
                     }} type="text" />
                     <button onClick={addWord}>Submit Word</button>
-                    {gameFinished && <p>Beat the Game!!!</p>}
-                    <p>Words left to find {amtOfAnswersLeft}</p>
+                    {gameFinishedState && <p>Beat the Game!!!</p>}
+                    <p className={styles.leftToFind}>Words left to find {amtOfAnswersLeft}</p>
                     <div ref={spawnPointRef} className={styles.spawnArea}></div>
                 </div>
             ) : (
                 <>
-                    {gameFinished && <p>Beat the Game!!!</p>}
-                    <p>Words left to find {amtOfAnswersLeft}</p>
+                    {gameFinishedState && <p>Beat the Game!!!</p>}
+                    <p className={styles.leftToFind}>Words left to find {amtOfAnswersLeft}</p>
+                    <p onClick={showHints} style={{ textAlign: "end", marginBottom: "1rem", cursor: "pointer" }}>hint?</p>
                     <div ref={spawnPointRef} className={styles.spawnArea}></div>
                 </>
             )}

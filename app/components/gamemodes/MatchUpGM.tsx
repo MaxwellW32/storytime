@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { v4 as uuidv4 } from "uuid";
 import styles from "./style.module.css"
 import { gameObjType, matchupType, storyBoardType } from "@/app/page";
@@ -22,7 +22,7 @@ import Container from "@/app/using/container";
 export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinished, gameData, isEditing = false, handleStoryBoard, sendUpdatedGameOver }: gameObjType & {
     isEditing?: boolean
     handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void,
-    sendUpdatedGameOver: (seenObjId: string) => void
+    sendUpdatedGameOver?: (seenObjId: string) => void
 }) {
 
 
@@ -91,7 +91,6 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
 
     function submitNewGameModeObj() {
         //local submit to parent make Story - saved to the storyTextboard
-
         const newGameMode: gameObjType = {
             gameSelection: gameSelection,
             gameData: {
@@ -102,7 +101,7 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
             gameFinished: gameFinished,
             shouldStartOnNewPage: shouldStartOnNewPage,
             boardType: "gamemode",
-            boardObjId: uuidv4()
+            boardObjId: boardObjId
         }
 
         if (handleStoryBoard) {
@@ -279,6 +278,16 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
         setItems(handleItemsWithChanges())
     }, [questions, choices])
 
+
+    const [loadButtonClicked, loadButtonClickedSet] = useState(false)
+    useEffect(() => {
+        if (loadButtonClicked) {
+            submitNewGameModeObj()
+            loadButtonClickedSet(false)
+        }
+
+    }, [loadButtonClicked])
+
     //update global state if in final view and game finished
     useEffect(() => {
         if (gameFinishedState !== gameFinished && sendUpdatedGameOver) {
@@ -286,20 +295,73 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
         }
     }, [gameFinishedState])
 
+    const questionInputRefs = useRef<HTMLInputElement[]>([null!])
+    const addQuestionInputsToRef = (ref: HTMLInputElement | null, indexToAdd: number) => {
+        // console.log(`$seeing index ${indexToAdd}, ref`, ref);
+        if (ref === null) return
+        questionInputRefs.current[indexToAdd] = ref
+    }
+
+    const choiceInputRefs = useRef<HTMLInputElement[][]>([[null!]])
+    const addChoiceInputsToRef = (ref: HTMLInputElement | null, largeIndexToAdd: number, smallIndexToAdd: number) => {
+        // console.log(`$seeing largeindex ${largeIndexToAdd}, small ${smallIndexToAdd}, ref`, ref);
+
+        if (ref === null) return
+
+        if (!choiceInputRefs.current[largeIndexToAdd]) {
+            choiceInputRefs.current[largeIndexToAdd] = []
+        }
+
+        if (!choiceInputRefs.current[largeIndexToAdd][smallIndexToAdd]) {
+            choiceInputRefs.current[largeIndexToAdd][smallIndexToAdd] = ref
+        }
+
+        choiceInputRefs.current[largeIndexToAdd][smallIndexToAdd] = ref
+
+    }
+
+    const loadValues = () => {
+        const newQuestionsArr: string[] = []
+        questionInputRefs.current.forEach((eachInput, index) => {
+            newQuestionsArr.push(eachInput.value)
+            // console.log(`$questions pos ${index}`, eachInput.value);
+        })
+        questionsSet(newQuestionsArr)
+
+        const newChoicesArr: string[][] = []
+        choiceInputRefs.current.forEach((inputArr, index) => {
+            newChoicesArr.push([])
+
+            inputArr.forEach((eachChoiceInput, smallerIndex) => {
+                newChoicesArr[index].push("")
+                newChoicesArr[index][smallerIndex] = eachChoiceInput.value
+
+                // console.log(`$choices large pos ${index}, smaller pos: ${smallerIndex}`, eachChoiceInput.value);
+            })
+        })
+        choicesSet(newChoicesArr)
+
+        loadButtonClickedSet(true)
+    }
 
     return (
         <div className={styles.gmMainDiv} style={{ scale: gameFinishedState ? .9 : 1 }}>
             {isEditing ? (
                 <>
-                    {questions?.map((temp, index) => (
+                    {questions.map((temp, index) => (
                         <div className={styles.questionCont} key={uuidv4()}>
-                            <label>Question {index + 1}</label>
-                            <input style={{ width: "100%" }} type='text' placeholder={`Enter Question ${index + 1}`} defaultValue={questions[index]} onBlur={(e) => {
-                                questionsSet((prevQuestions) => {
-                                    prevQuestions[index] = e.target.value
-                                    return [...prevQuestions]
-                                })
-                            }} />
+                            <div style={{ display: "flex", gap: ".7rem" }}>
+                                <label>Question {index + 1}</label>
+
+                                <svg className={styles.deleteQuestion}
+                                    onClick={() => {
+                                        questionInputRefs.current = questionInputRefs.current.filter((eq, seenIndex) => seenIndex !== index)
+                                        choiceInputRefs.current = choiceInputRefs.current.filter((eachchoiceArr, seenIndex) => seenIndex !== index)
+                                        loadValues()
+                                    }}
+                                    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
+                            </div>
+                            <input ref={(e) => { addQuestionInputsToRef(e, index) }} style={{ width: "100%" }} type='text' placeholder={`Enter Question ${index + 1}`} defaultValue={questions[index]} />
 
 
 
@@ -307,26 +369,41 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
                                 <>
                                     <div className={styles.choicesDivCont}>
                                         {choices[index].map((choice, smallerIndex) => (
-                                            <input key={uuidv4()} type='text' placeholder={`Answer ${smallerIndex + 1}`} defaultValue={choices[index][smallerIndex]}
-                                                onBlur={(e) => {
-                                                    choicesSet(prevChoicesArr => {
-                                                        const newarray = prevChoicesArr.map(e => e)
+                                            <div style={{ display: "flex", gap: ".5rem" }}>
+                                                <input ref={(e) => { addChoiceInputsToRef(e, index, smallerIndex) }} key={uuidv4()} type='text' placeholder={`Answer ${smallerIndex + 1}`}
+                                                    defaultValue={choices[index][smallerIndex]} />
 
-                                                        if (!newarray[index]) {
-                                                            newarray[index] = [];
-                                                        }
-                                                        if (!newarray[index][smallerIndex]) {
-                                                            newarray[index][smallerIndex] = "";
-                                                        }
+                                                <svg className={styles.deleteChoice}
+                                                    onClick={() => {
+                                                        choiceInputRefs.current = choiceInputRefs.current.map((eachchoiceArr, seenBigIndex) => {
+                                                            if (seenBigIndex === index) {
 
-                                                        newarray[index][smallerIndex] = e.target.value;
-                                                        return newarray;
-                                                    })
-                                                }} />
+                                                                if (eachchoiceArr.length > 1) {
+                                                                    return eachchoiceArr.filter((eachChoice, smallseenIndex) => {
+                                                                        if (smallseenIndex !== smallerIndex) {
+                                                                            return eachChoice
+                                                                        }
+                                                                    })
+                                                                } else {
+                                                                    return eachchoiceArr
+                                                                }
+                                                            } else {
+                                                                return eachchoiceArr
+                                                            }
+                                                        })
+                                                        loadValues()
+                                                    }}
+                                                    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
+
+                                            </div>
                                         ))}
                                     </div>
 
                                     <button className='secondButton' onClick={() => {
+
+                                        loadValues()
+
+
                                         choicesSet(prevArr => {
                                             const updatedChoices = prevArr.map((arr, i) => {
                                                 if (i === index) {
@@ -347,6 +424,10 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
                     }
 
                     <button className='secondButton' style={{ borderRadius: ".2rem" }} onClick={() => {
+
+                        loadValues()
+
+
                         questionsSet(prev => {
                             if (prev) {
                                 return [...prev, ""]
@@ -364,10 +445,10 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
                             return updatedChoices
                         })
 
-
                     }}>Add Question</button>
 
-                    {handleStoryBoard && <button style={{ margin: "0 auto" }} onClick={submitNewGameModeObj}>Save GameMode</button>}
+                    <button onClick={loadValues}>Load Game Board</button>
+
 
                     <DndContext
                         sensors={sensors}
@@ -382,7 +463,7 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
                             flexWrap: "wrap"
                         }}>
 
-                            {questions.map((eachQuestion, index) => {
+                            {questions?.map((eachQuestion, index) => {
                                 return (
                                     <Container key={uuidv4()} id={`container${index}`} items={items[`container${index}`]} arrPos={index} questionAsked={eachQuestion} />
                                 )

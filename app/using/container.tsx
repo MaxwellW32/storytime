@@ -19,12 +19,13 @@ export default function Container(props: any) {
         backgroundColor: "var(--backgoundColor)",
         border: "2px solid var(--textColor)",
         display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
         flexDirection: "column",
         padding: "1rem",
         margin: "1rem",
-        flex: 1,
+        flex: "1 1 250px",
         maxWidth: "50%",
-        gridAutoFlow: "row",
         gap: "1rem",
         minHeight: "100px",
     }
@@ -43,20 +44,25 @@ export default function Container(props: any) {
     const usingStyle = id === "root" ? rootStyle : normalStyle
 
     return (
-        <SortableContext
-            id={id}
-            items={items}
-            strategy={verticalListSortingStrategy}
-        >
-            <div ref={setNodeRef} style={usingStyle as React.CSSProperties}>
-                {questionAsked && <p>{questionAsked}</p>}
+        <>
+            {items ? (<SortableContext
+                id={id}
+                items={items}
+                strategy={verticalListSortingStrategy}
+            >
+                <div ref={setNodeRef} style={usingStyle as React.CSSProperties}>
+                    {questionAsked && <p>{questionAsked}</p>}
 
 
-                {items.map((itemText: any) => (
-                    <SortableItem key={itemText} id={itemText} itemText={itemText} arrPos={arrPos} />
-                ))}
+                    {items.map((itemText: any) => (
+                        <SortableItem key={itemText} id={itemText} itemText={itemText} arrPos={arrPos} />
+                    ))}
 
-            </div>
-        </SortableContext>
+                </div>
+            </SortableContext>) : (
+                null
+            )}
+
+        </>
     );
 }

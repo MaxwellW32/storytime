@@ -4,7 +4,6 @@
 
 .crossWordMain p {
     color: var(--textColor);
-
 }
 
 .spawnArea {
@@ -15,14 +14,18 @@
     display: grid;
     gap: .1rem;
     margin: 0 auto;
-    /* transform-style: preserve-3d; */
 }
 
 .tile {
-    background-color: green;
+    background-color: var(--primaryColor);
     display: grid;
     align-items: center;
     justify-items: center;
+}
+
+.leftToFind {
+    text-align: center;
+    margin: 1rem;
 }
 
 .correct {
@@ -32,7 +35,19 @@
 
 .incorrect {
     animation: shake 2500ms alternate ease;
+    background-color: grey;
 }
+
+.quickShake {
+    animation: quickShake 40ms infinite alternate;
+}
+
+@keyframes quickShake {
+    to {
+        rotate: 7deg;
+    }
+}
+
 
 @keyframes lift {
     to {
@@ -74,6 +89,27 @@
 .gmMainDiv label {
     color: var(--textColor);
     margin: .2rem 0 .2rem 0;
+}
+
+.questionCont svg {
+    cursor: pointer;
+}
+
+.questionCont svg:hover {
+    scale: 1.05;
+}
+
+.deleteQuestion {
+    width: var(--nav-icon-size);
+    fill: var(--textColor);
+    position: relative;
+    translate: 0 -5px;
+    rotate: 10deg;
+}
+
+.deleteChoice {
+    width: calc(var(--nav-icon-size) / 1.2);
+    fill: gold
 }
 
 .questionCont {

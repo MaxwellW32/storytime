@@ -322,7 +322,6 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData, 
         textAreaRefs.current.forEach((eachRef) => {
             makeRefCorrectSize(eachRef)
         })
-
     }, [storyBoards])
 
 
@@ -336,7 +335,7 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData, 
                         makingStorySet!(false)
                     }
 
-                }}>Close</button>
+                }}>Cancel</button>
             <h3 style={{ color: "#fff", textAlign: "center" }}>Lets make a wonderful story</h3>
 
             <div className={styles.makeStoryLabelInputCont}>
@@ -462,7 +461,6 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData, 
                                                     const seenTextObj = storyBoards[index] as textType
 
                                                     if (e.target.value !== seenTextObj.storedText) {
-                                                        console.log(`$seen as not equal`);
                                                         convertTextToStoryBoards(e.target.value, index)
                                                     }
                                                 }} />
@@ -475,7 +473,7 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData, 
                                             <div className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", backgroundColor: "var(--backgroundColor)" }}>
 
                                                 {eachElemnt.gameSelection === "matchup" ? (
-                                                    <MatchUpGM isEditing={true} {...eachElemnt} storyId={storyId} handleStoryBoard={handleStoryBoard} />
+                                                    <MatchUpGM isEditing={true} {...eachElemnt} handleStoryBoard={handleStoryBoard} />
                                                 ) : eachElemnt.gameSelection === "crossword" ? (
                                                     <CrosswordGM gameObj={eachElemnt} isEditing={true} handleStoryBoard={handleStoryBoard} />
                                                 ) : eachElemnt.gameSelection === "wordmeaning" ? (
@@ -504,7 +502,6 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData, 
 
                                             <div>
                                                 <button onClick={() => {
-                                                    console.log(`$seen mouse click on AddMore`);
                                                     gmShowingArrSet(prevArr => {
                                                         prevArr[index] = true
                                                         return [...prevArr]

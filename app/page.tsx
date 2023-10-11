@@ -68,28 +68,33 @@ async function deleteStory(seenId: string) {
 async function getStories() {
   "use server";
 
-  let rawStories = [] as story[]
-  rawStories = await prisma.story.findMany(
-    {
-      orderBy: {
-        likes: 'asc',
-      },
-    }
-  );
-
-  let usablestories = [] as StoryData[]
-  if (rawStories) {
-    usablestories = rawStories.map(eachstory => {
-      if (eachstory.storyboard !== null) {
-        eachstory.storyboard = JSON.parse(eachstory.storyboard)
-        return eachstory
-      } else {
-        return eachstory
+  try {
+    let rawStories = [] as story[]
+    rawStories = await prisma.story.findMany(
+      {
+        orderBy: {
+          likes: 'asc',
+        },
       }
-    }) as StoryData[]
+    );
+
+    let usablestories = [] as StoryData[]
+    if (rawStories) {
+      usablestories = rawStories.map(eachstory => {
+        if (eachstory.storyboard !== null) {
+          eachstory.storyboard = JSON.parse(eachstory.storyboard)
+          return eachstory
+        } else {
+          return eachstory
+        }
+      }) as StoryData[]
+    }
+
+    return usablestories
+  } catch (error) {
+    console.log(`$error`, error);
   }
 
-  return usablestories
 }
 
 

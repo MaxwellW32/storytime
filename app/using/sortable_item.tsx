@@ -8,6 +8,8 @@ export function Item(props: any) {
 
     const style = {
         width: "100%",
+        maxWidth: "200px",
+        marging: "0 auto",
         backgroundColor: "var(--primaryColor)",
         padding: "2rem",
         borderRadius: "1rem"

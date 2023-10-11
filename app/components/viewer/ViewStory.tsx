@@ -22,6 +22,8 @@ export default function ViewStory({ fullData, updateStory, deleteStory }: { full
     const [showDescriptionFull, showDescriptionFullSet] = useState(false)
     const [descOverFlowing, descOverFlowingSet] = useState(false)
 
+    const [userTriedToDelete, userTriedToDeleteSet] = useState(false)
+
     useEffect(() => {
         const element = descRef.current;
         if (element) {
@@ -65,7 +67,25 @@ export default function ViewStory({ fullData, updateStory, deleteStory }: { full
 
                 <div style={{ display: "flex", gap: "1rem" }}>
                     <button onClick={() => { readingSet(true) }}> Let&apos;s Read </button>
-                    <button style={{}} onClick={() => { deleteStory(fullData.storyid!) }}>Delete Story</button>
+                    {!userTriedToDelete ? (
+                        <button style={{}} onClick={() => { userTriedToDeleteSet(true) }}>Delete Story</button>
+
+                    ) : (
+                        <div >
+                            <p>Are you sure you want to delete?</p>
+                            <div style={{ display: "flex", width: "100%", justifyContent: "center", gap: ".5rem", marginTop: ".5rem" }}>
+                                <button onClick={() => {
+                                    deleteStory(fullData.storyid!)
+                                    userTriedToDeleteSet(false)
+                                }}>Yes</button>
+                                <button onClick={() => {
+                                    userTriedToDeleteSet(false)
+                                }}>No</button>
+                            </div>
+                        </div>
+
+                    )}
+
                 </div>
             </div>
 
@@ -113,7 +133,7 @@ export default function ViewStory({ fullData, updateStory, deleteStory }: { full
                                     {eachElemnt.gameSelection === "matchup" ? (
                                         <MatchUpGM {...eachElemnt} sendUpdatedGameOver={sendUpdatedGameOver} />
                                     ) : eachElemnt.gameSelection === "crossword" ? (
-                                        <CrosswordGM gameObj={eachElemnt} />
+                                        <CrosswordGM gameObj={eachElemnt} sendUpdatedGameOver={sendUpdatedGameOver} />
                                     ) : eachElemnt.gameSelection === "wordmeaning" ? (
                                         <WordsToMeaningGM />
                                     ) : eachElemnt.gameSelection === "pronounce" ? (
