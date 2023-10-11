@@ -369,7 +369,7 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
                                 <>
                                     <div className={styles.choicesDivCont}>
                                         {choices[index].map((choice, smallerIndex) => (
-                                            <div style={{ display: "flex", gap: ".5rem" }}>
+                                            <div key={uuidv4()} style={{ display: "flex", gap: ".5rem" }}>
                                                 <input ref={(e) => { addChoiceInputsToRef(e, index, smallerIndex) }} key={uuidv4()} type='text' placeholder={`Answer ${smallerIndex + 1}`}
                                                     defaultValue={choices[index][smallerIndex]} />
 
