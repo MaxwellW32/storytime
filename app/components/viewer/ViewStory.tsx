@@ -11,9 +11,9 @@ import MatchUpGM from '../gamemodes/MatchUpGM';
 import CrosswordGM from '../gamemodes/CrosswordGM';
 import WordsToMeaningGM from '../gamemodes/WordsToMeaningGM';
 import PronounciationGM from '../gamemodes/PronounciationGM';
-import { StoryData } from '@/app/page';
+import { StoryData, gameObjType } from '@/app/page';
 
-export default function ViewStory({ fullData, updateStory, deleteStory }: { fullData: StoryData, updateStory: (seeBoard: StoryData) => Promise<void>, deleteStory: (seenId: string) => Promise<void> }) {
+export default function ViewStory({ fullData, updateStory, deleteStory }: { fullData: StoryData, updateStory: (option: string, seeBoard: StoryData) => Promise<void>, deleteStory: (seenId: string) => Promise<void> }) {
 
     // console.log(`$called viewstory`, fullData);
     const [reading, readingSet] = useState(false)
@@ -30,6 +30,24 @@ export default function ViewStory({ fullData, updateStory, deleteStory }: { full
     }, [])
 
     const [editClicked, editClickedSet] = useState(false)
+
+    const sendUpdatedGameOver = (seenObjId: string) => {
+
+        const newStoryObj = { ...fullData }
+
+        newStoryObj.storyboard = newStoryObj!.storyboard!.map(eachBoardObj => {
+
+            if (eachBoardObj.boardObjId === seenObjId) {
+                const workingWith = eachBoardObj as gameObjType
+                return { ...eachBoardObj, gameFinished: !workingWith.gameFinished }
+            } else {
+                return eachBoardObj
+            }
+        })
+
+
+        updateStory("gamemode", newStoryObj)
+    }
 
     return (
         <div style={{ width: "95%", margin: "0 auto", borderRadius: ".7rem", padding: "1rem", backgroundColor: "var(--backgroundColor)", position: "relative" }}>
@@ -93,7 +111,7 @@ export default function ViewStory({ fullData, updateStory, deleteStory }: { full
                                 <div key={uuidv4()} className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", backgroundColor: "var(--backgroundColor)" }} >
 
                                     {eachElemnt.gameSelection === "matchup" ? (
-                                        <MatchUpGM {...eachElemnt} storyId={fullData.storyid!} />
+                                        <MatchUpGM {...eachElemnt} sendUpdatedGameOver={sendUpdatedGameOver} />
                                     ) : eachElemnt.gameSelection === "crossword" ? (
                                         <CrosswordGM gameObj={eachElemnt} />
                                     ) : eachElemnt.gameSelection === "wordmeaning" ? (

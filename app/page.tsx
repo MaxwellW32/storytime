@@ -4,19 +4,32 @@ import { Prisma, PrismaClient, story } from "@prisma/client";
 
 const prisma = new PrismaClient()
 
-async function updateStory(seenStory: StoryData) {
+async function updateStory(option: string, seenStory: StoryData) {
   "use server";
 
   const savableStory: story = { ...seenStory, storyboard: JSON.stringify(seenStory.storyboard) }
 
-  await prisma.story.update({
-    where: {
-      storyid: seenStory.storyid,
-    },
-    data: savableStory,
-  })
+  if (option === "story") {
 
-  revalidatePath("/")
+    await prisma.story.update({
+      where: {
+        storyid: seenStory.storyid,
+      },
+      data: savableStory,
+    })
+
+    revalidatePath("/")
+
+  } else if (option === "gamemode") {
+
+    await prisma.story.update({
+      where: {
+        storyid: seenStory.storyid,
+      },
+      data: savableStory,
+    })
+
+  }
 }
 
 async function newStory(newStory: StoryDataSend) {
@@ -38,31 +51,22 @@ async function newStory(newStory: StoryDataSend) {
 async function deleteStory(seenId: string) {
   "use server";
 
+
+  await prisma.story.delete({
+    where: { storyid: seenId },
+  });
+  console.log(`deleted specific ${seenId}`);
+  revalidatePath("/");
+
   //   const validateOldObj = await prisma.base.findUnique({
   //     where: { id: input },
   //   });
 
-  //   if (!validateOldObj) {
-  //     console.log(`couldnt even validate the oldObj for security`)
-  //     return
-  //   }
 
-  //   if (validateOldObj.canBeDeleted) {
-  //     const seenId = validateOldObj.id;
-
-  //     await prisma.base.delete({
-  //       where: { id: seenId },
-  //     });
-  //     console.log(`deleted specific ${seenId}`);
-  //     revalidatePath("/");
-  //   } else {
-  //     console.log(`Cannot delete ${validateOldObj.username}, this person is special to me ${validateOldObj.text.substring(0, 20)}`)
-  //   }
 }
 
-
-
-export default async function page() {
+async function getStories() {
+  "use server";
 
   let rawStories = [] as story[]
   rawStories = await prisma.story.findMany(
@@ -85,14 +89,20 @@ export default async function page() {
     }) as StoryData[]
   }
 
+  return usablestories
+}
 
-  if (!usablestories) {
+
+export default async function page() {
+  const stories = await getStories()
+
+  if (!stories) {
     return <p>Loading Up Stories...</p>
   }
 
   return (
     <>
-      <Home allstories={usablestories} deleteStory={deleteStory} newStory={newStory} updateStory={updateStory} />
+      <Home allstories={stories} deleteStory={deleteStory} newStory={newStory} updateStory={updateStory} />
     </>
   )
 }

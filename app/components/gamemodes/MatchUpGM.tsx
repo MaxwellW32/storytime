@@ -19,10 +19,10 @@ import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import Container from "@/app/using/container";
 
 
-export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinished, storyId, gameData, isEditing = false, boardType, handleStoryBoard }: gameObjType & {
-    storyId: string,
+export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameFinished, gameData, isEditing = false, handleStoryBoard, sendUpdatedGameOver }: gameObjType & {
     isEditing?: boolean
-    handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void
+    handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void,
+    sendUpdatedGameOver: (seenObjId: string) => void
 }) {
 
 
@@ -281,25 +281,9 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
 
     //update global state if in final view and game finished
     useEffect(() => {
-        const newObj: gameObjType = {
-            boardObjId,
-            gameSelection,
-            shouldStartOnNewPage,
-            gameData,
-            boardType,
-            gameFinished: gameFinishedState
+        if (gameFinishedState !== gameFinished && sendUpdatedGameOver) {
+            sendUpdatedGameOver(boardObjId)
         }
-
-        //save game finished globally
-        // if (gameFinishedState && !isEditing && !gameFinished) {
-        //     saveToLocalStorage("storiesArr", updateStoryWithGameDataGlobal(stories!, storyId, boardObjId, newObj))
-        // }
-
-        // //refresh
-        // if (!gameFinishedState && !isEditing && gameFinished) {
-        //     saveToLocalStorage("storiesArr", updateStoryWithGameDataGlobal(stories!, storyId, boardObjId, newObj))
-        // }
-
     }, [gameFinishedState])
 
 

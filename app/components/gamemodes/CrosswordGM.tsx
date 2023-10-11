@@ -30,13 +30,6 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
     const [userAmountCorrect, userAmountCorrectSet] = useState(0)
     const [gameFinished, gameFinishedSet] = useState(false)
 
-    //focus text input on refresh
-    useEffect(() => {
-        if (isEditing) {
-            inputRef.current.focus()
-        }
-    }, [])
-
     const amtOfAnswersLeft = useMemo(() => {
         return wordsArray.length - userAmountCorrect
     }, [userAmountCorrect, wordsArray.length])
@@ -265,7 +258,10 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
             for (let wordIndex = 0; wordIndex < eachWord.length; wordIndex++) {
                 tileRefs.current[randSafeXIndexToStart + ranDomBuffer + wordIndex].innerText = eachWord[wordIndex]
                 tileRefs.current[randSafeXIndexToStart + ranDomBuffer + wordIndex].setAttribute('data-seenLetter', eachWord[wordIndex])
-                tileRefs.current[randSafeXIndexToStart + ranDomBuffer + wordIndex].style.backgroundColor = "yellow"
+
+                if (isEditing) {
+                    tileRefs.current[randSafeXIndexToStart + ranDomBuffer + wordIndex].style.backgroundColor = "yellow"
+                }
             }
             randSafeXIndexToStart += longestWordNum
         })
@@ -277,7 +273,9 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
         for (let wordIndex = 0; wordIndex < newtwoItemArr[0].length; wordIndex++) {
             tileRefs.current[randSafeYIndexToStart + ranDomBuffer].innerText = newtwoItemArr[0][wordIndex]
             tileRefs.current[randSafeYIndexToStart + ranDomBuffer].setAttribute('data-seenLetter', newtwoItemArr[0][wordIndex])
-            tileRefs.current[randSafeYIndexToStart + ranDomBuffer].style.backgroundColor = "yellow"
+            if (isEditing) {
+                tileRefs.current[randSafeYIndexToStart + ranDomBuffer].style.backgroundColor = "yellow"
+            }
 
             randSafeYIndexToStart += longestWordNum //everytime you add longest word num you skip a line
         }
@@ -288,7 +286,9 @@ export default function CrosswordGM({ gameObj, isEditing = false, handleStoryBoa
         for (let wordIndex = 0; wordIndex < newtwoItemArr[1].length; wordIndex++) {
             tileRefs.current[randSafeYIndexToStart + ranDomBuffer].innerText = newtwoItemArr[1][wordIndex]
             tileRefs.current[randSafeYIndexToStart + ranDomBuffer].setAttribute('data-seenLetter', newtwoItemArr[1][wordIndex])
-            tileRefs.current[randSafeYIndexToStart + ranDomBuffer].style.backgroundColor = "yellow"
+            if (isEditing) {
+                tileRefs.current[randSafeYIndexToStart + ranDomBuffer].style.backgroundColor = "yellow"
+            }
 
             randSafeYIndexToStart += longestWordNum //everytime you add longest word num you skip a line
         }
