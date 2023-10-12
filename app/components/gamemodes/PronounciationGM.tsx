@@ -13,7 +13,7 @@ export default function PronounciationGM({ isEditing = false, gameObj, storyid, 
     isEditing?: boolean,
     gameObj: gameObjType,
     storyid?: string,
-    handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void,
+    handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void
 }) {
     const {
         transcript,
@@ -81,17 +81,16 @@ export default function PronounciationGM({ isEditing = false, gameObj, storyid, 
                     })
 
                 })
-
-            } else {
-                wordTileRefs.current.forEach(eachTileRef => {
-                    if (eachTileRef.innerText.toLowerCase() === workingTranscript) {
-                        eachTileRef.style.backgroundColor = "var(--primaryColor)"
-                        setTimeout(() => {
-                            eachTileRef.style.backgroundColor = "var(--secondaryColor)"
-                        }, 1500)
-                    }
-                })
             }
+
+            wordTileRefs.current.forEach(eachTileRef => {
+                if (eachTileRef.innerText.toLowerCase() === workingTranscript) {
+                    eachTileRef.style.backgroundColor = "var(--primaryColor)"
+                    setTimeout(() => {
+                        eachTileRef.style.backgroundColor = "var(--secondaryColor)"
+                    }, 1500)
+                }
+            })
         }
     }
     //make usermatched words everytime voice input changes
@@ -109,15 +108,15 @@ export default function PronounciationGM({ isEditing = false, gameObj, storyid, 
                         })
                     }
                 })
-
-            } else {
-                if (givenWords.includes(workingTranscript) && !userMatchedWords.includes(workingTranscript)) {
-                    userMatchedWordsSet(prev => {
-                        const newArr = [...prev, workingTranscript]
-                        return newArr
-                    })
-                }
             }
+
+            if (givenWords.includes(workingTranscript) && !userMatchedWords.includes(workingTranscript)) {
+                userMatchedWordsSet(prev => {
+                    const newArr = [...prev, workingTranscript]
+                    return newArr
+                })
+            }
+
         }
 
 

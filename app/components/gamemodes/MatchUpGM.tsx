@@ -24,7 +24,7 @@ import DisplayGameOVer from "../useful/DisplayGameOver";
 export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameData, isEditing = false, storyid, handleStoryBoard }: gameObjType & {
     isEditing?: boolean,
     storyid?: string,
-    handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void,
+    handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void
 }) {
 
 

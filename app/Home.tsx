@@ -7,7 +7,7 @@ import ViewStory from './components/viewer/ViewStory';
 import { StoryData, StoryDataSend } from "./page";
 
 
-export default function Home({ allstories, updateStory, newStory, deleteStory }: { allstories: StoryData[], updateStory: (seeBoard: StoryData) => Promise<void>, newStory: (newStory: StoryDataSend) => Promise<void>, deleteStory: (seenId: string) => Promise<void> }) {
+export default function Home({ allstories, updateStory, newStory, deleteStory }: { allstories: StoryData[], updateStory: (option: "story" | "likes", seeBoard: StoryData) => Promise<void>, newStory: (newStory: StoryDataSend) => Promise<void>, deleteStory: (seenId: string) => Promise<void> }) {
 
     const [makingStory, makingStorySet] = useState(false)
 

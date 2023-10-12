@@ -11,23 +11,35 @@ const cantDeleteList = [
   'da8cd1c6-2aa2-443d-911e-07678ead954b',
 ]
 
-async function updateStory(seenStory: StoryData) {
+async function updateStory(option: "story" | "likes", seenStory: StoryData) {
   "use server";
 
-  if (cantDeleteList.includes(seenStory.storyid)) return
+  if (option === "story") {
+    if (cantDeleteList.includes(seenStory.storyid)) return
 
-  const savableStory: story = { ...seenStory, storyboard: JSON.stringify(seenStory.storyboard) }
+    const savableStory: story = { ...seenStory, storyboard: JSON.stringify(seenStory.storyboard) }
 
+    await prisma.story.update({
+      where: {
+        storyid: seenStory.storyid,
+      },
+      data: savableStory,
+    })
 
-  await prisma.story.update({
-    where: {
-      storyid: seenStory.storyid,
-    },
-    data: savableStory,
-  })
+    revalidatePath("/")
 
-  revalidatePath("/")
-
+  } else if (option === "likes") {
+    await prisma.story.update({
+      where: {
+        storyid: seenStory.storyid,
+      },
+      data: {
+        likes: {
+          increment: seenStory.likes
+        }
+      },
+    })
+  }
 }
 
 async function newStory(newStory: StoryDataSend) {

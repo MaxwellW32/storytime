@@ -9,7 +9,7 @@ import DisplayGameOVer from "../useful/DisplayGameOver"
 export default function CrosswordGM({ gameObj, isEditing = false, storyid, handleStoryBoard }:
     {
         gameObj: gameObjType, isEditing?: boolean, storyid?: string
-        handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void,
+        handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void
     }) {
 
     const [wordsArray, wordsArraySet] = useState<string[]>(() => {

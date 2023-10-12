@@ -13,7 +13,7 @@ import WordsToMeaningGM from '../gamemodes/WordsToMeaningGM';
 import PronounciationGM from '../gamemodes/PronounciationGM';
 import { StoryData, gameObjType } from '@/app/page';
 
-export default function ViewStory({ fullData, updateStory, deleteStory }: { fullData: StoryData, updateStory: (seeBoard: StoryData) => Promise<void>, deleteStory: (seenId: string) => Promise<void> }) {
+export default function ViewStory({ fullData, updateStory, deleteStory }: { fullData: StoryData, updateStory: (option: "story" | "likes", seeBoard: StoryData) => Promise<void>, deleteStory: (seenId: string) => Promise<void> }) {
 
     // console.log(`$called viewstory`, fullData);
     const [reading, readingSet] = useState(false)
@@ -32,6 +32,8 @@ export default function ViewStory({ fullData, updateStory, deleteStory }: { full
     }, [])
 
     const [editClicked, editClickedSet] = useState(false)
+    const [sentLikesAlready, sentLikesAlreadySet] = useState(false)
+
 
     return (
         <div style={{ width: "95%", margin: "0 auto", borderRadius: ".7rem", padding: "1rem", backgroundColor: "var(--backgroundColor)", position: "relative" }}>
@@ -80,6 +82,10 @@ export default function ViewStory({ fullData, updateStory, deleteStory }: { full
                         }}>{showDescriptionFull ? "Show Less" : "Show More"}</p>}
                     </>
                 )}
+
+                {fullData.likes > 0 && (
+                    <p>{fullData.likes} {fullData.likes === 1 ? "Like" : "Likes"}</p>
+                )}
             </div>
 
             {/* storyboard container */}
@@ -87,6 +93,14 @@ export default function ViewStory({ fullData, updateStory, deleteStory }: { full
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", overflowY: "auto", backgroundColor: "var(--backgroundColor)", zIndex: 1, color: "var(--textColor)" }}>
                     <button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => { readingSet(false) }}>close</button>
                     <h3 style={{ textAlign: "center", fontSize: "2rem" }}>{fullData.title}</h3>
+
+                    <p onClick={() => {
+                        if (!sentLikesAlready) {
+                            const newStoryObj: StoryData = { ...fullData, likes: 1 }
+                            updateStory("likes", newStoryObj)
+                        }
+                        sentLikesAlreadySet(true)
+                    }}>I like this</p>
 
                     {fullData.storyboard?.map((eachElemnt, index) => {
 
