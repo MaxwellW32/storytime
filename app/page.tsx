@@ -4,8 +4,17 @@ import { Prisma, PrismaClient, story } from "@prisma/client";
 
 const prisma = new PrismaClient()
 
+const cantDeleteList = [
+  '873d3425-0c04-4d1c-b204-383b190823b3',
+  '9ccd61b1-d75a-41fd-a28e-7b53977441ef',
+  'a1a9f994-8516-478f-b37b-ae4ed5793336',
+  'da8cd1c6-2aa2-443d-911e-07678ead954b',
+]
+
 async function updateStory(seenStory: StoryData) {
   "use server";
+
+  if (cantDeleteList.includes(seenStory.storyid)) return
 
   const savableStory: story = { ...seenStory, storyboard: JSON.stringify(seenStory.storyboard) }
 
@@ -39,6 +48,8 @@ async function newStory(newStory: StoryDataSend) {
 
 async function deleteStory(seenId: string) {
   "use server";
+
+  if (cantDeleteList.includes(seenId)) return
 
 
   await prisma.story.delete({
