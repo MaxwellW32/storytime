@@ -10,6 +10,28 @@ import makeStoryBackground from "@/public/makestorybackground.png"
 import makeStoryBackgroundDark from "@/public/makestorybackgroundDark.png"
 import NavBar from './components/navbar/NavBar'
 import { retreiveFromLocalStorage, saveToLocalStorage } from './utility/savestorage'
+import { Inter, Roboto_Mono, Comic_Neue } from 'next/font/google'
+
+
+const comin_nue = Comic_Neue({
+  subsets: ['latin'],
+  variable: '--font-comic-nue',
+  weight: ["300", "400", "700"],
+  display: 'swap',
+})
+
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+})
+
+const roboto_mono = Roboto_Mono({
+  subsets: ['latin'],
+  variable: '--font-roboto-mono',
+  display: 'swap',
+})
 
 export default function RootLayout({
   children,
@@ -79,7 +101,7 @@ export default function RootLayout({
   }, [])
 
   return (
-    <html lang="en" style={{ backgroundImage: "var(--backdrop)", ...themeStyles }}>
+    <html lang="en" style={{ backgroundImage: "var(--backdrop)", ...themeStyles }} className={`${inter.variable} ${roboto_mono.variable} ${comin_nue.variable}`}>
       <body>
         <NavBar />
         {children}

@@ -71,6 +71,8 @@ html {
   height: 100dvh;
   max-width: 100dvw;
   overflow: auto;
+  font-family: var(--font-comic-nue);
+
 }
 
 img {
@@ -84,8 +86,9 @@ svg {
 }
 
 h3 {
-  font-weight: var(--bold-font-weight);
   font-size: var(--large-font-size);
+  font-weight: var(--bold-font-weight);
+  font-family: var(--font-roboto-mono);
 }
 
 a {
