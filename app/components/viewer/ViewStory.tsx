@@ -71,11 +71,10 @@ export default function ViewStory({ fullData, updateStory, deleteStory }: { full
                 </div>
             </div>
 
-            <div className={`italic`} style={{ fontSize: ".8em", marginTop: "var(--medium-margin)", display: "grid", gap: ".3rem", alignSelf: "flex-end" }}>
+            <div className={`italic`} style={{ marginTop: "var(--medium-margin)", display: "grid", gap: ".3rem", alignSelf: "flex-end" }}>
                 {fullData.shortdescription && (
                     <>
-                        <p style={{ color: "var(--secondaryColor)" }}>Description</p>
-                        <p ref={descRef} className={styles.descText} style={{ display: showDescriptionFull ? "block" : "-webkit-box" }}>{fullData.shortdescription}</p>
+                        <p ref={descRef} className={styles.descText} style={{ display: showDescriptionFull ? "block" : "-webkit-box", maxWidth: "850px" }}>{fullData.shortdescription}</p>
                         {descOverFlowing && <p className={styles.highlighted} onClick={() => {
                             showDescriptionFullSet(prev => !prev)
                         }}>{showDescriptionFull ? "Show Less" : "Show More"}</p>}
