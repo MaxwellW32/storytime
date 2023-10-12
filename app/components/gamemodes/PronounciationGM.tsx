@@ -274,7 +274,7 @@ export default function PronounciationGM({ isEditing = false, gameObj, storyid, 
 
                                 <div>
                                     <p>Words To Pronounce</p>
-                                    <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", justifyContent: "center" }}>
+                                    <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", margin: "1rem", justifyContent: "center" }}>
 
                                         {wordsLeftToMAtch.map((eachWord) => {
                                             return (
@@ -293,7 +293,7 @@ export default function PronounciationGM({ isEditing = false, gameObj, storyid, 
 
                             </div>
 
-                            <div className={styles.probuttonholder} style={{ padding: "1rem", backgroundColor: "grey", display: "grid", justifyItems: "stretch", gap: ".2rem" }}>
+                            <div className={styles.probuttonholder} style={{ padding: "1rem", display: "grid", justifyItems: "stretch", gap: ".2rem" }}>
                                 <button onClick={start}>Start</button>
                                 <button onClick={SpeechRecognition.stopListening}>Stop</button>
                                 <button onClick={resetTranscript}>Reset</button>

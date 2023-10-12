@@ -10,8 +10,7 @@
 :root {
   --error-color: #e74c3c;
 
-  --font-family-main: cursive;
-  --font-family-secondary: 'Roboto', sans-serif;
+  /* --font-family-main: ; */
 
   --small-font-size: .7em;
   --regular-font-size: 1em;
@@ -151,7 +150,6 @@ input {
 
 
 body {
-  font-family: var(--font-family-main);
   font-size: var(--regular-font-size);
   height: 100%;
   overflow-y: auto;

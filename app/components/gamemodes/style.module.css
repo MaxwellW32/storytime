@@ -129,7 +129,6 @@
 .pronounceMainDiv {
     text-align: center;
     width: 100%;
-    background-color: azure;
     min-height: 300px;
     display: grid;
     grid-auto-flow: column;
