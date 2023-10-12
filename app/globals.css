@@ -58,6 +58,7 @@
   /* border: 1px solid red !important; */
 }
 
+
 ol,
 ul,
 li,
@@ -157,4 +158,8 @@ body {
   font-size: var(--regular-font-size);
   height: 100%;
   overflow-y: auto;
+}
+
+body::-webkit-scrollbar {
+  display: none;
 }
