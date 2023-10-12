@@ -153,4 +153,6 @@ input {
 body {
   font-family: var(--font-family-main);
   font-size: var(--regular-font-size);
+  height: 100%;
+  overflow-y: auto;
 }

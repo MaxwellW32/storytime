@@ -19,6 +19,6 @@ model story {
 
   storyboard       String? @db.Text //anything with a ? can be stored as null in the db
   rating           Int?
-  backgroundaudio  String?
-  shortdescription String?
+  backgroundaudio  String? @db.Text
+  shortdescription String? @db.Text
 }
