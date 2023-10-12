@@ -28,6 +28,10 @@ export function handleStoriesWhereGameOver(seenStoryId: string, seenObjId: strin
         if (seenObj === null) {
             return false //no obj seen so gamefinished is false
         } else {
+
+            if (!seenObj[seenStoryId]) {
+                seenObj[seenStoryId] = []
+            }
             return seenObj[seenStoryId].includes(seenObjId)
         }
 

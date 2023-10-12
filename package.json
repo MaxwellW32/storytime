@@ -19,12 +19,15 @@
     "react": "latest",
     "react-dom": "latest",
     "react-player": "^2.13.0",
+    "react-speech-recognition": "^3.10.0",
+    "regenerator-runtime": "^0.14.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "@types/react-speech-recognition": "^3.9.2",
     "@types/uuid": "^9.0.4",
     "autoprefixer": "latest",
     "eslint": "latest",

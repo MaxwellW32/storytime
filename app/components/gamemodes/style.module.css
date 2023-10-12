@@ -122,3 +122,31 @@
     column-gap: 1rem;
     flex-wrap: wrap;
 }
+
+
+
+/* pronounce GM*/
+.pronounceMainDiv {
+    text-align: center;
+    width: 100%;
+    background-color: azure;
+    min-height: 300px;
+    display: grid;
+    grid-auto-flow: column;
+    /* justify-content: center; */
+    gap: 1rem;
+}
+
+.highlightText {
+    background-color: pink;
+}
+
+.probuttonholderread button {
+    background-color: var(--primaryColor);
+}
+
+.probuttonholder button {
+    width: 100%;
+    margin: 0 auto;
+    max-width: 400px;
+}

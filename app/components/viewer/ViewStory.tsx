@@ -119,7 +119,7 @@ export default function ViewStory({ fullData, updateStory, deleteStory }: { full
                                     ) : eachElemnt.gameSelection === "wordmeaning" ? (
                                         <WordsToMeaningGM />
                                     ) : eachElemnt.gameSelection === "pronounce" ? (
-                                        <PronounciationGM />
+                                        <PronounciationGM gameObj={eachElemnt} storyid={fullData.storyid} />
                                     ) : null}
                                 </div>
                             )

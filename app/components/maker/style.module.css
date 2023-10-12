@@ -33,6 +33,10 @@
     position: relative;
 }
 
+.addMore input {
+    border-bottom: 1px solid black;
+}
+
 .addMore:hover .bttnHolder {
     opacity: 1;
     user-select: all;

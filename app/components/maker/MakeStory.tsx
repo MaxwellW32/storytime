@@ -478,7 +478,7 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData, 
                                                 ) : eachElemnt.gameSelection === "wordmeaning" ? (
                                                     <WordsToMeaningGM />
                                                 ) : eachElemnt.gameSelection === "pronounce" ? (
-                                                    <PronounciationGM />
+                                                    <PronounciationGM gameObj={eachElemnt} isEditing={true} handleStoryBoard={handleStoryBoard} />
                                                 ) : null}
 
                                             </div>

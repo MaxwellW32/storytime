@@ -168,7 +168,7 @@ export interface matchupType {
 
 export interface pronounceType {
   gameDataFor: "pronounce",
-
+  givenWords: string[] | null
 }
 
 export interface wordsToMeaningType {

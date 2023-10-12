@@ -77,6 +77,7 @@ export default function CrosswordGM({ gameObj, isEditing = false, storyid, handl
 
     }, [gameFinishedState])
 
+
     //check tiles intersection with selection
     useEffect(() => {
         if (clickedOnBoardAmt >= 2) {
