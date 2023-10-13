@@ -1,5 +1,5 @@
 "use client"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo } from "react"
 import { v4 as uuidv4 } from "uuid";
 import styles from "./style.module.css"
 import { StoryData, StoryDataSend, gameObjType, gameSelectionTypes, imageType, storyBoardType, textType, videoType } from "@/app/page";
@@ -11,14 +11,6 @@ import WordsToMeaningGM from "../gamemodes/WordsToMeaningGM";
 import PronounciationGM from "../gamemodes/PronounciationGM";
 
 
-function makeLinksAndParagraphsArray(text: string) {
-    return text.split(ISLINKORBREAK).map(item => item.trim()).filter(Boolean);
-}
-
-
-
-let regNewLineLimit = "\n\n\n";
-const ISLINKORBREAK = new RegExp(`(https?:\/\/[^\s]+\.(?:com|net|org|io)\/[^\s]+|${regNewLineLimit})`, 'g');
 
 
 const ISLINK = /(https?:\/\/[^\s]+\.(?:com|net|org|io)\/[^\s]+)/g;
@@ -322,6 +314,23 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData, 
         })
     }, [storyBoards])
 
+    function makeLinksAndParagraphsArray(text: string) {
+        return text.split(ISLINKORBREAK).map(item => item.trim()).filter(Boolean);
+    }
+
+
+
+    const [regNewLineLimit, regNewLineLimitSet] = useState(3)
+    const ISLINKORBREAK = useMemo(() => {
+        let newStr = ""
+        for (let index = 0; index < regNewLineLimit; index++) {
+            newStr += "\n"
+        }
+
+        console.log(`$newstr seen`, newStr);
+        return new RegExp(`(https?:\/\/[^\s]+\.(?:com|net|org|io)\/[^\s]+|${newStr})`, 'g');
+    }, [regNewLineLimit])
+
 
     return (
         <div className={styles.makeStoryMainDiv}>
@@ -367,6 +376,21 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData, 
 
             <div className={styles.storyBoardCont}>
                 <h3 style={{ color: "#fff", textAlign: "center" }}>Story Board</h3>
+                <p style={{ color: "#fff", textAlign: "center" }}>Make new paragraph after {regNewLineLimit} {regNewLineLimit === 1 ? "linebreak" : "linebreaks"}</p>
+                <div style={{ margin: "0 auto", display: "flex", gap: "1rem" }}>
+                    <button onClick={() => {
+                        regNewLineLimitSet(prev => {
+                            const newNum = prev - 1
+
+                            if (newNum >= 1) {
+                                return newNum
+                            } else {
+                                return 1
+                            }
+                        })
+                    }}>Decrease</button>
+                    <button onClick={() => { regNewLineLimitSet(prev => prev + 1) }}>Increase</button>
+                </div>
 
                 {!storyBoards ? (
                     <>
