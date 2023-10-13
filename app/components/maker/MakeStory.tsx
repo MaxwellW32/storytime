@@ -65,7 +65,7 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData, 
     function convertTextToStoryBoards(passedText: string, indexToAdd?: number) {
         //sets up my original array from text only blank
 
-        if (indexToAdd !== null) {
+        if (indexToAdd !== undefined) {
             storyBoardsSet(prevStoryBoardArr => {
 
                 const ObjsArray = makeLinksAndParagraphsArray(passedText).map(eachStr => {
@@ -165,7 +165,6 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData, 
                     }
                 })
 
-                console.log(`new created`, ObjsArray);
                 return ObjsArray
             })
         }
@@ -328,7 +327,7 @@ export default function MakeStory({ makingStorySet, editClickedSet, passedData, 
         <div className={styles.makeStoryMainDiv}>
             <button style={{ margin: ".5rem .5rem 0 auto" }}
                 onClick={() => {
-                    if (passedData !== null) {
+                    if (passedData !== undefined) {
                         editClickedSet!(false)
                     } else {
                         makingStorySet!(false)
