@@ -17,7 +17,7 @@ async function updateStory(option: "story" | "likes", seenStory: StoryData) {
   if (option === "story") {
     if (cantDeleteList.includes(seenStory.storyid)) return
 
-    const savableStory: story = { ...seenStory, storyboard: JSON.stringify(seenStory.storyboard) }
+    const savableStory: story = { ...seenStory, storyboard: JSON.stringify(seenStory.storyboard), gamemodes: JSON.stringify(seenStory.gamemodes) }
 
     await prisma.story.update({
       where: {
@@ -46,9 +46,10 @@ async function newStory(newStory: StoryDataSend) {
   "use server";
 
   try {
+    const savableStory: StoryDataSend = { ...newStory, storyboard: JSON.stringify(newStory.storyboard), gamemodes: JSON.stringify(newStory.gamemodes) }
 
     await prisma.story.create({
-      data: newStory,
+      data: savableStory,
     });
 
   } catch (error) {
@@ -91,15 +92,21 @@ async function getStories() {
     );
 
     let usablestories = [] as StoryData[]
+
     if (rawStories) {
+
       usablestories = rawStories.map(eachstory => {
         if (eachstory.storyboard !== null) {
           eachstory.storyboard = JSON.parse(eachstory.storyboard)
-          return eachstory
-        } else {
-          return eachstory
         }
+
+        if (eachstory.gamemodes !== null) {
+          eachstory.gamemodes = JSON.parse(eachstory.gamemodes)
+        }
+
+        return eachstory
       }) as StoryData[]
+
     }
 
     return usablestories
@@ -150,19 +157,18 @@ export type gameSelectionTypes = "matchup" | "crossword" | "pronounce" | "wordme
 export interface gameObjType {
   boardObjId: string,
   gameSelection: gameSelectionTypes, //tell different types of gamemodes
-  boardType: "gamemode",
-  shouldStartOnNewPage: boolean | null,
   gameData: gameDataType | null,
 }
 
 
-export type storyBoardType = gameObjType | videoType | imageType | textType
+export type storyBoardType = videoType | imageType | textType
 export interface StoryData {//story is raw from database, storydata is what is usable
   title: string;
   storyid: string;
   createdat: Date;
   likes: number;
   storyboard: storyBoardType[] | null;
+  gamemodes: gameObjType[] | null;
   rating: number | null;
   backgroundaudio: string | null;
   shortdescription: string | null;
@@ -175,8 +181,9 @@ export interface StoryDataSend {
   createdat: Date | undefined,
   likes: number | undefined,
 
-  rating: number | null, //will get stored as literal null
-  storyboard: string | null,
+  rating: number | null,
+  storyboard: string | null, //send as string to be saved
+  gamemodes: string | null,
   backgroundaudio: string | null,
   shortdescription: string | null,
 
@@ -202,6 +209,9 @@ export interface wordsToMeaningType {
 export interface crosswordType {
   gameDataFor: "crossword",
   wordArray: string[] | null
+  hintObj: {
+    [hintTitle: string]: string;
+  } | null
 }
 
 

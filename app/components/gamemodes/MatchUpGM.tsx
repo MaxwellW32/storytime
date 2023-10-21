@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo, useRef, ReactNode } from "react"
 import { v4 as uuidv4 } from "uuid";
 import styles from "./style.module.css"
-import { gameObjType, matchupType, storyBoardType } from "@/app/page";
+import { gameObjType, gameSelectionTypes, matchupType, storyBoardType } from "@/app/page";
 
 
 import {
@@ -21,28 +21,38 @@ import { handleStoriesWhereGameOver } from "@/app/utility/savestorage";
 import DisplayGameOVer from "../useful/DisplayGameOver";
 
 
-export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewPage, gameData, isEditing = false, storyid, handleStoryBoard }: gameObjType & {
+export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGameMode }: {
+    gameObj?: gameObjType,
     isEditing?: boolean,
     storyid?: string,
-    handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void
+    addGameMode?: (gamemode: gameObjType) => void
 }) {
 
+    const gameSelection = useRef<gameSelectionTypes>(gameObj?.gameSelection ?? "matchup")
+    const boardObjId = useRef<string>(gameObj?.boardObjId ?? uuidv4())
+    const [gameData, gameDataSet] = useState<matchupType>(() => {
+        const newObj: matchupType = {
+            gameDataFor: "matchup",
+            choicesArr: null,
+            questionsArr: null
+        }
+
+        return gameObj?.gameData as matchupType ?? newObj
+    })
 
     const [questions, questionsSet] = useState<string[]>(() => {
-
-        return { ...gameData as matchupType }.questionsArr ?? ["", "", "", ""]
+        return gameData.questionsArr ?? ["", "", "", ""]
     })
 
     const [choices, choicesSet] = useState<string[][]>(() => {
-
-        return { ...gameData as matchupType }.choicesArr ?? questions.map(eachItem => {
+        return gameData.choicesArr ?? questions.map(eachItem => {
             return [""]
         })
     })
 
     const [gameFinishedState, gameFinishedStateSet] = useState<boolean>(() => {
         if (!isEditing) {
-            const isGameOver = handleStoriesWhereGameOver(storyid!, boardObjId, "read")
+            const isGameOver = handleStoriesWhereGameOver(storyid!, boardObjId.current, "read")
             return isGameOver!
         } else {
             return false
@@ -98,23 +108,32 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
 
     const [items, setItems] = useState<any>(() => handleItemsWithChanges());
 
-    function submitNewGameModeObj() {
+    function submit() {
         //local submit to parent make Story - saved to the storyTextboard
         const newGameMode: gameObjType = {
-            gameSelection: gameSelection,
+            gameSelection: gameSelection.current,
             gameData: {
-                gameDataFor: "matchup",
-                choicesArr: choices!,
-                questionsArr: questions!
+                ...gameData,
+                choicesArr: choices,
+                questionsArr: questions //in future make gamedata work with choices and questions arr
             },
-            shouldStartOnNewPage: shouldStartOnNewPage,
-            boardType: "gamemode",
-            boardObjId: boardObjId
+            boardObjId: boardObjId.current
         }
 
-        if (handleStoryBoard) {
-            handleStoryBoard("update", boardObjId, newGameMode)
+        if (addGameMode) {
+            addGameMode(newGameMode)
         }
+
+        //reset
+        boardObjId.current = uuidv4()
+        gameDataSet({
+            gameDataFor: "matchup",
+            choicesArr: null,
+            questionsArr: null
+        })
+        questionsSet(["", "", "", ""])
+        choicesSet([[""], [""], [""], [""]])
+
     }
 
     function checkAnswers() {
@@ -286,16 +305,6 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
         setItems(handleItemsWithChanges())
     }, [questions, choices])
 
-
-    const [loadButtonClicked, loadButtonClickedSet] = useState(false)
-    useEffect(() => {
-        if (loadButtonClicked) {
-            submitNewGameModeObj()
-            loadButtonClickedSet(false)
-        }
-
-    }, [loadButtonClicked])
-
     //write change to local storage
     const gameFinishedOnce = useRef(false)
     useEffect(() => {
@@ -304,80 +313,45 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
         }
 
         if (gameFinishedOnce.current && !isEditing) {
-            handleStoriesWhereGameOver(storyid!, boardObjId, "update")
+            handleStoriesWhereGameOver(storyid!, boardObjId.current, "update")
         }
 
     }, [gameFinishedState])
 
 
-
-    const questionInputRefs = useRef<HTMLInputElement[]>([null!])
-    const addQuestionInputsToRef = (ref: HTMLInputElement | null, indexToAdd: number) => {
-        // console.log(`$seeing index ${indexToAdd}, ref`, ref);
-        if (ref === null) return
-        questionInputRefs.current[indexToAdd] = ref
-    }
-
-    const choiceInputRefs = useRef<HTMLInputElement[][]>([[null!]])
-    const addChoiceInputsToRef = (ref: HTMLInputElement | null, largeIndexToAdd: number, smallIndexToAdd: number) => {
-        // console.log(`$seeing largeindex ${largeIndexToAdd}, small ${smallIndexToAdd}, ref`, ref);
-
-        if (ref === null) return
-
-        if (!choiceInputRefs.current[largeIndexToAdd]) {
-            choiceInputRefs.current[largeIndexToAdd] = []
-        }
-
-        if (!choiceInputRefs.current[largeIndexToAdd][smallIndexToAdd]) {
-            choiceInputRefs.current[largeIndexToAdd][smallIndexToAdd] = ref
-        }
-
-        choiceInputRefs.current[largeIndexToAdd][smallIndexToAdd] = ref
-
-    }
-
-    const loadValues = () => {
-        const newQuestionsArr: string[] = []
-        questionInputRefs.current.forEach((eachInput, index) => {
-            newQuestionsArr.push(eachInput.value)
-            // console.log(`$questions pos ${index}`, eachInput.value);
-        })
-        questionsSet(newQuestionsArr)
-
-        const newChoicesArr: string[][] = []
-        choiceInputRefs.current.forEach((inputArr, index) => {
-            newChoicesArr.push([])
-
-            inputArr.forEach((eachChoiceInput, smallerIndex) => {
-                newChoicesArr[index].push("")
-                newChoicesArr[index][smallerIndex] = eachChoiceInput.value
-
-                // console.log(`$choices large pos ${index}, smaller pos: ${smallerIndex}`, eachChoiceInput.value);
-            })
-        })
-        choicesSet(newChoicesArr)
-
-        loadButtonClickedSet(true)
-    }
-
     return (
         <div className={styles.gmMainDiv} style={{ scale: gameFinishedState ? .9 : 1 }}>
+
             {isEditing ? (
                 <>
                     {questions.map((temp, index) => (
-                        <div className={styles.questionCont} key={uuidv4()}>
+                        <div className={styles.questionCont} key={index}>
                             <div style={{ display: "flex", gap: ".7rem" }}>
                                 <label>Question {index + 1}</label>
 
                                 <svg className={styles.deleteQuestion}
                                     onClick={() => {
-                                        questionInputRefs.current = questionInputRefs.current.filter((eq, seenIndex) => seenIndex !== index)
-                                        choiceInputRefs.current = choiceInputRefs.current.filter((eachchoiceArr, seenIndex) => seenIndex !== index)
-                                        loadValues()
+                                        if (questions.length > 1) {
+                                            questionsSet(prevQuestions => {
+                                                return prevQuestions.filter((eachQuestion, qindex) => qindex !== index)
+                                            })
+
+                                            choicesSet(prevChoices => {
+                                                return prevChoices.filter((eachStrArr, seeIn) => index !== seeIn)
+                                            })
+                                        }
                                     }}
                                     xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
                             </div>
-                            <input ref={(e) => { addQuestionInputsToRef(e, index) }} style={{ width: "100%" }} type='text' placeholder={`Enter Question ${index + 1}`} defaultValue={questions[index]} />
+                            <input style={{ width: "100%" }} type='text' placeholder={`Enter Question ${index + 1}`} value={questions[index]} onChange={(e) => {
+                                questionsSet(prevQuestions => {
+                                    const newQuestions = [...prevQuestions]
+
+                                    newQuestions[index] = e.target.value
+
+                                    return newQuestions
+                                })
+                            }} />
 
 
 
@@ -385,29 +359,27 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
                                 <>
                                     <div className={styles.choicesDivCont}>
                                         {choices[index].map((choice, smallerIndex) => (
-                                            <div key={uuidv4()} style={{ display: "flex", gap: ".5rem" }}>
-                                                <input ref={(e) => { addChoiceInputsToRef(e, index, smallerIndex) }} key={uuidv4()} type='text' placeholder={`Answer ${smallerIndex + 1}`}
-                                                    defaultValue={choices[index][smallerIndex]} />
+                                            <div key={`${index}${smallerIndex}`} style={{ display: "flex", gap: ".5rem" }}>
+                                                <input type='text' placeholder={`Answer ${smallerIndex + 1}`}
+                                                    value={choices[index][smallerIndex]} onChange={(e) => {
+                                                        choicesSet(prevChoices => {
+                                                            const newChoices = [...prevChoices]
+
+                                                            newChoices[index][smallerIndex] = e.target.value
+
+                                                            return newChoices
+                                                        })
+                                                    }} />
 
                                                 <svg className={styles.deleteChoice}
                                                     onClick={() => {
-                                                        choiceInputRefs.current = choiceInputRefs.current.map((eachchoiceArr, seenBigIndex) => {
-                                                            if (seenBigIndex === index) {
-
-                                                                if (eachchoiceArr.length > 1) {
-                                                                    return eachchoiceArr.filter((eachChoice, smallseenIndex) => {
-                                                                        if (smallseenIndex !== smallerIndex) {
-                                                                            return eachChoice
-                                                                        }
-                                                                    })
-                                                                } else {
-                                                                    return eachchoiceArr
-                                                                }
-                                                            } else {
-                                                                return eachchoiceArr
-                                                            }
-                                                        })
-                                                        loadValues()
+                                                        if (choices[index].length > 1) {
+                                                            choicesSet(prevChoices => {
+                                                                const newChoices = prevChoices.map(e => e)
+                                                                newChoices[index] = newChoices[index].filter((each, eachInd) => eachInd !== smallerIndex)
+                                                                return newChoices
+                                                            })
+                                                        }
                                                     }}
                                                     xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
 
@@ -417,21 +389,13 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
 
                                     <button className='secondButton' onClick={() => {
 
-                                        loadValues()
-
-
                                         choicesSet(prevArr => {
-                                            const updatedChoices = prevArr.map((arr, i) => {
-                                                if (i === index) {
-                                                    return [...arr, ""];
-                                                } else {
-                                                    return arr;
-                                                }
-
-                                            });
+                                            const updatedChoices = [...prevArr]
+                                            updatedChoices[index] = [...updatedChoices[index], ""]
 
                                             return updatedChoices;
                                         })
+
                                     }}>Add Answer</button>
                                 </>
                             )}
@@ -441,30 +405,19 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
 
                     <button className='secondButton' style={{ borderRadius: ".2rem" }} onClick={() => {
 
-                        loadValues()
-
-
-                        questionsSet(prev => {
-                            if (prev) {
-                                return [...prev, ""]
-                            } else {
-                                return [""]
-                            }
+                        questionsSet(prevQuestions => {
+                            const newQuestions = [...prevQuestions, ""]
+                            return newQuestions
                         })
 
 
-                        choicesSet(prevChoicesArr => {
-                            let updatedChoices = [...prevChoicesArr!]
+                        choicesSet(prevArr => {
+                            const updatedChoices = [...prevArr, [""]]
 
-                            updatedChoices.push([""])
-
-                            return updatedChoices
+                            return updatedChoices;
                         })
 
                     }}>Add Question</button>
-
-                    <button onClick={loadValues}>Load Game Board</button>
-
 
                     <DndContext
                         sensors={sensors}
@@ -480,8 +433,9 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
                         }}>
 
                             {questions?.map((eachQuestion, index) => {
+
                                 return (
-                                    <Container key={uuidv4()} id={`container${index}`} items={items[`container${index}`]} arrPos={index} questionAsked={eachQuestion} />
+                                    <Container key={index} id={`container${index}`} items={items[`container${index}`]} arrPos={index} questionAsked={eachQuestion} />
                                 )
                             })}
                         </div>
@@ -495,11 +449,13 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
                         <button className='secondButton' onClick={checkAnswers}>Check Answers</button>
                     )}
 
+                    <button onClick={submit}>Submit Gamemode</button>
+
                 </>
             ) : (
 
 
-                <>
+                <div style={{ maxHeight: "100%", display: "grid", gridTemplateRows: "5fr 1fr" }}>
                     <DisplayGameOVer gameOver={gameFinishedState}>
 
                         <DndContext
@@ -510,9 +466,8 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
                             onDragEnd={handleDragEnd}
                         >
                             <div style={{
-                                display: "flex",
-                                flexDirection: "row",
-                                flexWrap: "wrap"
+                                display: "grid",
+                                gridTemplateColumns: "1fr 1fr",
                             }}>
                                 {questions!.map((eachQuestion, index) => {
                                     return (
@@ -525,13 +480,15 @@ export default function MatchUpGM({ gameSelection, boardObjId, shouldStartOnNewP
 
                     </DisplayGameOVer>
 
+                    <div>
+                        {gameFinishedState ? (
+                            <button className='secondButton' onClick={refreshGame}>Game Finished - refresh?</button>
+                        ) : (
+                            <button className='secondButton' onClick={checkAnswers}>Check Answers</button>
+                        )}
+                    </div>
 
-                    {gameFinishedState ? (
-                        <button className='secondButton' onClick={refreshGame}>Game Finished - refresh?</button>
-                    ) : (
-                        <button className='secondButton' onClick={checkAnswers}>Check Answers</button>
-                    )}
-                </>
+                </div>
             )
             }
         </div>

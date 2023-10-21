@@ -23,11 +23,9 @@ export default function Container(props: any) {
         justifyContent: "center",
         flexDirection: "column",
         padding: "1rem",
-        margin: "1rem",
-        flex: "1 1 250px",
-        maxWidth: "50%",
         gap: "1rem",
         minHeight: "100px",
+        margin: ".5rem"
     }
 
     const rootStyle = {

@@ -7,14 +7,8 @@
 }
 
 .spawnArea {
-    max-height: 400px;
-    width: 90%;
-    max-width: 500px;
-    height: 100%;
-    aspect-ratio: 1/1;
     display: grid;
-    gap: .1rem;
-    margin: 0 auto;
+
 }
 
 .tile {

@@ -9,11 +9,11 @@ import styles from "./style.module.css"
 import { handleStoriesWhereGameOver } from '@/app/utility/savestorage';
 
 
-export default function PronounciationGM({ isEditing = false, gameObj, storyid, handleStoryBoard }: {
+export default function PronounciationGM({ isEditing = false, sentGameObj, storyid, addGameMode }: {
     isEditing?: boolean,
-    gameObj: gameObjType,
+    sentGameObj?: gameObjType,
     storyid?: string,
-    handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void
+    addGameMode?: (gamemode: gameObjType) => void
 }) {
     const {
         transcript,
@@ -22,14 +22,25 @@ export default function PronounciationGM({ isEditing = false, gameObj, storyid, 
         browserSupportsSpeechRecognition
     } = useSpeechRecognition();
 
-    const [givenWords, givenWordsSet] = useState<string[]>(() => {
-        const lowerCaseArr: string[] = []
-        const seenArr = { ...gameObj.gameData as pronounceType }.givenWords ?? []
-        seenArr?.forEach(eachWord => {
-            lowerCaseArr.push(eachWord.toLowerCase())
-        })
+    const initialState: gameObjType = {
+        boardObjId: uuidv4(),
+        gameData: {
+            gameDataFor: "pronounce",
+            givenWords: null
+        } as pronounceType,
+        gameSelection: "pronounce"
+    }
 
-        return lowerCaseArr
+    const [gameObj, gameObjSet] = useState<gameObjType>(sentGameObj ?? { ...initialState })
+
+    // const myWords = ["APPLE", "BANANA", "CHerry", "doG", "ELEphant", "flower", "grape", "house", "igloo", "jacket", "kiwi", "lemon", "melon", "orange", "penguin", "queen", "rabbit", "strawberry", "turtle", "umbrella"];
+
+    const [givenWords, givenWordsSet] = useState<string[]>(() => {
+        let seenArr = { ...gameObj.gameData as pronounceType }.givenWords ?? []
+        seenArr = seenArr.map(eachWord => {
+            return eachWord.toLowerCase()
+        })
+        return seenArr
     })
     const [userMatchedWords, userMatchedWordsSet] = useState<string[]>([])
     const [gameOverState, gameOverStateSet] = useState<boolean>(() => {
@@ -171,24 +182,18 @@ export default function PronounciationGM({ isEditing = false, gameObj, storyid, 
         }
     }
 
-    const [wantsToSubmit, wantsToSubmitSet] = useState(false)
-    useEffect(() => {
-        if (wantsToSubmit) {
-            handleSubmit()
-        }
-    }, [wantsToSubmit])
-
     const handleSubmit = () => {
-        //local submit to storyboard
-
         const newObj: gameObjType = {
             ...gameObj,
-            gameData: { gameDataFor: "pronounce", givenWords: givenWords }
+            gameData: { ...gameObj.gameData as pronounceType, givenWords: givenWords }
         }
 
-        if (handleStoryBoard) {
-            handleStoryBoard!("update", gameObj!.boardObjId, newObj)
+        if (addGameMode) {
+            addGameMode(newObj)
         }
+
+        gameObjSet({ ...initialState })
+        givenWordsSet([])
     }
 
     const refreshGame = () => {
@@ -197,6 +202,18 @@ export default function PronounciationGM({ isEditing = false, gameObj, storyid, 
 
     const start = () => {
         SpeechRecognition.startListening()
+    }
+
+    const handleAddWord = () => {
+        givenWordsSet(prevWords => {
+            const newArr = [...prevWords, inputRef.current.value.toLowerCase()]
+
+            setTimeout(() => {
+                inputRef.current.value = ""
+                inputRef.current.focus()
+            }, 500)
+            return newArr
+        })
     }
 
     if (!browserSupportsSpeechRecognition) {
@@ -208,14 +225,12 @@ export default function PronounciationGM({ isEditing = false, gameObj, storyid, 
                 <div style={{ display: "grid", justifyItems: "center" }}>
 
                     <div>
-                        <input type='text' ref={inputRef} placeholder='Add a word to pronounce here' />
-                        <button onClick={() => {
-                            wantsToSubmitSet(true)
-                            givenWordsSet(prevWords => {
-                                const newArr = [...prevWords, inputRef.current.value]
-                                return newArr
-                            })
-                        }}>Submit</button>
+                        <input type='text' ref={inputRef} placeholder='Add a word to pronounce here' onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                handleAddWord()
+                            }
+                        }} />
+                        <button onClick={handleAddWord}>Add</button>
                     </div>
 
 
@@ -233,7 +248,6 @@ export default function PronounciationGM({ isEditing = false, gameObj, storyid, 
 
                                             <svg style={{ width: ".8rem", fill: "var(--textColor)" }}
                                                 onClick={() => {
-                                                    wantsToSubmitSet(true)
                                                     givenWordsSet(prevGivenWords => {
                                                         const newArr = prevGivenWords.filter((eachWord, seenIndex) => seenIndex !== index)
                                                         return newArr
@@ -262,6 +276,7 @@ export default function PronounciationGM({ isEditing = false, gameObj, storyid, 
                         </div>
 
                     </DisplayGameOVer>
+                    <button onClick={handleSubmit}>Submit Gamemode</button>
                 </div>
             ) : (
                 <>

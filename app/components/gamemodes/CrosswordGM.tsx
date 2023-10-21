@@ -4,19 +4,44 @@ import { useRef, useEffect, useState, useMemo } from "react"
 import { crosswordType, gameObjType, storyBoardType } from "@/app/page"
 import { handleStoriesWhereGameOver } from "@/app/utility/savestorage"
 import DisplayGameOVer from "../useful/DisplayGameOver"
+import { v4 as uuidv4 } from "uuid";
 
 
-export default function CrosswordGM({ gameObj, isEditing = false, storyid, handleStoryBoard }:
-    {
-        gameObj: gameObjType, isEditing?: boolean, storyid?: string
-        handleStoryBoard?: (option: string, seenBoardId: string, newBoardData?: storyBoardType) => void
-    }) {
+export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, addGameMode }:
+    { sentGameObj?: gameObjType, isEditing?: boolean, storyid?: string, addGameMode?: (gamemode: gameObjType) => void }) {
+
+    const initialState: gameObjType = {
+        boardObjId: uuidv4(),
+        gameData: {
+            gameDataFor: "crossword",
+            wordArray: null,
+            hintObj: null
+        } as crosswordType,
+        gameSelection: "crossword"
+    }
+
+    const [gameObj, gameObjSet] = useState<gameObjType>(sentGameObj ?? { ...initialState })
+
+    // const myWords = ["apple", "banana", "cherry", "dog", "elephant", "flower", "grape", "house", "igloo", "jacket", "kiwi", "lemon", "melon", "orange", "penguin", "queen", "rabbit", "strawberry", "turtle", "umbrella"];
 
     const [wordsArray, wordsArraySet] = useState<string[]>(() => {
-        const gameObjGameData = gameObj.gameData as crosswordType
-
-        return gameObjGameData?.wordArray ?? []
+        return { ...gameObj?.gameData as crosswordType }.wordArray ?? []
     })
+
+    //each obj key is a word, the hint is the value
+    const [hintObj, hintObjSet] = useState(() => {
+        const newHintObj: {
+            [key: string]: string
+        } = {}
+
+        wordsArray.forEach(eachWord => {
+            newHintObj[eachWord] = ""
+        })
+
+        return { ...gameObj?.gameData as crosswordType }.hintObj ?? { ...newHintObj }
+    })
+
+    const [wordArrSkipIndex, wordArrSkipIndexSet] = useState(0)
 
     const spawnPointRef = useRef<HTMLDivElement>(null!)
     const tileRefs = useRef<HTMLDivElement[]>([])
@@ -50,16 +75,17 @@ export default function CrosswordGM({ gameObj, isEditing = false, storyid, handl
         return wordsArray.length - userAmountCorrect
     }, [userAmountCorrect, wordsArray.length])
 
-    const handleSubmit = () => {
-        //local submit to storyboard
+    const submit = () => {
 
         const newObj: gameObjType = {
             ...gameObj,
-            gameData: { gameDataFor: "crossword", wordArray: wordsArray }
+            gameData: { ...gameObj.gameData as crosswordType, wordArray: wordsArray, hintObj: hintObj }
         }
 
-        if (handleStoryBoard) {
-            handleStoryBoard!("update", gameObj!.boardObjId, newObj)
+        if (addGameMode) {
+            addGameMode(newObj)
+            gameObjSet({ ...initialState })
+            wordsArraySet([])
         }
     }
 
@@ -202,10 +228,11 @@ export default function CrosswordGM({ gameObj, isEditing = false, storyid, handl
 
     //check if user got all correct
     useEffect(() => {
-        if (userAmountCorrect === wordsArray.length) {
+        if (userAmountCorrect === wordsArray.length && wordsArray.length > 0) {
             gameFinishedStateSet(true)
         }
     }, [userAmountCorrect])
+
 
 
     const loadUpTiles = (wordsSeenArr: string[]) => {
@@ -220,33 +247,58 @@ export default function CrosswordGM({ gameObj, isEditing = false, storyid, handl
             [wordsSeenArr[i], wordsSeenArr[j]] = [wordsSeenArr[j], wordsSeenArr[i]];
         }
 
-        let longestWordNum = 0
-        wordsSeenArr.forEach(eachWord => {
-            if (eachWord.length > longestWordNum) {
-                longestWordNum = eachWord.length
+        const sideWords = wordsSeenArr.length > 2 ? wordsSeenArr.splice(wordsSeenArr.length - 2, 2) : null
+
+        const longestWordLength = () => {
+            let myNum = 0
+            wordsSeenArr.forEach(eachWord => {
+                if (eachWord.length > myNum) {
+                    myNum = eachWord.length
+                }
+            })
+
+            if (sideWords !== null) {
+                sideWords.forEach(eachWord => {
+                    if (eachWord.length > myNum) {
+                        myNum = eachWord.length
+                    }
+                })
             }
-        })
-        longestWordNum += Math.floor(Math.random() * 2) + 2 //becomes amout of columns
 
-        let newtwoItemArr //becomes the text on first and last column
-        if (wordsSeenArr.length > 2) {
-            newtwoItemArr = wordsSeenArr.splice(wordsSeenArr.length - 2, 2)
-        } else {
-            newtwoItemArr = ["", ""]
+            return myNum
+        }
+        const getColumnAmt = () => {
+            let myNum = 0
+            myNum += longestWordLength()
+            const extraColumns = Math.floor(Math.random() * 2) + 2
+            myNum += extraColumns
+
+            return myNum
+
         }
 
-        let rowBuffer = Math.floor(Math.random() * 3) + 2
-        let amountOfRows = longestWordNum + rowBuffer
+        const getRowAmt = () => {
+            let myNum = 0
+            const extraRowsAmt = Math.floor(Math.random() * 3) + 2
+            const longestWord = longestWordLength()
 
-        if (wordsSeenArr.length > longestWordNum) {
-            amountOfRows = wordsSeenArr.length + rowBuffer
+            if (wordsSeenArr.length > longestWord) {
+                myNum = wordsSeenArr.length + extraRowsAmt
+            } else {
+                myNum = longestWord + extraRowsAmt
+            }
+
+            return myNum
+
         }
+
+        let amountOfColumns = getColumnAmt() //becomes amout of columns
+
+        let amountOfRows = getRowAmt()  //amt of rows
 
         const spawnPoint = spawnPointRef.current!
-        spawnPoint.style.gridTemplateColumns = `repeat(${longestWordNum}, 1fr)`
+        spawnPoint.style.gridTemplateColumns = `repeat(${amountOfColumns}, 1fr)`
         spawnPoint.style.gridTemplateRows = `repeat(${amountOfRows}, 1fr)`
-
-        let elementCounter = 0
 
         const handleClick = (e: MouseEvent) => {
 
@@ -278,10 +330,11 @@ export default function CrosswordGM({ gameObj, isEditing = false, storyid, handl
             })
         }
 
+        let elementCounter = 0
         const alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 
         for (let index = 0; index < amountOfRows; index++) {
-            for (let smallerIndex = 0; smallerIndex < longestWordNum; smallerIndex++) {
+            for (let smallerIndex = 0; smallerIndex < amountOfColumns; smallerIndex++) {
                 const newElement = document.createElement("div")
 
                 const randomAlphabetLetter = alphabet[Math.floor(Math.random() * alphabet.length)]
@@ -299,103 +352,123 @@ export default function CrosswordGM({ gameObj, isEditing = false, storyid, handl
             }
         }
 
-        let randSafeXIndexToStart = 0
-        wordsSeenArr.forEach(eachWord => {
-            if (rowBuffer > 0) {
-                //allows us to skip a row every now and then
+        let extraRowAmt = amountOfRows - wordsSeenArr.length
+        let rowXStarter = 0
+
+        wordsSeenArr.forEach((eachWord, wordArrIndex) => {
+            if (extraRowAmt > 0) {
+                //skip a row every now and then
                 const overHalf = Math.random() * 1
                 if (overHalf > 0.4) {
-                    randSafeXIndexToStart += longestWordNum
-                    rowBuffer--
+                    rowXStarter += amountOfColumns //skip a column space
+                    extraRowAmt--
                 }
             }
 
-            const ranDomBuffer = (Math.floor(Math.random() * ((longestWordNum - 1) - eachWord.length))) + 1
+            const ranDomXBuffer = (Math.floor(Math.random() * ((amountOfColumns - 1) - eachWord.length))) + 1
             for (let wordIndex = 0; wordIndex < eachWord.length; wordIndex++) {
-                tileRefs.current[randSafeXIndexToStart + ranDomBuffer + wordIndex].innerText = eachWord[wordIndex]
-                tileRefs.current[randSafeXIndexToStart + ranDomBuffer + wordIndex].setAttribute('data-seenLetter', eachWord[wordIndex])
+                tileRefs.current[rowXStarter + ranDomXBuffer + wordIndex].innerText = eachWord[wordIndex]
+                tileRefs.current[rowXStarter + ranDomXBuffer + wordIndex].setAttribute('data-seenLetter', eachWord[wordIndex])
 
                 if (isEditing) {
-                    tileRefs.current[randSafeXIndexToStart + ranDomBuffer + wordIndex].style.backgroundColor = "var(--secondaryColor)"
+                    tileRefs.current[rowXStarter + ranDomXBuffer + wordIndex].style.backgroundColor = "var(--secondaryColor)"
                 }
             }
-            randSafeXIndexToStart += longestWordNum
+            rowXStarter += amountOfColumns //go to new row
         })
 
 
         //add word in 1st column
-        let randSafeYIndexToStart = 0
-        let ranDomBuffer = (Math.floor(Math.random() * (amountOfRows - newtwoItemArr[0].length))) * longestWordNum
-        for (let wordIndex = 0; wordIndex < newtwoItemArr[0].length; wordIndex++) {
-            tileRefs.current[randSafeYIndexToStart + ranDomBuffer].innerText = newtwoItemArr[0][wordIndex]
-            tileRefs.current[randSafeYIndexToStart + ranDomBuffer].setAttribute('data-seenLetter', newtwoItemArr[0][wordIndex])
-            if (isEditing) {
-                tileRefs.current[randSafeYIndexToStart + ranDomBuffer].style.backgroundColor = "var(--secondaryColor)"
+        if (sideWords !== null) {
+            let firstColumnLocation = 0
+            let ranDomBuffer = (Math.floor(Math.random() * (amountOfRows - sideWords[0].length))) * amountOfColumns
+            for (let wordIndex = 0; wordIndex < sideWords[0].length; wordIndex++) {
+                tileRefs.current[firstColumnLocation + ranDomBuffer].innerText = sideWords[0][wordIndex]
+                tileRefs.current[firstColumnLocation + ranDomBuffer].setAttribute('data-seenLetter', sideWords[0][wordIndex])
+                if (isEditing) {
+                    tileRefs.current[firstColumnLocation + ranDomBuffer].style.backgroundColor = "var(--secondaryColor)"
+                }
+
+                firstColumnLocation += amountOfColumns //everytime you add longest word num you skip a line
             }
 
-            randSafeYIndexToStart += longestWordNum //everytime you add longest word num you skip a line
-        }
+            //add word in last column
+            let lastColumnLocation = amountOfColumns - 1
+            ranDomBuffer = (Math.floor(Math.random() * (amountOfRows - sideWords[1].length))) * amountOfColumns
+            for (let wordIndex = 0; wordIndex < sideWords[1].length; wordIndex++) {
+                tileRefs.current[lastColumnLocation + ranDomBuffer].innerText = sideWords[1][wordIndex]
+                tileRefs.current[lastColumnLocation + ranDomBuffer].setAttribute('data-seenLetter', sideWords[1][wordIndex])
+                if (isEditing) {
+                    tileRefs.current[lastColumnLocation + ranDomBuffer].style.backgroundColor = "var(--secondaryColor)"
+                }
 
-        //add word in last column
-        randSafeYIndexToStart = longestWordNum - 1
-        ranDomBuffer = (Math.floor(Math.random() * (amountOfRows - newtwoItemArr[1].length))) * longestWordNum
-        for (let wordIndex = 0; wordIndex < newtwoItemArr[1].length; wordIndex++) {
-            tileRefs.current[randSafeYIndexToStart + ranDomBuffer].innerText = newtwoItemArr[1][wordIndex]
-            tileRefs.current[randSafeYIndexToStart + ranDomBuffer].setAttribute('data-seenLetter', newtwoItemArr[1][wordIndex])
-            if (isEditing) {
-                tileRefs.current[randSafeYIndexToStart + ranDomBuffer].style.backgroundColor = "var(--secondaryColor)"
+                lastColumnLocation += amountOfColumns //everytime you add longest word num you skip a line
             }
-
-            randSafeYIndexToStart += longestWordNum //everytime you add longest word num you skip a line
         }
-
-
     }
-
-    //load up tiles
-    const didMount = useRef(false)
-    useEffect(() => {
-        didMount.current = true
-
-        if (didMount.current) {
-            loadUpTiles([...wordsArray])
-
-            if (isEditing) {
-                inputRef.current.value = ""
-            }
-        }
-    }, [wordsArray])
 
     const inputRef = useRef<HTMLInputElement>(null!)
 
+    //load up tiles
+    useEffect(() => {
+        loadUpTiles([...wordsArray])
+        if (isEditing) inputRef.current.value = ""
+    }, [wordsArray])
+
+
     const addWord = () => {
-        wordsArraySet(prevwordsArr => {
+        if (inputRef.current.value) {
+            wordsArraySet(prevwordsArr => {
 
-            let newArr = []
-            if (prevwordsArr) {
-                newArr = [...prevwordsArr, inputRef.current.value]
-            } else {
-                newArr = [inputRef.current.value]
-            }
+                let newArr = []
+                if (prevwordsArr) {
+                    newArr = [...prevwordsArr, inputRef.current.value]
+                } else {
+                    newArr = [inputRef.current.value]
+                }
 
-            return newArr
-        })
+                return newArr
+            })
+        }
 
     }
 
-    //monitor changes and save em
+    //ensure wordArrSkipIndex is always in range - handle hintObjData
     useEffect(() => {
-        const passedArray: string[] = !gameObj.gameData ? [] : { ...gameObj.gameData as crosswordType }.wordArray ?? []
-
-        if (passedArray.length !== wordsArray.length) {
-            handleSubmit()
+        if (wordArrSkipIndex > wordsArray.length - 1) {
+            wordArrSkipIndexSet(wordsArray.length - 1 >= 0 ? wordsArray.length - 1 : 0)
         }
-    }, [wordsArray.length])
+
+        //ensure word values not in array are removed from obj
+        Object.keys(hintObj).forEach(eachHintKey => {
+            let seenInArr = false
+
+            wordsArray.forEach(eachWord => {
+                if (eachWord === eachHintKey) {
+                    seenInArr = true
+                }
+            })
+
+            if (!seenInArr) {
+                // hintObj
+                hintObjSet(prevHintObj => {
+                    const newHintObj = { ...prevHintObj }
+                    delete newHintObj[eachHintKey];
+                    console.log(`$seeing newHintOBj`, newHintObj);
+                    return newHintObj
+                })
+            }
+
+        })
+    }, [wordsArray])
+
+    console.log(`$word at index`, wordsArray[wordArrSkipIndex]);
+    console.log("hintObj", hintObj)
 
     return (
         <div className={styles.crossWordMain} style={{ padding: "1rem" }}>
             {isEditing ? (
-                <div >
+                <div style={{ display: "grid" }} >
                     <label>Enter Words you&apos;d like to appear in the Crossword</label>
                     <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", margin: "1rem" }}>
                         {wordsArray.map((eachWord, index) => {
@@ -415,30 +488,80 @@ export default function CrosswordGM({ gameObj, isEditing = false, storyid, handl
                             )
                         })}
                     </div>
-                    <input ref={inputRef} onKeyDown={(e) => {
+
+
+                    <input ref={inputRef} placeholder="Enter a word" onKeyDown={(e) => {
                         if (e.key === "Enter") {
                             addWord()
                         }
                     }} type="text" />
                     <button onClick={addWord}>Submit Word</button>
+
+                    {wordsArray[wordArrSkipIndex] && (
+                        <div style={{ display: "flex", flexWrap: "wrap", justifySelf: "center", gap: ".5rem", alignItems: "center" }}>
+                            <button onClick={() => {
+                                wordArrSkipIndexSet(prev => {
+                                    let newNum = prev - 1
+                                    return newNum >= 0 ? newNum : 0
+                                })
+                            }}>Prev Hint</button>
+
+                            <div style={{ display: "flex", flexDirection: "column" }}>
+                                <label>Set a hint for &apos;{wordsArray[wordArrSkipIndex]}&apos;?</label>
+                                <input type="text" placeholder="Enter a hint" value={hintObj[wordsArray[wordArrSkipIndex]] ?? ""} onChange={(e) => {
+                                    hintObjSet(prevHintObj => {
+                                        const newHintObj = { ...prevHintObj }
+                                        newHintObj[wordsArray[wordArrSkipIndex]] = e.target.value
+                                        return newHintObj
+                                    })
+                                }} />
+                            </div>
+
+
+                            <button onClick={() => {
+                                wordArrSkipIndexSet(prev => {
+                                    let newNum = prev + 1
+                                    const maxArrIndex = wordsArray.length - 1
+                                    return newNum <= maxArrIndex ? newNum : maxArrIndex
+                                })
+                            }}>Next Hint</button>
+                        </div>
+                    )}
                     {gameFinishedState && <p>Beat the Game!!!</p>}
                     <p className={styles.leftToFind}>Words left to find {amtOfAnswersLeft}</p>
                     <div ref={spawnPointRef} className={styles.spawnArea}></div>
+                    <button onClick={submit}>Submit Gamemode</button>
                 </div>
             ) : (
-                <>
-                    <p className={styles.leftToFind}>Words left to find {amtOfAnswersLeft}</p>
-                    <p onClick={showHints} style={{ textAlign: "end", marginBottom: "1rem", cursor: "pointer" }}>hint?</p>
-                    <DisplayGameOVer gameOver={gameFinishedState}>
-                        <div ref={spawnPointRef} className={styles.spawnArea}></div>
-                    </DisplayGameOVer>
+                <div style={{ display: "flex", flexDirection: "column", maxHeight: "100%" }}>
+                    <div style={{ flex: 1 }}>
+                        <p className={styles.leftToFind}>Words left to find {amtOfAnswersLeft}</p>
+                        <p onClick={showHints} style={{ textAlign: "end", marginBottom: "1rem", cursor: "pointer" }}>hint?</p>
+                    </div>
+
+                    <div style={{ flex: 7 }}>
+                        <DisplayGameOVer gameOver={gameFinishedState}>
+                            <div style={{ display: "flex", gap: "1rem" }}>
+
+                                {Object.values(hintObj).map((eachHintClue, clueIndex) => {
+                                    return (
+                                        <div key={clueIndex} >
+                                            <p>{eachHintClue}</p>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                            <div ref={spawnPointRef} className={styles.spawnArea}></div>
+                        </DisplayGameOVer>
+                    </div>
+
                     {gameFinishedState && (
-                        <>
+                        <div style={{ flex: 1 }}>
                             <p>Beat the Game!!!</p>
                             <button onClick={() => { gameFinishedStateSet(false) }}>Refresh</button>
-                        </>
+                        </div>
                     )}
-                </>
+                </div>
             )}
 
         </div>

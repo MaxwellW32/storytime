@@ -28,3 +28,8 @@
     max-width: 750px;
     margin: 0 auto;
 }
+
+.gameModeOverFlowCont::-webkit-scrollbar {
+    display: none;
+
+}

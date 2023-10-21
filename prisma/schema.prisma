@@ -17,8 +17,9 @@ model story {
   createdat DateTime @default(now())
   likes     Int      @default(0)
 
-  storyboard       String? @db.Text //anything with a ? can be stored as null in the db
   rating           Int?
+  storyboard       String? @db.Text //anything with a ? can be stored as null in the db
+  gamemodes        String? @db.Text
   backgroundaudio  String? @db.Text
   shortdescription String? @db.Text
 }

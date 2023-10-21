@@ -68,11 +68,24 @@
     background-color: var(--seeThroughBg);
 }
 
-.storyBoardCont {
+.editCont {
     background-color: rgba(0, 0, 0, 0.5);
     padding: 2rem .5rem 2rem .5rem;
     gap: .5rem;
     display: grid;
+    position: relative;
+    grid-template-columns: 1fr;
+}
+
+
+.storyContent {
+    background-color: purple;
+    width: 100%;
+}
+
+.gamemodeContent {
+    width: 100%;
+    min-height: 400px;
 }
 
 .textAreaEdit {

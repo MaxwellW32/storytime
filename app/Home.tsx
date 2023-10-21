@@ -14,13 +14,12 @@ export default function Home({ allstories, updateStory, newStory, deleteStory }:
     return (
         <main className={styles.homeDiv}>
 
-            {makingStory
-                ? <MakeStory newStory={newStory} makingStorySet={makingStorySet} />
+            {makingStory ? <MakeStory newStory={newStory} makingStorySet={makingStorySet} />
                 : (<button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => { makingStorySet(true) }}>Add a Story</button>)
             }
 
             {allstories?.map((eachStory: StoryData) => (
-                <ViewStory deleteStory={deleteStory} updateStory={updateStory} key={uuidv4()} fullData={eachStory} />
+                <ViewStory deleteStory={deleteStory} updateStory={updateStory} key={eachStory.storyid} fullData={eachStory} />
             ))}
         </main>
     )
