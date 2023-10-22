@@ -33,12 +33,11 @@ export default function RootLayout({
 }) {
 
   const [theme, themeSet] = useAtom(globalTheme)
-  const [settingTheme, settingThemeSet] = useState<boolean>(() => {
-    //temp workaround
+
+  useEffect(() => {
     const newTheme = retreiveFromLocalStorage("savedTheme") ?? true
     themeSet(newTheme)
-    return newTheme
-  })
+  }, [])
 
   //save theme settings to storage
   useEffect(() => {
