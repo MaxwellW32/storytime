@@ -34,7 +34,7 @@ export default function RootLayout({
 
   const [theme, themeSet] = useAtom(globalTheme)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const newTheme = retreiveFromLocalStorage("savedTheme") ?? true
     themeSet(newTheme)
   }, [])
