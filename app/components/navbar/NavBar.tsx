@@ -1,12 +1,10 @@
 import { atom, useAtom } from 'jotai'
 import { globalTheme } from '@/app/utility/globalState'
-import { saveToLocalStorage, retreiveFromLocalStorage } from '@/app/utility/savestorage'
-
-import { useEffect, useLayoutEffect, useRef } from 'react'
 import styles from "./style.module.css"
 import Link from 'next/link'
 
 export default function NavBar() {
+    // const [theme, themeSet] = useAtom(globalTheme)
     const [theme, themeSet] = useAtom(globalTheme)
 
     return (

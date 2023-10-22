@@ -7,7 +7,7 @@ export function saveToLocalStorage(keyName: any, item: any) {
 export function retreiveFromLocalStorage(keyName: string): any {
     const keyItem = localStorage.getItem(keyName);
 
-    if (keyItem) {
+    if (keyItem !== null) {
         const keyItemParsed = JSON.parse(keyItem);
         return keyItemParsed
     } else {

@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo, useRef, ReactNode } from "react"
 import { v4 as uuidv4 } from "uuid";
 import styles from "./style.module.css"
-import { gameObjType, gameSelectionTypes, matchupType, storyBoardType } from "@/app/page";
+import { gameObjType, gameSelectionTypes, matchupType, storyBoardType, updateGameModesParams } from "@/app/page";
 
 
 import {
@@ -21,11 +21,12 @@ import { handleStoriesWhereGameOver } from "@/app/utility/savestorage";
 import DisplayGameOVer from "../useful/DisplayGameOver";
 
 
-export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGameMode }: {
+export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGameMode, updateGameModes }: {
     gameObj?: gameObjType,
     isEditing?: boolean,
     storyid?: string,
-    addGameMode?: (gamemode: gameObjType) => void
+    addGameMode?: (gamemode: gameObjType) => void,
+    updateGameModes?: updateGameModesParams
 }) {
 
     const gameSelection = useRef<gameSelectionTypes>(gameObj?.gameSelection ?? "matchup")
@@ -122,17 +123,23 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
 
         if (addGameMode) {
             addGameMode(newGameMode)
+            console.log(`$add ran`);
+        }
+
+        if (updateGameModes && storyid) {
+            updateGameModes(newGameMode, storyid, "normal")
+            console.log(`$handle ran`);
         }
 
         //reset
-        boardObjId.current = uuidv4()
-        gameDataSet({
-            gameDataFor: "matchup",
-            choicesArr: null,
-            questionsArr: null
-        })
-        questionsSet(["", "", "", ""])
-        choicesSet([[""], [""], [""], [""]])
+        // boardObjId.current = uuidv4()
+        // gameDataSet({
+        //     gameDataFor: "matchup",
+        //     choicesArr: null,
+        //     questionsArr: null
+        // })
+        // questionsSet(["", "", "", ""])
+        // choicesSet([[""], [""], [""], [""]])
 
     }
 
@@ -427,9 +434,8 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
                         onDragEnd={handleDragEnd}
                     >
                         <div style={{
-                            display: "flex",
-                            flexDirection: "row",
-                            flexWrap: "wrap"
+                            display: "grid",
+                            gridTemplateColumns: "1fr 1fr",
                         }}>
 
                             {questions?.map((eachQuestion, index) => {

@@ -11,6 +11,10 @@ const cantDeleteList = [
   'da8cd1c6-2aa2-443d-911e-07678ead954b',
 ]
 
+//if you're using maker its new
+
+//if you're editing a story you can edit, from the list its gonna be a replace
+
 async function updateStory(option: "story" | "likes", seenStory: StoryData) {
   "use server";
 
@@ -26,7 +30,6 @@ async function updateStory(option: "story" | "likes", seenStory: StoryData) {
       data: savableStory,
     })
 
-    revalidatePath("/")
 
   } else if (option === "likes") {
     await prisma.story.update({
@@ -35,11 +38,76 @@ async function updateStory(option: "story" | "likes", seenStory: StoryData) {
       },
       data: {
         likes: {
-          increment: seenStory.likes
+          increment: 1
         }
       },
     })
   }
+
+  revalidatePath("/")
+}
+
+export type updateGameModesParams = (sentGameModeObj: gameObjType, storyId: string, option: "normal" | "delete") => Promise<void>
+const updateGameModes: updateGameModesParams = async (sentGameModeObj, storyId, option) => {
+  "use server";
+
+  const seenStory = await prisma.story.findUnique(
+    {
+      where: {
+        storyid: storyId,
+      },
+    }
+  )
+  if (seenStory === null) return
+
+  let gameModeObjs: gameObjType[] = JSON.parse(seenStory.gamemodes ?? "[]")
+
+  if (option === "normal") {
+
+    let foundInStory = false
+    let foundAtIndex: null | number = null
+    gameModeObjs.forEach((eachGameObj, index) => {
+      if (eachGameObj.boardObjId === sentGameModeObj.boardObjId) {
+        foundInStory = true
+        foundAtIndex = index
+      }
+    })
+
+    if (foundInStory && foundAtIndex !== null) {
+      gameModeObjs[foundAtIndex] = sentGameModeObj
+    } else {
+      gameModeObjs = [sentGameModeObj, ...gameModeObjs]
+    }
+
+    const saveableGameModeArr = JSON.stringify(gameModeObjs)
+
+    await prisma.story.update({
+      where: {
+        storyid: storyId,
+      },
+      data: {
+        gamemodes: saveableGameModeArr
+      },
+    })
+
+  } else if (option === "delete") {
+
+    const filteredArr = gameModeObjs.filter(eachGObj => eachGObj.boardObjId !== sentGameModeObj.boardObjId)
+
+    await prisma.story.update({
+      where: {
+        storyid: storyId,
+      },
+      data: {
+        gamemodes: JSON.stringify(filteredArr)
+      },
+    })
+
+  }
+
+
+  revalidatePath("/")
+
 }
 
 async function newStory(newStory: StoryDataSend) {
@@ -50,6 +118,27 @@ async function newStory(newStory: StoryDataSend) {
 
     await prisma.story.create({
       data: savableStory,
+    });
+
+  } catch (error) {
+    console.log(`$something wrong`, error);
+  }
+
+  revalidatePath("/");
+}
+
+async function newAllStory(newStoriesArr: StoryData[]) {
+  "use server";
+  console.log(`$omg running on server`);
+  return
+
+  try {
+    const savableStoriesArr = newStoriesArr.map(eachStory => {
+      return { ...eachStory, storyboard: JSON.stringify(eachStory.storyboard), gamemodes: JSON.stringify(eachStory.gamemodes) }
+    })
+
+    await prisma.story.createMany({
+      data: savableStoriesArr,
     });
 
   } catch (error) {
@@ -86,7 +175,7 @@ async function getStories() {
     rawStories = await prisma.story.findMany(
       {
         orderBy: {
-          likes: 'asc',
+          likes: 'desc',
         },
       }
     );
@@ -126,7 +215,7 @@ export default async function page() {
 
   return (
     <>
-      <Home allstories={stories} deleteStory={deleteStory} newStory={newStory} updateStory={updateStory} />
+      <Home allstories={stories} getStories={getStories} deleteStory={deleteStory} newStory={newStory} updateStory={updateStory} newAllStory={newAllStory} updateGameModes={updateGameModes} />
     </>
   )
 }

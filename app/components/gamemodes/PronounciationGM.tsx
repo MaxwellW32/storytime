@@ -4,16 +4,17 @@ import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognitio
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from "uuid";
 import DisplayGameOVer from '../useful/DisplayGameOver';
-import { gameObjType, pronounceType, storyBoardType } from '@/app/page';
+import { gameObjType, pronounceType, storyBoardType, updateGameModesParams } from '@/app/page';
 import styles from "./style.module.css"
 import { handleStoriesWhereGameOver } from '@/app/utility/savestorage';
 
 
-export default function PronounciationGM({ isEditing = false, sentGameObj, storyid, addGameMode }: {
+export default function PronounciationGM({ isEditing = false, sentGameObj, storyid, addGameMode, updateGameModes }: {
     isEditing?: boolean,
     sentGameObj?: gameObjType,
     storyid?: string,
-    addGameMode?: (gamemode: gameObjType) => void
+    addGameMode?: (gamemode: gameObjType) => void,
+    updateGameModes?: updateGameModesParams, storyId?: string
 }) {
     const {
         transcript,
@@ -192,8 +193,12 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
             addGameMode(newObj)
         }
 
-        gameObjSet({ ...initialState })
-        givenWordsSet([])
+        if (updateGameModes && storyid) {
+            updateGameModes(newObj, storyid, "normal")
+        }
+
+        // gameObjSet({ ...initialState })
+        // givenWordsSet([])
     }
 
     const refreshGame = () => {

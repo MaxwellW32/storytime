@@ -5,14 +5,20 @@ import CrosswordGM from "./CrosswordGM"
 import MatchUpGM from "./MatchUpGM"
 import PronounciationGM from "./PronounciationGM"
 import WordsToMeaningGM from "./WordsToMeaningGM"
-import { gameObjType, gameSelectionTypes } from "@/app/page"
+import { gameObjType, gameSelectionTypes, updateGameModesParams } from "@/app/page"
 import { v4 as uuidv4 } from "uuid";
 
 
-export default function GamemodeMaker({ addGameMode }: { addGameMode?: (gamemode: gameObjType) => void }) {
+export default function GamemodeMaker({ addGameMode, updateGameModes, storyId }: { addGameMode?: (gamemode: gameObjType) => void, updateGameModes?: updateGameModesParams, storyId?: string }) {
 
-    const [gameModeViewing, gameModeViewingSet] = useState<"cross" | "match" | "pro" | "wordmean">("match")
+    const [gameModeViewing, gameModeViewingSet] = useState<"cross" | "match" | "pro" | "wordmean">()
 
+    const [showObjList, showObjListSet] = useState({
+        "cross": true,
+        "match": true,
+        "pro": true,
+        "wordmean": true
+    })
     return (
         <div style={{ backgroundColor: "rgba(20,20,20,0.7)" }}>
             <button onClick={() => { gameModeViewingSet("match") }}>Make Matchbup</button>
@@ -21,18 +27,34 @@ export default function GamemodeMaker({ addGameMode }: { addGameMode?: (gamemode
             <button onClick={() => { gameModeViewingSet("wordmean") }}>Make Word Meaning</button>
 
             <div>
+                {gameModeViewing === undefined && <p>Add a Gamemode here</p>}
+                {gameModeViewing !== undefined && <button onClick={() => {
+                    showObjListSet(prevShowObjList => {
+                        const newObjList = { ...prevShowObjList }
+                        newObjList[gameModeViewing] = false
+                        return newObjList
+                    })
+
+                    setTimeout(() => {
+                        showObjListSet(prevShowObjList => {
+                            const newObjList = { ...prevShowObjList }
+                            newObjList[gameModeViewing] = true
+                            return newObjList
+                        })
+                    }, 0)
+                }}>Reset</button>}
 
                 <div style={{ display: gameModeViewing === "match" ? "block" : "none" }}>
-                    <MatchUpGM addGameMode={addGameMode} isEditing={true} />
+                    {showObjList["match"] && <MatchUpGM addGameMode={addGameMode} isEditing={true} updateGameModes={updateGameModes} storyid={storyId} />}
                 </div>
                 <div style={{ display: gameModeViewing === "cross" ? "block" : "none" }}>
-                    <CrosswordGM addGameMode={addGameMode} isEditing={true} />
+                    {showObjList["cross"] && <CrosswordGM addGameMode={addGameMode} updateGameModes={updateGameModes} isEditing={true} storyid={storyId} />}
                 </div>
                 <div style={{ display: gameModeViewing === "pro" ? "block" : "none" }}>
-                    <PronounciationGM addGameMode={addGameMode} isEditing={true} />
+                    {showObjList["pro"] && <PronounciationGM addGameMode={addGameMode} updateGameModes={updateGameModes} storyid={storyId} isEditing={true} />}
                 </div>
                 <div style={{ display: gameModeViewing === "wordmean" ? "block" : "none" }}>
-                    <WordsToMeaningGM />
+                    {showObjList["wordmean"] && <WordsToMeaningGM />}
                 </div>
             </div>
 

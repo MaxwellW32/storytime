@@ -1,14 +1,14 @@
 "use client"
 import styles from "./style.module.css"
 import { useRef, useEffect, useState, useMemo } from "react"
-import { crosswordType, gameObjType, storyBoardType } from "@/app/page"
+import { crosswordType, gameObjType, storyBoardType, updateGameModesParams } from "@/app/page"
 import { handleStoriesWhereGameOver } from "@/app/utility/savestorage"
 import DisplayGameOVer from "../useful/DisplayGameOver"
 import { v4 as uuidv4 } from "uuid";
 
 
-export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, addGameMode }:
-    { sentGameObj?: gameObjType, isEditing?: boolean, storyid?: string, addGameMode?: (gamemode: gameObjType) => void }) {
+export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, addGameMode, updateGameModes }:
+    { sentGameObj?: gameObjType, isEditing?: boolean, storyid?: string, addGameMode?: (gamemode: gameObjType) => void, updateGameModes?: updateGameModesParams, storyId?: string }) {
 
     const initialState: gameObjType = {
         boardObjId: uuidv4(),
@@ -84,9 +84,14 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
 
         if (addGameMode) {
             addGameMode(newObj)
-            gameObjSet({ ...initialState })
-            wordsArraySet([])
         }
+
+        if (updateGameModes && storyid) {
+            updateGameModes(newObj, storyid, "normal")
+        }
+
+        // gameObjSet({ ...initialState })
+        // wordsArraySet([])
     }
 
     //write change to local storage
@@ -454,7 +459,6 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
                 hintObjSet(prevHintObj => {
                     const newHintObj = { ...prevHintObj }
                     delete newHintObj[eachHintKey];
-                    console.log(`$seeing newHintOBj`, newHintObj);
                     return newHintObj
                 })
             }
@@ -462,8 +466,6 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
         })
     }, [wordsArray])
 
-    console.log(`$word at index`, wordsArray[wordArrSkipIndex]);
-    console.log("hintObj", hintObj)
 
     return (
         <div className={styles.crossWordMain} style={{ padding: "1rem" }}>

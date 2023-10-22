@@ -2,7 +2,7 @@
 
 import './globals.css'
 import { useAtom } from 'jotai'
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { globalTheme } from './utility/globalState'
 import homeBackgroundImage from "@/public/background.png"
 import homeBackgroundImageDark from "@/public/backgroundDark.png"
@@ -20,7 +20,6 @@ const comin_nue = Comic_Neue({
   display: 'swap',
 })
 
-
 const roboto_mono = Roboto_Mono({
   subsets: ['latin'],
   variable: '--font-roboto-mono',
@@ -33,26 +32,19 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
 
-
   const [theme, themeSet] = useAtom(globalTheme)
+  const [settingTheme, settingThemeSet] = useState<boolean>(() => {
+    //temp workaround
+    const newTheme = retreiveFromLocalStorage("savedTheme") ?? true
+    themeSet(newTheme)
+    return newTheme
+  })
 
-  //load old theme settings from storage
-  useLayoutEffect(() => {
-    const seenTheme = retreiveFromLocalStorage("savedTheme")
-    if (seenTheme !== null) {
-      themeSet(seenTheme)
-    }
-  }, [])
-
-
-  const didMount = useRef(false)
   //save theme settings to storage
   useEffect(() => {
-    if (didMount.current) {
+    if (theme !== null) {
       saveToLocalStorage("savedTheme", theme)
     }
-
-    didMount.current = true
   }, [theme])
 
   const themeStyles = useMemo(() => {
@@ -61,30 +53,31 @@ export default function RootLayout({
       [key: string]: string
     } = {}
 
-    if (theme) {
-      newThemeObj = {
-        "--primaryColor": "#ffb200",
-        "--secondaryColor": "purple",
-        "--backgroundColor": "#ffe9cb",
-        "--textColor": "#000",
-        "--textColorAnti": "#fff",
-        "--backdrop": `url(${homeBackgroundImage.src})`,
-        "--editStoryBackdrop": `url(${makeStoryBackground.src})`,
-        "--seeThroughBg": "rgba(0,0,0, 0.553)"
-      }
-    } else {
-      newThemeObj = {
-        "--primaryColor": "#7777ff",
-        "--secondaryColor": "orange",
-        "--backgroundColor": "#23201d",
-        "--textColor": "#fff",
-        "--textColorAnti": "#000",
-        "--backdrop": `url(${homeBackgroundImageDark.src})`,
-        "--editStoryBackdrop": `url(${makeStoryBackgroundDark.src})`,
-        "--seeThroughBg": "rgba(255,255,255, 0.1)"
+    if (theme !== null) {
+      if (theme) {
+        newThemeObj = {
+          "--primaryColor": "#ffb200",
+          "--secondaryColor": "purple",
+          "--backgroundColor": "#ffe9cb",
+          "--textColor": "#000",
+          "--textColorAnti": "#fff",
+          "--backdrop": `url(${homeBackgroundImage.src})`,
+          "--editStoryBackdrop": `url(${makeStoryBackground.src})`,
+          "--seeThroughBg": "rgba(0,0,0, 0.553)"
+        }
+      } else {
+        newThemeObj = {
+          "--primaryColor": "#7777ff",
+          "--secondaryColor": "orange",
+          "--backgroundColor": "#23201d",
+          "--textColor": "#fff",
+          "--textColorAnti": "#000",
+          "--backdrop": `url(${homeBackgroundImageDark.src})`,
+          "--editStoryBackdrop": `url(${makeStoryBackgroundDark.src})`,
+          "--seeThroughBg": "rgba(255,255,255, 0.1)"
+        }
       }
     }
-
 
     return newThemeObj
   }, [theme])
@@ -96,9 +89,13 @@ export default function RootLayout({
 
   return (
     <html lang="en" style={{ backgroundImage: "var(--backdrop)", ...themeStyles }} className={`${roboto_mono.variable} ${comin_nue.variable}`}>
-      <body>
-        <NavBar />
-        {children}
+      <body style={{}}>
+        {theme !== null && (
+          <>
+            <NavBar />
+            {children}
+          </>
+        )}
       </body>
     </html>
   )

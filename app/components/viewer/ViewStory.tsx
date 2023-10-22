@@ -1,6 +1,6 @@
 "use client"
 import Image from 'next/image'
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo } from "react"
 import { v4 as uuidv4 } from "uuid";
 import styles from "./style.module.css"
 import ReactPlayer from "react-player/youtube";
@@ -11,19 +11,26 @@ import MatchUpGM from '../gamemodes/MatchUpGM';
 import CrosswordGM from '../gamemodes/CrosswordGM';
 import WordsToMeaningGM from '../gamemodes/WordsToMeaningGM';
 import PronounciationGM from '../gamemodes/PronounciationGM';
-import { StoryData, gameObjType } from '@/app/page';
+import { StoryData, gameObjType, updateGameModesParams } from '@/app/page';
 import GamemodeMaker from '../gamemodes/GamemodeMaker';
 
-export default function ViewStory({ fullData, updateStory, deleteStory }: { fullData: StoryData, updateStory: (option: "story" | "likes", seeBoard: StoryData) => Promise<void>, deleteStory: (seenId: string) => Promise<void> }) {
 
-    // console.log(`$called viewstory`, fullData);
+export default function ViewStory({ fullData, updateStory, deleteStory, updateGameModes }: { fullData: StoryData, updateStory: (option: "story" | "likes", seeBoard: StoryData) => Promise<void>, deleteStory: (seenId: string) => Promise<void>, updateGameModes: updateGameModesParams }) {
+
     const [reading, readingSet] = useState(false)
 
     const descRef = useRef<HTMLParagraphElement>(null)
     const [showDescriptionFull, showDescriptionFullSet] = useState(false)
     const [descOverFlowing, descOverFlowingSet] = useState(false)
-
     const [userTriedToDelete, userTriedToDeleteSet] = useState(false)
+    const [reloader, reloaderSet] = useState(true)
+
+    useEffect(() => {
+        reloaderSet(false)
+        setTimeout(() => {
+            reloaderSet(true)
+        }, 5)
+    }, [fullData.gamemodes])
 
     useEffect(() => {
         const element = descRef.current;
@@ -95,23 +102,48 @@ export default function ViewStory({ fullData, updateStory, deleteStory }: { full
             {reading && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", overflowY: "auto", backgroundColor: "var(--backgroundColor)", zIndex: 1, color: "var(--textColor)" }} className={styles.readingDiv}>
 
-                    <div style={{ backgroundColor: "green", width: "100%", height: "100dvh", overflowY: "auto", maxWidth: "800px", position: "fixed", top: 0, right: 0, translate: gameModesShowing ? "0px 0px" : "100% 0px", zIndex: 2, transition: "translate 600ms", display: "grid", gridTemplateRows: "1fr 5fr" }}>
+                    <div style={{ backgroundColor: "green", width: "100%", height: "100dvh", overflowY: "auto", maxWidth: "800px", position: "fixed", top: 0, right: 0, translate: gameModesShowing ? "0px 0px" : "100% 0px", zIndex: 2, transition: "translate 600ms", display: "grid" }}>
 
                         <div>
-
-                            <p>Show me the gamemodes!</p>
                             <div>
-                                <button onClick={() => { gameModesShowingSet(false) }}>Close GameModes</button>
-                                <button onClick={() => { showNewGameModeButtonSet(prev => !prev) }}>{showNewGameModeButton ? "Close" : "Add GameMode"}</button>
+                                <button onClick={() => { gameModesShowingSet(false) }}>Close</button>
+                                <button onClick={() => { showNewGameModeButtonSet(prev => !prev) }}>{showNewGameModeButton ? "View Games" : "Add Game"}</button>
                             </div>
 
-                            {showNewGameModeButton && <GamemodeMaker />}
+                            {showNewGameModeButton && (
+                                <div>
+                                    <GamemodeMaker updateGameModes={updateGameModes} storyId={fullData.storyid} />
+
+                                    <p style={{ marginTop: "5rem", }}>Edit gamemodes here</p>
+                                    <div style={{}}>
+                                        {reloader && fullData.gamemodes?.map((eachGameObj, gameModeIndex) => {
+                                            let chosenEl: JSX.Element | null = null
+
+                                            if (eachGameObj.gameSelection === "matchup") {
+                                                chosenEl = <MatchUpGM isEditing={true} gameObj={eachGameObj} updateGameModes={updateGameModes} storyid={fullData.storyid} />
+                                            } else if (eachGameObj.gameSelection === "crossword") {
+                                                chosenEl = <CrosswordGM isEditing={true} sentGameObj={eachGameObj} updateGameModes={updateGameModes} storyid={fullData.storyid} />
+                                            } else if (eachGameObj.gameSelection === "pronounce") {
+                                                chosenEl = <PronounciationGM isEditing={true} sentGameObj={eachGameObj} updateGameModes={updateGameModes} storyid={fullData.storyid} />
+                                            } else if (eachGameObj.gameSelection === "wordmeaning") {
+                                                chosenEl = <WordsToMeaningGM />
+                                            }
+
+
+                                            return (
+                                                <div key={eachGameObj.boardObjId} style={{ marginBottom: "2rem" }}>
+                                                    {chosenEl}
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                            )}
 
                         </div>
 
-                        <div className={styles.gameModeOverFlowCont} style={{ backgroundColor: "red", width: "100%", display: "flex", overflowX: "scroll", gap: "1rem" }}>
-
-                            {fullData.gamemodes?.map((eachGameObj, gameModeIndex) => {
+                        <div className={styles.gameModeOverFlowCont} style={{ backgroundColor: "red", width: "100%", display: showNewGameModeButton ? "none" : "flex", overflowX: "scroll", gap: "1rem" }}>
+                            {reloader && fullData.gamemodes?.map((eachGameObj, gmIndex) => {
                                 let chosenEl: JSX.Element | null = null
 
                                 if (eachGameObj.gameSelection === "matchup") {
@@ -126,7 +158,7 @@ export default function ViewStory({ fullData, updateStory, deleteStory }: { full
 
 
                                 return (
-                                    <div key={gameModeIndex} style={{ width: "100%", height: "100%", overflowY: "auto", background: "grey", flex: "0 0 auto" }}>
+                                    <div key={eachGameObj.boardObjId} style={{ width: "100%", height: "100%", overflowY: "auto", background: "grey", flex: "0 0 auto" }}>
                                         {chosenEl}
                                     </div>
                                 )
@@ -140,15 +172,19 @@ export default function ViewStory({ fullData, updateStory, deleteStory }: { full
                     </div>
                     <h3 style={{ textAlign: "center", fontSize: "2rem" }}>{fullData.title}</h3>
 
-                    <div style={{ display: "flex", gap: ".5rem", alignItems: "center", padding: ".5rem", alignSelf: "flex-end", cursor: "pointer" }}>
-                        <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512"><path d="M47.6 300.4L228.3 469.1c7.5 7 17.4 10.9 27.7 10.9s20.2-3.9 27.7-10.9L464.4 300.4c30.4-28.3 47.6-68 47.6-109.5v-5.8c0-69.9-50.5-129.5-119.4-141C347 36.5 300.6 51.4 268 84L256 96 244 84c-32.6-32.6-79-47.5-124.6-39.9C50.5 55.6 0 115.2 0 185.1v5.8c0 41.5 17.2 81.2 47.6 109.5z" /></svg>
-                        <p style={{ fontSize: ".6rem" }} onClick={() => {
-                            if (!sentLikesAlready) {
-                                const newStoryObj: StoryData = { ...fullData, likes: 1 }
-                                updateStory("likes", newStoryObj)
-                            }
-                            sentLikesAlreadySet(true)
-                        }}>I like this</p>
+                    <div style={{ alignSelf: "flex-end", textAlign: "center" }}>
+                        {fullData.likes > 0 && <p>{fullData.likes} {fullData.likes === 1 ? "Like" : "Likes"}</p>}
+                        <div style={{ display: "flex", gap: ".5rem", alignItems: "center", padding: ".5rem", cursor: "pointer" }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512"><path d="M47.6 300.4L228.3 469.1c7.5 7 17.4 10.9 27.7 10.9s20.2-3.9 27.7-10.9L464.4 300.4c30.4-28.3 47.6-68 47.6-109.5v-5.8c0-69.9-50.5-129.5-119.4-141C347 36.5 300.6 51.4 268 84L256 96 244 84c-32.6-32.6-79-47.5-124.6-39.9C50.5 55.6 0 115.2 0 185.1v5.8c0 41.5 17.2 81.2 47.6 109.5z" /></svg>
+
+                            <p style={{ fontSize: ".6rem" }} onClick={() => {
+                                if (!sentLikesAlready) {
+                                    const newStoryObj: StoryData = { ...fullData, likes: 1 }
+                                    updateStory("likes", newStoryObj)
+                                }
+                                sentLikesAlreadySet(true)
+                            }}>I like this</p>
+                        </div>
                     </div>
 
                     {fullData.storyboard?.map((eachElemnt, index) => {
