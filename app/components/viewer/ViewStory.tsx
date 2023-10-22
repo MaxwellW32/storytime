@@ -24,6 +24,12 @@ export default function ViewStory({ fullData, updateStory, deleteStory, updateGa
     const [descOverFlowing, descOverFlowingSet] = useState(false)
     const [userTriedToDelete, userTriedToDeleteSet] = useState(false)
     const [reloader, reloaderSet] = useState(true)
+    const [canPlayAudio, canPlayAudioSet] = useState(false)
+
+    //monitor reading or not, for sound
+    useEffect(() => {
+        canPlayAudioSet(reading)
+    }, [reading])
 
     useEffect(() => {
         reloaderSet(false)
@@ -60,7 +66,9 @@ export default function ViewStory({ fullData, updateStory, deleteStory, updateGa
                 </div>
 
                 <div style={{ display: "flex", gap: "1rem" }}>
-                    <button onClick={() => { readingSet(true) }}> Let&apos;s Read </button>
+                    <button onClick={() => {
+                        readingSet(true)
+                    }}> Let&apos;s Read </button>
                     {!userTriedToDelete ? (
                         <button style={{}} onClick={() => { userTriedToDeleteSet(true) }}>Delete Story</button>
 
@@ -102,19 +110,21 @@ export default function ViewStory({ fullData, updateStory, deleteStory, updateGa
             {reading && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", overflowY: "auto", backgroundColor: "var(--backgroundColor)", zIndex: 1, color: "var(--textColor)" }} className={styles.readingDiv}>
 
+                    <p style={{ position: "absolute", top: 0, right: 0, margin: "1rem", scale: .8 }} onClick={() => { canPlayAudioSet(prev => !prev) }}>{canPlayAudio ? "Pause" : "Play"}</p>
+
                     <div style={{ backgroundColor: "green", width: "100%", height: "100dvh", overflowY: "auto", maxWidth: "800px", position: "fixed", top: 0, right: 0, translate: gameModesShowing ? "0px 0px" : "100% 0px", zIndex: 2, transition: "translate 600ms", display: "grid" }}>
 
                         <div>
                             <div>
-                                <button onClick={() => { gameModesShowingSet(false) }}>Close</button>
-                                <button onClick={() => { showNewGameModeButtonSet(prev => !prev) }}>{showNewGameModeButton ? "View Games" : "Add Game"}</button>
+                                <button onClick={() => { gameModesShowingSet(false) }}>Go Back</button>
+                                <button onClick={() => { showNewGameModeButtonSet(prev => !prev) }}>{showNewGameModeButton ? "View Games" : "Add A Game?"}</button>
                             </div>
 
                             {showNewGameModeButton && (
                                 <div>
                                     <GamemodeMaker updateGameModes={updateGameModes} storyId={fullData.storyid} />
 
-                                    <p style={{ marginTop: "5rem", }}>Edit gamemodes here</p>
+                                    <p style={{ marginTop: "5rem", }}>Current Gamemodes</p>
                                     <div style={{}}>
                                         {reloader && fullData.gamemodes?.map((eachGameObj, gameModeIndex) => {
                                             let chosenEl: JSX.Element | null = null
@@ -142,7 +152,7 @@ export default function ViewStory({ fullData, updateStory, deleteStory, updateGa
 
                         </div>
 
-                        <div className={styles.gameModeOverFlowCont} style={{ backgroundColor: "red", width: "100%", display: showNewGameModeButton ? "none" : "flex", overflowX: "scroll", gap: "1rem" }}>
+                        <div className={styles.gameModeOverFlowCont} style={{ width: "100%", height: "100%", display: showNewGameModeButton ? "none" : "flex", overflowX: "scroll", gap: "1rem", scrollSnapType: "x mandatory", whiteSpace: "nowrap" }}>
                             {reloader && fullData.gamemodes?.map((eachGameObj, gmIndex) => {
                                 let chosenEl: JSX.Element | null = null
 
@@ -158,7 +168,7 @@ export default function ViewStory({ fullData, updateStory, deleteStory, updateGa
 
 
                                 return (
-                                    <div key={eachGameObj.boardObjId} style={{ width: "100%", height: "100%", overflowY: "auto", background: "grey", flex: "0 0 auto" }}>
+                                    <div key={eachGameObj.boardObjId} style={{ backgroundColor: "rgba(200,200,200,0.5)", minWidth: "100%", height: "100%", overflowY: "auto", flex: "0 0 auto", scrollSnapAlign: "start", display: "inline-block" }}>
                                         {chosenEl}
                                     </div>
                                 )
@@ -214,7 +224,7 @@ export default function ViewStory({ fullData, updateStory, deleteStory, updateGa
             <div style={{ display: "none" }}>
                 <ReactPlayer
                     loop={true}
-                    playing={reading}
+                    playing={canPlayAudio}
                     url={fullData.backgroundaudio ? fullData.backgroundaudio : "https://www.youtube.com/watch?v=NJuSStkIZBg"} />
             </div>
         </div>

@@ -1,10 +1,10 @@
 const fs = require('fs');
 
 
-export default function saveDataToFile(seenData) {
+export default function saveDataToFile(seenData: any, name: string) {
     const jsonData = JSON.stringify(seenData);
 
-    fs.writeFile('backupbeforerewrite.json', jsonData, 'utf8', (err) => {
+    fs.writeFile(`${name}.json`, jsonData, 'utf8', (err: Error) => {
         if (err) {
             console.error('Error writing to file:', err);
         } else {

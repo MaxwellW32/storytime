@@ -327,7 +327,7 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
 
 
     return (
-        <div className={styles.gmMainDiv} style={{ scale: gameFinishedState ? .9 : 1 }}>
+        <div className={styles.gmMainDiv} style={{}}>
 
             {isEditing ? (
                 <>
@@ -461,30 +461,34 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
             ) : (
 
 
-                <div style={{ maxHeight: "100%", display: "grid", gridTemplateRows: "5fr 1fr" }}>
-                    <DisplayGameOVer gameOver={gameFinishedState}>
+                <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+                    <div style={{ flex: 1 }}>
+                        <DisplayGameOVer gameOver={gameFinishedState}>
 
-                        <DndContext
-                            sensors={sensors}
-                            collisionDetection={closestCorners}
-                            onDragStart={handleDragStart}
-                            onDragOver={handleDragOver}
-                            onDragEnd={handleDragEnd}
-                        >
-                            <div style={{
-                                display: "grid",
-                                gridTemplateColumns: "1fr 1fr",
-                            }}>
-                                {questions!.map((eachQuestion, index) => {
-                                    return (
-                                        <Container key={uuidv4()} id={`container${index}`} items={items[`container${index}`]} arrPos={index} questionAsked={eachQuestion} />
-                                    )
-                                })}
-                            </div>
-                            <Container id="root" items={items.root} arrPos={4} />
-                        </DndContext>
+                            <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCorners}
+                                onDragStart={handleDragStart}
+                                onDragOver={handleDragOver}
+                                onDragEnd={handleDragEnd}
+                            >
 
-                    </DisplayGameOVer>
+                                <div style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "1fr 1fr",
+                                }}>
+                                    {questions!.map((eachQuestion, index) => {
+                                        return (
+                                            <Container key={index} id={`container${index}`} items={items[`container${index}`]} arrPos={index} questionAsked={eachQuestion} />
+                                        )
+                                    })}
+                                </div>
+                                <Container id="root" items={items.root} arrPos={4} />
+
+                            </DndContext>
+
+                        </DisplayGameOVer>
+                    </div>
 
                     <div>
                         {gameFinishedState ? (

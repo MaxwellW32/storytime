@@ -70,6 +70,7 @@ html {
   background-size: cover;
   background-repeat: no-repeat;
   background-position-x: left;
+  background-color: #23201d;
   height: 100dvh;
   max-width: 100dvw;
   overflow: auto;

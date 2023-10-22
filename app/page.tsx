@@ -1,6 +1,8 @@
 import { revalidatePath } from "next/cache";
 import Home from "./Home";
 import { Prisma, PrismaClient, story } from "@prisma/client";
+import backupStories from "../frequentBackup.json"
+import saveDataToFile from "./utility/TempDb";
 
 const prisma = new PrismaClient()
 
@@ -129,7 +131,6 @@ async function newStory(newStory: StoryDataSend) {
 
 async function newAllStory(newStoriesArr: StoryData[]) {
   "use server";
-  console.log(`$omg running on server`);
   return
 
   try {
@@ -179,6 +180,9 @@ async function getStories() {
         },
       }
     );
+
+    // saveDataToFile(rawStories, "frequentBackup") //backup database
+    // rawStories = backupStories as unknown as story[] //use own records
 
     let usablestories = [] as StoryData[]
 

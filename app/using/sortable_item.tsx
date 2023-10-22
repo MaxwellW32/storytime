@@ -7,12 +7,14 @@ export function Item(props: any) {
     const { id, itemText } = props;
 
     const style = {
-        width: "100%",
-        maxWidth: "200px",
+        width: "70px",
+        aspectRatio: "1/1",
         marging: "0 auto",
         backgroundColor: "var(--primaryColor)",
-        padding: "2rem",
-        borderRadius: "1rem"
+        borderRadius: "1rem",
+        display: "grid",
+        alignItems: "center",
+        justifyContent: "center"
     };
 
     return <div style={style}>{itemText}</div>;

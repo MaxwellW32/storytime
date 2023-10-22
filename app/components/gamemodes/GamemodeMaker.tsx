@@ -21,13 +21,14 @@ export default function GamemodeMaker({ addGameMode, updateGameModes, storyId }:
     })
     return (
         <div style={{ backgroundColor: "rgba(20,20,20,0.7)" }}>
+            {gameModeViewing === undefined && <p>Add Gamemodes Here</p>}
+
             <button onClick={() => { gameModeViewingSet("match") }}>Make Matchbup</button>
             <button onClick={() => { gameModeViewingSet("cross") }}>Make Crossword</button>
             <button onClick={() => { gameModeViewingSet("pro") }}>Make Pronounciation</button>
             <button onClick={() => { gameModeViewingSet("wordmean") }}>Make Word Meaning</button>
 
             <div>
-                {gameModeViewing === undefined && <p>Add a Gamemode here</p>}
                 {gameModeViewing !== undefined && <button onClick={() => {
                     showObjListSet(prevShowObjList => {
                         const newObjList = { ...prevShowObjList }

@@ -24,7 +24,7 @@ export default function Container(props: any) {
         flexDirection: "column",
         padding: "1rem",
         gap: "1rem",
-        minHeight: "100px",
+        minHeight: "150px",
         margin: ".5rem"
     }
 
@@ -32,7 +32,6 @@ export default function Container(props: any) {
         display: "flex",
         flexWrap: "wrap",
         gap: "1rem",
-        minHeight: "10px",
         border: "2px solid var(--textColor)",
         justifyContent: "center",
         padding: "1rem",

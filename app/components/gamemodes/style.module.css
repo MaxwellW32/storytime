@@ -8,7 +8,10 @@
 
 .spawnArea {
     display: grid;
-
+    height: 70dvh;
+    aspect-ratio: 1/1;
+    max-width: 90dvw;
+    margin: 0 auto;
 }
 
 .tile {
@@ -76,9 +79,12 @@
 /* matchup gm */
 .gmMainDiv {
     display: grid;
+    align-items: stretch;
     gap: 1rem;
     padding: .5rem 0 .5rem 0;
     border-radius: 1rem;
+    height: 100%;
+    max-width: 100dvw;
 }
 
 .gmMainDiv label {
