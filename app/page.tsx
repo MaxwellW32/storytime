@@ -18,7 +18,7 @@ const cantDeleteList = [
 //if you're editing a story you can edit, from the list its gonna be a replace
 
 
-async function updateStory(option: "story" | "likes", seenStory: StoryData) {
+async function updateStory(option: "story" | "likes" | "rating", seenStory: StoryData) {
   "use server";
 
   if (option === "story") {
@@ -43,6 +43,22 @@ async function updateStory(option: "story" | "likes", seenStory: StoryData) {
         likes: {
           increment: 1
         }
+      },
+    })
+  } else if (option === "rating") {
+
+    await prisma.story.update({
+      where: {
+        storyid: seenStory.storyid,
+      },
+      data: {
+        rating: {
+          increment: seenStory.rating
+        },
+        amtofratings: {
+          increment: 1
+        }
+
       },
     })
   }
@@ -256,14 +272,16 @@ export interface gameObjType {
 
 
 export type storyBoardType = videoType | imageType | textType
+
 export interface StoryData {//story is raw from database, storydata is what is usable
   title: string;
   storyid: string;
   createdat: Date;
   likes: number;
+  rating: number;
+  amtofratings: number;
   storyboard: storyBoardType[] | null;
   gamemodes: gameObjType[] | null;
-  rating: number | null;
   backgroundaudio: string | null;
   shortdescription: string | null;
 }
@@ -274,8 +292,9 @@ export interface StoryDataSend {
   storyid: string | undefined, //will give a value if undefined
   createdat: Date | undefined,
   likes: number | undefined,
+  rating: number | undefined;
+  amtofratings: number | undefined;
 
-  rating: number | null,
   storyboard: string | null, //send as string to be saved
   gamemodes: string | null,
   backgroundaudio: string | null,

@@ -9,7 +9,7 @@ export const allServerFunctionsAtom = atom<{
     "getStories": () => Promise<StoryData[] | undefined>,
     "deleteStory": (seenId: string) => Promise<void>,
     "newStory": (newStory: StoryDataSend) => Promise<void>,
-    "updateStory": (option: "story" | "likes", seenStory: StoryData) => Promise<void>,
+    "updateStory": (option: "story" | "likes" | "rating", seenStory: StoryData) => Promise<void>,
     "newAllStory": (newStoriesArr: StoryData[]) => Promise<void>,
     "updateGameModes": updateGameModesParams,
 } | null>(null);

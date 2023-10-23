@@ -32,7 +32,9 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
     const [likes, likesSet] = useState(passedData?.likes ?? undefined)
     const [createdAt, createdAtSet] = useState(passedData?.createdat ?? undefined)
 
-    const [storyRating, storyRatingSet] = useState<number | null>(passedData?.rating ?? null)
+    const [storyRating, storyRatingSet] = useState<number | undefined>(passedData?.rating ?? undefined)
+    const [storyAmtOfRatings, storyAmtOfRatingsSet] = useState<number | undefined>(passedData?.amtofratings ?? undefined)
+
     const [storyBgAudio, storyBgAudioSet] = useState<null | string>(passedData?.backgroundaudio ?? null)
     const [storyShrtDescription, storyShrtDescriptionSet] = useState<null | string>(passedData?.shortdescription ?? null)
 
@@ -251,9 +253,10 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                 storyid: storyId!,
                 createdat: createdAt!,
                 likes: likes!,
+                rating: storyRating!,
+                amtofratings: storyAmtOfRatings!,
                 title: storyTitle,
                 backgroundaudio: storyBgAudio,
-                rating: storyRating,
                 shortdescription: storyShrtDescription,
                 storyboard: storyBoards,
                 gamemodes: gameModes,
@@ -268,9 +271,10 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                 storyid: storyId,
                 createdat: createdAt,
                 likes: likes,
+                rating: storyRating,
+                amtofratings: storyAmtOfRatings,
                 title: storyTitle,
                 backgroundaudio: storyBgAudio,
-                rating: storyRating,
                 shortdescription: storyShrtDescription,
                 storyboard: storyBoards as unknown as string | null,
                 gamemodes: gameModes as unknown as string | null
@@ -351,13 +355,6 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                 <label htmlFor='msShDescription'>Short Description</label>
                 <input id='msShDescription' type='text' placeholder='Enter a Description ' value={storyShrtDescription ?? ""} onChange={(e) => {
                     storyShrtDescriptionSet(e.target.value)
-                }} />
-            </div>
-
-            <div className={styles.makeStoryLabelInputCont}>
-                <label htmlFor='msRating'>Rating</label>
-                <input id='msRating' type='number' placeholder='Enter a Rating /5 ' value={storyRating ?? undefined} onChange={(e) => {
-                    storyRatingSet(parseInt(e.target.value))
                 }} />
             </div>
 
