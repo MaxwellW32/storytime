@@ -19,15 +19,19 @@ import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import Container from "@/app/using/container";
 import { handleStoriesWhereGameOver } from "@/app/utility/savestorage";
 import DisplayGameOVer from "../useful/DisplayGameOver";
+import { useAtom } from "jotai";
+import { allServerFunctionsAtom } from "@/app/utility/globalState";
 
 
-export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGameMode, updateGameModes }: {
+export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGameModeLocally, updateGamemodeDirectly }: {
     gameObj?: gameObjType,
     isEditing?: boolean,
     storyid?: string,
-    addGameMode?: (gamemode: gameObjType) => void,
-    updateGameModes?: updateGameModesParams
+    addGameModeLocally?: (gamemode: gameObjType) => void,
+    updateGamemodeDirectly?: boolean
 }) {
+
+    const [allServerFunctions,] = useAtom(allServerFunctionsAtom)
 
     const gameSelection = useRef<gameSelectionTypes>(gameObj?.gameSelection ?? "matchup")
     const boardObjId = useRef<string>(gameObj?.boardObjId ?? uuidv4())
@@ -121,13 +125,13 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
             boardObjId: boardObjId.current
         }
 
-        if (addGameMode) {
-            addGameMode(newGameMode)
+        if (addGameModeLocally) {
+            addGameModeLocally(newGameMode)
             console.log(`$add ran`);
         }
 
-        if (updateGameModes && storyid) {
-            updateGameModes(newGameMode, storyid, "normal")
+        if (updateGamemodeDirectly && storyid) {
+            allServerFunctions!.updateGameModes(newGameMode, storyid, "normal")
             console.log(`$handle ran`);
         }
 

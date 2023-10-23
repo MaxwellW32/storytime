@@ -149,3 +149,8 @@
     margin: 0 auto;
     max-width: 400px;
 }
+
+.bright {
+    filter: brightness(1.5) !important;
+    transition: filter none;
+}

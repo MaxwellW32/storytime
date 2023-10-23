@@ -10,7 +10,9 @@ import CrosswordGM from "../gamemodes/CrosswordGM";
 import WordsToMeaningGM from "../gamemodes/WordsToMeaningGM";
 import PronounciationGM from "../gamemodes/PronounciationGM";
 import GamemodeMaker from "../gamemodes/GamemodeMaker";
-
+import { useAtom } from "jotai";
+import { allServerFunctionsAtom } from "@/app/utility/globalState";
+import AddEpubFile from "./AddEpub";
 
 
 
@@ -19,7 +21,10 @@ const ISYTVID = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/
 
 
 
-export default function MakeStory({ passedData, newStory, updateStory, makingStorySet, editClickedSet }: { updateStory?: (option: "story" | "likes", seeBoard: StoryData) => Promise<void>, passedData?: StoryData, makingStorySet?: React.Dispatch<React.SetStateAction<boolean>>, editClickedSet?: React.Dispatch<React.SetStateAction<boolean>>, newStory?: (newStory: StoryDataSend) => Promise<void> }) {
+export default function MakeStory({ passedData, shouldUpdateStory, makingStorySet, editClickedSet }: { passedData?: StoryData, shouldUpdateStory?: boolean, makingStorySet?: React.Dispatch<React.SetStateAction<boolean>>, editClickedSet?: React.Dispatch<React.SetStateAction<boolean>> }) {
+
+    const [allServerFunctions,] = useAtom(allServerFunctionsAtom)
+
 
     const [storyTitle, storyTitleSet] = useState(passedData?.title ?? "")
 
@@ -207,7 +212,7 @@ export default function MakeStory({ passedData, newStory, updateStory, makingSto
 
     }
 
-    function addGameMode(gamemode: gameObjType) {
+    function addGameModeLocally(gamemode: gameObjType) {
         gameModesSet(prevGameModes => {
 
             let newGameModes = prevGameModes === null ? [] : [...prevGameModes]
@@ -240,7 +245,8 @@ export default function MakeStory({ passedData, newStory, updateStory, makingSto
 
     function handleSubmit() {
 
-        if (updateStory) {
+        if (shouldUpdateStory) {
+
             const updatedStoryObj: StoryData = {
                 storyid: storyId!,
                 createdat: createdAt!,
@@ -252,10 +258,12 @@ export default function MakeStory({ passedData, newStory, updateStory, makingSto
                 storyboard: storyBoards,
                 gamemodes: gameModes,
             }
-            updateStory("story", updatedStoryObj)
-        }
+            allServerFunctions!.updateStory("story", updatedStoryObj)
 
-        if (newStory) {
+        } else {
+
+            //new story
+
             const newStoryObj: StoryDataSend = {
                 storyid: storyId,
                 createdat: createdAt,
@@ -264,12 +272,13 @@ export default function MakeStory({ passedData, newStory, updateStory, makingSto
                 backgroundaudio: storyBgAudio,
                 rating: storyRating,
                 shortdescription: storyShrtDescription,
-                storyboard: storyBoards as unknown as string,
-                gamemodes: gameModes as unknown as string
+                storyboard: storyBoards as unknown as string | null,
+                gamemodes: gameModes as unknown as string | null
             }
             //using unkown here cause its not a string, i convert it to a string in the update function
-            newStory(newStoryObj)
+            allServerFunctions!.newStory(newStoryObj)
         }
+
 
         if (editClickedSet) {
             editClickedSet(false)
@@ -372,26 +381,33 @@ export default function MakeStory({ passedData, newStory, updateStory, makingSto
 
                 <div style={{ display: contentMaking === "story" ? "block" : "none" }} className={styles.storyContent}>
                     <h3 style={{ color: "#fff", textAlign: "center" }}>Story Board</h3>
-                    <p style={{ color: "#fff", textAlign: "center" }}>Make new paragraph after {regNewLineLimit} {regNewLineLimit === 1 ? "linebreak" : "linebreaks"}</p>
-                    <div style={{ margin: "0 auto", display: "flex", gap: "1rem" }}>
-                        <button onClick={() => {
-                            regNewLineLimitSet(prev => {
-                                const newNum = prev - 1
+                    <div style={{ margin: "0 auto" }}>
+                        <p style={{ color: "#fff", textAlign: "center" }}>Make new paragraph after {regNewLineLimit} {regNewLineLimit === 1 ? "linebreak" : "linebreaks"}</p>
 
-                                if (newNum >= 1) {
-                                    return newNum
-                                } else {
-                                    return 1
-                                }
-                            })
-                        }}>Decrease</button>
-                        <button onClick={() => { regNewLineLimitSet(prev => prev + 1) }}>Increase</button>
+                        <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
+                            <button onClick={() => {
+                                regNewLineLimitSet(prev => {
+                                    const newNum = prev - 1
+
+                                    if (newNum >= 1) {
+                                        return newNum
+                                    } else {
+                                        return 1
+                                    }
+                                })
+                            }}>Decrease</button>
+                            <button onClick={() => { regNewLineLimitSet(prev => prev + 1) }}>Increase</button>
+                        </div>
+
+                        <div>
+                            <AddEpubFile convertTextToStoryBoards={convertTextToStoryBoards} />
+                        </div>
                     </div>
 
 
                     {!storyBoards ? (
                         <>
-                            <textarea className={styles.textAreaEdit} style={{ width: "100%", }} placeholder='Enter your story - seen image and Youtube urls will be automaitcally loaded' value={preProcessedText}
+                            <textarea className={styles.textAreaEdit} style={{ width: "100%", }} placeholder='Enter your story - image and Youtube links will be loaded automaitcally' value={preProcessedText}
 
                                 onChange={(e) => {
                                     e.target.style.height = 'auto';
@@ -428,7 +444,7 @@ export default function MakeStory({ passedData, newStory, updateStory, makingSto
                                 {storyBoards.map((eachElemnt, index) => {
 
                                     return (
-                                        <div key={uuidv4()} tabIndex={0} className={styles.addMore}>
+                                        <div key={index} tabIndex={0} className={styles.addMore}>
 
                                             <svg className={styles.deleteBoardBttn} onClick={() => {
                                                 deleteBoardAtIndex(index)
@@ -483,7 +499,7 @@ export default function MakeStory({ passedData, newStory, updateStory, makingSto
                 </div>
 
                 <div style={{ display: contentMaking === "gamemode" ? "block" : "none" }} className={styles.gamemodeContent}>
-                    <GamemodeMaker addGameMode={addGameMode} />
+                    <GamemodeMaker addGameModeLocally={addGameModeLocally} />
 
                     <div style={{ marginTop: "6rem" }}>
                         <p>Gamemodes added</p>
@@ -492,11 +508,11 @@ export default function MakeStory({ passedData, newStory, updateStory, makingSto
                             let chosenEl: JSX.Element | null = null
 
                             if (eachGameObj.gameSelection === "matchup") {
-                                chosenEl = <MatchUpGM addGameMode={addGameMode} gameObj={eachGameObj} isEditing={true} />
+                                chosenEl = <MatchUpGM addGameModeLocally={addGameModeLocally} gameObj={eachGameObj} isEditing={true} />
                             } else if (eachGameObj.gameSelection === "crossword") {
-                                chosenEl = <CrosswordGM addGameMode={addGameMode} sentGameObj={eachGameObj} isEditing={true} />
+                                chosenEl = <CrosswordGM addGameModeLocally={addGameModeLocally} sentGameObj={eachGameObj} isEditing={true} />
                             } else if (eachGameObj.gameSelection === "pronounce") {
-                                chosenEl = <PronounciationGM addGameMode={addGameMode} sentGameObj={eachGameObj} isEditing={true} />
+                                chosenEl = <PronounciationGM addGameModeLocally={addGameModeLocally} sentGameObj={eachGameObj} isEditing={true} />
                             } else if (eachGameObj.gameSelection === "wordmeaning") {
                                 chosenEl = <WordsToMeaningGM />
                             }
@@ -518,19 +534,10 @@ export default function MakeStory({ passedData, newStory, updateStory, makingSto
                 </div>
             </div>
 
-
-
-
             <button style={{ marginTop: "4rem" }} onClick={handleSubmit}>Submit</button>
-
-
-
-
-
-
-
-
 
         </div>
     )
 }
+
+

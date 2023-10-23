@@ -18,8 +18,8 @@ model story {
   likes     Int      @default(0)
 
   rating           Int?
-  storyboard       String? @db.Text //anything with a ? can be stored as null in the db
-  gamemodes        String? @db.Text
+  storyboard       String? @db.LongText //anything with a ? can be stored as null in the db
+  gamemodes        String? @db.LongText
   backgroundaudio  String? @db.Text
   shortdescription String? @db.Text
 }

@@ -17,13 +17,14 @@ const cantDeleteList = [
 
 //if you're editing a story you can edit, from the list its gonna be a replace
 
+
 async function updateStory(option: "story" | "likes", seenStory: StoryData) {
   "use server";
 
   if (option === "story") {
     if (cantDeleteList.includes(seenStory.storyid)) return
 
-    const savableStory: story = { ...seenStory, storyboard: JSON.stringify(seenStory.storyboard), gamemodes: JSON.stringify(seenStory.gamemodes) }
+    const savableStory: story = { ...seenStory, storyboard: seenStory.storyboard !== null ? JSON.stringify(seenStory.storyboard) : null, gamemodes: seenStory.gamemodes !== null ? JSON.stringify(seenStory.gamemodes) : null }
 
     await prisma.story.update({
       where: {
@@ -62,7 +63,7 @@ const updateGameModes: updateGameModesParams = async (sentGameModeObj, storyId, 
   )
   if (seenStory === null) return
 
-  let gameModeObjs: gameObjType[] = JSON.parse(seenStory.gamemodes ?? "[]")
+  let gameModeObjs: gameObjType[] = seenStory.gamemodes !== null ? JSON.parse(seenStory.gamemodes) : []
 
   if (option === "normal") {
 
@@ -116,7 +117,7 @@ async function newStory(newStory: StoryDataSend) {
   "use server";
 
   try {
-    const savableStory: StoryDataSend = { ...newStory, storyboard: JSON.stringify(newStory.storyboard), gamemodes: JSON.stringify(newStory.gamemodes) }
+    const savableStory: StoryDataSend = { ...newStory, storyboard: newStory.storyboard !== null ? JSON.stringify(newStory.storyboard) : null, gamemodes: newStory.gamemodes !== null ? JSON.stringify(newStory.gamemodes) : null }
 
     await prisma.story.create({
       data: savableStory,

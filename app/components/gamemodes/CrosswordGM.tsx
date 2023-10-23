@@ -5,10 +5,14 @@ import { crosswordType, gameObjType, storyBoardType, updateGameModesParams } fro
 import { handleStoriesWhereGameOver } from "@/app/utility/savestorage"
 import DisplayGameOVer from "../useful/DisplayGameOver"
 import { v4 as uuidv4 } from "uuid";
+import { useAtom } from "jotai"
+import { allServerFunctionsAtom } from "@/app/utility/globalState"
 
 
-export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, addGameMode, updateGameModes }:
-    { sentGameObj?: gameObjType, isEditing?: boolean, storyid?: string, addGameMode?: (gamemode: gameObjType) => void, updateGameModes?: updateGameModesParams, storyId?: string }) {
+export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, addGameModeLocally, updateGamemodeDirectly }:
+    { sentGameObj?: gameObjType, isEditing?: boolean, storyid?: string, addGameModeLocally?: (gamemode: gameObjType) => void, updateGamemodeDirectly?: boolean, storyId?: string }) {
+
+    const [allServerFunctions,] = useAtom(allServerFunctionsAtom)
 
     const initialState: gameObjType = {
         boardObjId: uuidv4(),
@@ -82,12 +86,12 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
             gameData: { ...gameObj.gameData as crosswordType, wordArray: wordsArray, hintObj: hintObj }
         }
 
-        if (addGameMode) {
-            addGameMode(newObj)
+        if (addGameModeLocally) {
+            addGameModeLocally(newObj)
         }
 
-        if (updateGameModes && storyid) {
-            updateGameModes(newObj, storyid, "normal")
+        if (updateGamemodeDirectly && storyid) {
+            allServerFunctions!.updateGameModes(newObj, storyid, "normal")
         }
 
         // gameObjSet({ ...initialState })

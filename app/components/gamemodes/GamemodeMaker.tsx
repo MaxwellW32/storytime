@@ -1,15 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import CrosswordGM from "./CrosswordGM"
 import MatchUpGM from "./MatchUpGM"
 import PronounciationGM from "./PronounciationGM"
 import WordsToMeaningGM from "./WordsToMeaningGM"
 import { gameObjType, gameSelectionTypes, updateGameModesParams } from "@/app/page"
 import { v4 as uuidv4 } from "uuid";
+import styles from "./style.module.css"
 
 
-export default function GamemodeMaker({ addGameMode, updateGameModes, storyId }: { addGameMode?: (gamemode: gameObjType) => void, updateGameModes?: updateGameModesParams, storyId?: string }) {
+export default function GamemodeMaker({ addGameModeLocally, updateGamemodeDirectly, storyId }: { addGameModeLocally?: (gamemode: gameObjType) => void, updateGamemodeDirectly?: boolean, storyId?: string }) {
 
     const [gameModeViewing, gameModeViewingSet] = useState<"cross" | "match" | "pro" | "wordmean">()
 
@@ -19,16 +20,41 @@ export default function GamemodeMaker({ addGameMode, updateGameModes, storyId }:
         "pro": true,
         "wordmean": true
     })
+
+    const canDoubleClick = useRef(false)
+
+    const handleDoubleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+        if (canDoubleClick.current) {
+            gameModeViewingSet(undefined)
+            const newEl = e.target as HTMLButtonElement
+            newEl.classList.add(styles.bright)
+
+            setTimeout(() => {
+                newEl.classList.remove(styles.bright)
+            }, 400)
+
+
+        }
+
+        canDoubleClick.current = true
+
+        setTimeout(() => {
+            canDoubleClick.current = false
+        }, 400)
+    }
+
+
     return (
         <div style={{ backgroundColor: "rgba(20,20,20,0.7)" }}>
-            {gameModeViewing === undefined && <p>Add Gamemodes Here</p>}
 
-            <button onClick={() => { gameModeViewingSet("match") }}>Make Matchbup</button>
-            <button onClick={() => { gameModeViewingSet("cross") }}>Make Crossword</button>
-            <button onClick={() => { gameModeViewingSet("pro") }}>Make Pronounciation</button>
-            <button onClick={() => { gameModeViewingSet("wordmean") }}>Make Word Meaning</button>
+            <button onClick={(e) => { gameModeViewingSet("match"); handleDoubleClick(e) }}>Make Matchbup</button>
+            <button onClick={(e) => { gameModeViewingSet("cross"); handleDoubleClick(e) }}>Make Crossword</button>
+            <button onClick={(e) => { gameModeViewingSet("pro"); handleDoubleClick(e) }}>Make Pronounciation</button>
+            <button onClick={(e) => { gameModeViewingSet("wordmean"); handleDoubleClick(e) }}>Make Word Meaning</button>
 
             <div>
+                {gameModeViewing === undefined && <p>Add Gamemodes Here</p>}
+
                 {gameModeViewing !== undefined && <button onClick={() => {
                     showObjListSet(prevShowObjList => {
                         const newObjList = { ...prevShowObjList }
@@ -46,13 +72,13 @@ export default function GamemodeMaker({ addGameMode, updateGameModes, storyId }:
                 }}>Reset</button>}
 
                 <div style={{ display: gameModeViewing === "match" ? "block" : "none" }}>
-                    {showObjList["match"] && <MatchUpGM addGameMode={addGameMode} isEditing={true} updateGameModes={updateGameModes} storyid={storyId} />}
+                    {showObjList["match"] && <MatchUpGM addGameModeLocally={addGameModeLocally} isEditing={true} updateGamemodeDirectly={updateGamemodeDirectly} storyid={storyId} />}
                 </div>
                 <div style={{ display: gameModeViewing === "cross" ? "block" : "none" }}>
-                    {showObjList["cross"] && <CrosswordGM addGameMode={addGameMode} updateGameModes={updateGameModes} isEditing={true} storyid={storyId} />}
+                    {showObjList["cross"] && <CrosswordGM addGameModeLocally={addGameModeLocally} updateGamemodeDirectly={updateGamemodeDirectly} isEditing={true} storyid={storyId} />}
                 </div>
                 <div style={{ display: gameModeViewing === "pro" ? "block" : "none" }}>
-                    {showObjList["pro"] && <PronounciationGM addGameMode={addGameMode} updateGameModes={updateGameModes} storyid={storyId} isEditing={true} />}
+                    {showObjList["pro"] && <PronounciationGM addGameModeLocally={addGameModeLocally} updateGamemodeDirectly={updateGamemodeDirectly} storyid={storyId} isEditing={true} />}
                 </div>
                 <div style={{ display: gameModeViewing === "wordmean" ? "block" : "none" }}>
                     {showObjList["wordmean"] && <WordsToMeaningGM />}

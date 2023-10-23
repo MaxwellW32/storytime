@@ -13,9 +13,13 @@ import WordsToMeaningGM from '../gamemodes/WordsToMeaningGM';
 import PronounciationGM from '../gamemodes/PronounciationGM';
 import { StoryData, gameObjType, updateGameModesParams } from '@/app/page';
 import GamemodeMaker from '../gamemodes/GamemodeMaker';
+import { useAtom } from 'jotai';
+import { allServerFunctionsAtom } from '@/app/utility/globalState';
 
 
-export default function ViewStory({ fullData, updateStory, deleteStory, updateGameModes }: { fullData: StoryData, updateStory: (option: "story" | "likes", seeBoard: StoryData) => Promise<void>, deleteStory: (seenId: string) => Promise<void>, updateGameModes: updateGameModesParams }) {
+export default function ViewStory({ fullData }: { fullData: StoryData }) {
+
+    const [allServerFunctions,] = useAtom(allServerFunctionsAtom)
 
     const [reading, readingSet] = useState(false)
 
@@ -24,6 +28,7 @@ export default function ViewStory({ fullData, updateStory, deleteStory, updateGa
     const [descOverFlowing, descOverFlowingSet] = useState(false)
     const [userTriedToDelete, userTriedToDeleteSet] = useState(false)
     const [reloader, reloaderSet] = useState(true)
+    const [wantsToEditCurrentGamemodes, wantsToEditCurrentGamemodesSet] = useState(false)
     const [canPlayAudio, canPlayAudioSet] = useState(false)
 
     //monitor reading or not, for sound
@@ -54,7 +59,7 @@ export default function ViewStory({ fullData, updateStory, deleteStory, updateGa
     return (
         <div style={{ width: "95%", margin: "0 auto", borderRadius: ".7rem", padding: "1rem", backgroundColor: "var(--backgroundColor)", position: "relative" }}>
 
-            {editClicked && <MakeStory updateStory={updateStory} passedData={fullData} editClickedSet={editClickedSet} />}
+            {editClicked && <MakeStory shouldUpdateStory={true} passedData={fullData} editClickedSet={editClickedSet} />}
 
             <div className={styles.titleCont}>
 
@@ -77,7 +82,7 @@ export default function ViewStory({ fullData, updateStory, deleteStory, updateGa
                             <p>Are you sure you want to delete?</p>
                             <div style={{ display: "flex", width: "100%", justifyContent: "center", gap: ".5rem", marginTop: ".5rem" }}>
                                 <button onClick={() => {
-                                    deleteStory(fullData.storyid!)
+                                    allServerFunctions!.deleteStory(fullData.storyid)
                                     userTriedToDeleteSet(false)
                                 }}>Yes</button>
                                 <button onClick={() => {
@@ -110,7 +115,7 @@ export default function ViewStory({ fullData, updateStory, deleteStory, updateGa
             {reading && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem", position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", overflowY: "auto", backgroundColor: "var(--backgroundColor)", zIndex: 1, color: "var(--textColor)" }} className={styles.readingDiv}>
 
-                    <p style={{ position: "absolute", top: 0, right: 0, margin: "1rem", scale: .8 }} onClick={() => { canPlayAudioSet(prev => !prev) }}>{canPlayAudio ? "Pause" : "Play"}</p>
+                    <p style={{ position: "absolute", top: 0, right: 0, margin: "1rem", scale: .8 }} onClick={() => { canPlayAudioSet(prev => !prev) }}>{canPlayAudio ? "Pause Music" : "Play"}</p>
 
                     <div style={{ backgroundColor: "green", width: "100%", height: "100dvh", overflowY: "auto", maxWidth: "800px", position: "fixed", top: 0, right: 0, translate: gameModesShowing ? "0px 0px" : "100% 0px", zIndex: 2, transition: "translate 600ms", display: "grid" }}>
 
@@ -120,35 +125,35 @@ export default function ViewStory({ fullData, updateStory, deleteStory, updateGa
                                 <button onClick={() => { showNewGameModeButtonSet(prev => !prev) }}>{showNewGameModeButton ? "View Games" : "Add A Game?"}</button>
                             </div>
 
-                            {showNewGameModeButton && (
-                                <div>
-                                    <GamemodeMaker updateGameModes={updateGameModes} storyId={fullData.storyid} />
+                            <div style={{ display: showNewGameModeButton ? "block" : "none" }}>
+                                <GamemodeMaker updateGamemodeDirectly={true} storyId={fullData.storyid} />
 
-                                    <p style={{ marginTop: "5rem", }}>Current Gamemodes</p>
-                                    <div style={{}}>
-                                        {reloader && fullData.gamemodes?.map((eachGameObj, gameModeIndex) => {
-                                            let chosenEl: JSX.Element | null = null
+                                <button style={{ marginTop: "5rem", }} onClick={() => {
+                                    wantsToEditCurrentGamemodesSet(prev => !prev)
+                                }}>Edit Current Gamemodes</button>
+                                <div style={{}}>
+                                    {wantsToEditCurrentGamemodes && reloader && fullData.gamemodes?.map((eachGameObj, gameModeIndex) => {
+                                        let chosenEl: JSX.Element | null = null
 
-                                            if (eachGameObj.gameSelection === "matchup") {
-                                                chosenEl = <MatchUpGM isEditing={true} gameObj={eachGameObj} updateGameModes={updateGameModes} storyid={fullData.storyid} />
-                                            } else if (eachGameObj.gameSelection === "crossword") {
-                                                chosenEl = <CrosswordGM isEditing={true} sentGameObj={eachGameObj} updateGameModes={updateGameModes} storyid={fullData.storyid} />
-                                            } else if (eachGameObj.gameSelection === "pronounce") {
-                                                chosenEl = <PronounciationGM isEditing={true} sentGameObj={eachGameObj} updateGameModes={updateGameModes} storyid={fullData.storyid} />
-                                            } else if (eachGameObj.gameSelection === "wordmeaning") {
-                                                chosenEl = <WordsToMeaningGM />
-                                            }
+                                        if (eachGameObj.gameSelection === "matchup") {
+                                            chosenEl = <MatchUpGM isEditing={true} gameObj={eachGameObj} updateGamemodeDirectly={true} storyid={fullData.storyid} />
+                                        } else if (eachGameObj.gameSelection === "crossword") {
+                                            chosenEl = <CrosswordGM isEditing={true} sentGameObj={eachGameObj} updateGamemodeDirectly={true} storyid={fullData.storyid} />
+                                        } else if (eachGameObj.gameSelection === "pronounce") {
+                                            chosenEl = <PronounciationGM isEditing={true} sentGameObj={eachGameObj} updateGamemodeDirectly={true} storyid={fullData.storyid} />
+                                        } else if (eachGameObj.gameSelection === "wordmeaning") {
+                                            chosenEl = <WordsToMeaningGM />
+                                        }
 
 
-                                            return (
-                                                <div key={eachGameObj.boardObjId} style={{ marginBottom: "2rem" }}>
-                                                    {chosenEl}
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
+                                        return (
+                                            <div key={eachGameObj.boardObjId} style={{ marginBottom: "2rem" }}>
+                                                {chosenEl}
+                                            </div>
+                                        )
+                                    })}
                                 </div>
-                            )}
+                            </div>
 
                         </div>
 
@@ -178,7 +183,7 @@ export default function ViewStory({ fullData, updateStory, deleteStory, updateGa
                     </div>
                     <div style={{ display: "flex", gap: ".5rem", alignItems: "center", padding: ".5rem" }}>
                         <button style={{}} onClick={() => { readingSet(false) }}>close</button>
-                        {fullData.gamemodes !== null && <button style={{}} onClick={() => { gameModesShowingSet(true) }}>Play Some Games</button>}
+                        {true && <button style={{}} onClick={() => { gameModesShowingSet(true) }}>Play Some Games</button>}
                     </div>
                     <h3 style={{ textAlign: "center", fontSize: "2rem" }}>{fullData.title}</h3>
 
@@ -190,7 +195,7 @@ export default function ViewStory({ fullData, updateStory, deleteStory, updateGa
                             <p style={{ fontSize: ".6rem" }} onClick={() => {
                                 if (!sentLikesAlready) {
                                     const newStoryObj: StoryData = { ...fullData, likes: 1 }
-                                    updateStory("likes", newStoryObj)
+                                    allServerFunctions!.updateStory("likes", newStoryObj)
                                 }
                                 sentLikesAlreadySet(true)
                             }}>I like this</p>

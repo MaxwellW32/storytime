@@ -11,6 +11,6 @@ export const allServerFunctionsAtom = atom<{
     "newStory": (newStory: StoryDataSend) => Promise<void>,
     "updateStory": (option: "story" | "likes", seenStory: StoryData) => Promise<void>,
     "newAllStory": (newStoriesArr: StoryData[]) => Promise<void>,
-    "updateGameModes": updateGameModesParams
+    "updateGameModes": updateGameModesParams,
 } | null>(null);
 

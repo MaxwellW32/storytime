@@ -11,31 +11,32 @@ import { useAtom } from "jotai";
 
 
 export default function Home({ allstories, getStories, newAllStory, updateStory, newStory, deleteStory, updateGameModes }: { allstories: StoryData[],getStories(): Promise<StoryData[] | undefined>, updateStory: (option: "story" | "likes", seeBoard: StoryData) => Promise<void>, newStory: (newStory: StoryDataSend) => Promise<void>, deleteStory: (seenId: string) => Promise<void>, newAllStory: (newStoriesArr: StoryData[]) => Promise<void>, updateGameModes:updateGameModesParams}) {
-    // const [, allServerFunctionsSet] = useAtom(allServerFunctionsAtom)
+
+    const [, allServerFunctionsSet] = useAtom(allServerFunctionsAtom)
 
     const [makingStory, makingStorySet] = useState(false)
 
     //use this instead of drilling props
-    // useEffect(()=>{
-    //     allServerFunctionsSet({
-    //         "getStories":getStories,
-    //         "deleteStory":deleteStory,
-    //         "newStory":newStory,
-    //         "updateStory":updateStory,
-    //         "newAllStory":newAllStory,
-    //         "updateGameModes":updateGameModes
-    //     })
-    // },[])
+    useEffect(()=>{
+        allServerFunctionsSet({
+            "getStories":getStories,
+            "deleteStory":deleteStory,
+            "newStory":newStory,
+            "updateStory":updateStory,
+            "newAllStory":newAllStory,
+            "updateGameModes":updateGameModes
+                })
+    },[])
 
     return (
         <main className={styles.homeDiv}>
 
-            {makingStory ? <MakeStory newStory={newStory} makingStorySet={makingStorySet} />
+            {makingStory ? <MakeStory makingStorySet={makingStorySet} />
                 : (<button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => { makingStorySet(true) }}>Add a Story</button>)
             }
 
             {allstories?.map((eachStory: StoryData) => (
-                <ViewStory deleteStory={deleteStory} updateStory={updateStory} key={eachStory.storyid} fullData={eachStory} updateGameModes={updateGameModes} />
+                <ViewStory key={eachStory.storyid} fullData={eachStory}/>
             ))}
         </main>
     )

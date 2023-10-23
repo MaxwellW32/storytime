@@ -7,15 +7,19 @@ import DisplayGameOVer from '../useful/DisplayGameOver';
 import { gameObjType, pronounceType, storyBoardType, updateGameModesParams } from '@/app/page';
 import styles from "./style.module.css"
 import { handleStoriesWhereGameOver } from '@/app/utility/savestorage';
+import { useAtom } from 'jotai';
+import { allServerFunctionsAtom } from '@/app/utility/globalState';
 
 
-export default function PronounciationGM({ isEditing = false, sentGameObj, storyid, addGameMode, updateGameModes }: {
+export default function PronounciationGM({ isEditing = false, sentGameObj, storyid, addGameModeLocally, updateGamemodeDirectly }: {
     isEditing?: boolean,
     sentGameObj?: gameObjType,
     storyid?: string,
-    addGameMode?: (gamemode: gameObjType) => void,
-    updateGameModes?: updateGameModesParams, storyId?: string
+    addGameModeLocally?: (gamemode: gameObjType) => void,
+    updateGamemodeDirectly?: boolean, storyId?: string
 }) {
+    const [allServerFunctions,] = useAtom(allServerFunctionsAtom)
+
     const {
         transcript,
         listening,
@@ -189,12 +193,12 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
             gameData: { ...gameObj.gameData as pronounceType, givenWords: givenWords }
         }
 
-        if (addGameMode) {
-            addGameMode(newObj)
+        if (addGameModeLocally) {
+            addGameModeLocally(newObj)
         }
 
-        if (updateGameModes && storyid) {
-            updateGameModes(newObj, storyid, "normal")
+        if (updateGamemodeDirectly && storyid) {
+            allServerFunctions!.updateGameModes(newObj, storyid, "normal")
         }
 
         // gameObjSet({ ...initialState })
