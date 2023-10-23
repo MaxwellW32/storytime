@@ -7,14 +7,14 @@ export function Item(props: any) {
     const { id, itemText } = props;
 
     const style = {
-        width: "70px",
-        aspectRatio: "1/1",
         marging: "0 auto",
         backgroundColor: "var(--primaryColor)",
         borderRadius: "1rem",
         display: "grid",
         alignItems: "center",
-        justifyContent: "center"
+        justifyContent: "center",
+        padding: "1rem"
+
     };
 
     return <div style={style}>{itemText}</div>;

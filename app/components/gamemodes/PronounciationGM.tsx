@@ -229,7 +229,7 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
         return <span>Can&apos;t play this game, browser doesn&apos;t support speech recognition.</span>;
     }
     return (
-        <div style={{ padding: "1rem" }}>
+        <div style={{ padding: "1rem", maxWidth: "100dvw" }}>
             {isEditing ? (
                 <div style={{ display: "grid", justifyItems: "center" }}>
 
@@ -252,7 +252,7 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
 
                                 {givenWords.map((eachWord, index) => {
                                     return (
-                                        <div key={uuidv4()} style={{ display: "flex", alignItems: "start" }}>
+                                        <div key={index} style={{ display: "flex", alignItems: "start" }}>
                                             <p ref={(e) => { addWordTilesToRef(e, index) }} style={{ backgroundColor: "var(--secondaryColor)", borderRadius: ".7rem", padding: ".5rem", textTransform: "capitalize" }}>{eachWord}</p>
 
                                             <svg style={{ width: ".8rem", fill: "var(--textColor)" }}
@@ -299,9 +299,9 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
                                     <p>Words To Pronounce</p>
                                     <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", margin: "1rem", justifyContent: "center" }}>
 
-                                        {wordsLeftToMAtch.map((eachWord) => {
+                                        {wordsLeftToMAtch.map((eachWord, eachWordIndex) => {
                                             return (
-                                                <div key={uuidv4()}>
+                                                <div key={eachWordIndex}>
                                                     <p style={{ backgroundColor: "var(--secondaryColor)", borderRadius: ".7rem", padding: ".5rem" }}>{eachWord}</p>
                                                 </div>
                                             )

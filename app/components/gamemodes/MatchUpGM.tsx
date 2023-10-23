@@ -479,7 +479,9 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
 
                                 <div style={{
                                     display: "grid",
-                                    gridTemplateColumns: "1fr 1fr",
+                                    gridTemplateColumns: "50% 50%",
+                                    maxWidth: "100dvw",
+
                                 }}>
                                     {questions!.map((eachQuestion, index) => {
                                         return (

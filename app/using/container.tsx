@@ -48,7 +48,7 @@ export default function Container(props: any) {
                 strategy={verticalListSortingStrategy}
             >
                 <div ref={setNodeRef} style={usingStyle as React.CSSProperties}>
-                    {questionAsked && <p>{questionAsked}</p>}
+                    {questionAsked && <p style={{ whiteSpace: "pre-wrap" }}>{questionAsked}</p>}
 
 
                     {items.map((itemText: any) => (

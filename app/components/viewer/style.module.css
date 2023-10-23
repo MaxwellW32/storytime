@@ -1,11 +1,10 @@
 /* view story */
 .titleCont {
-    display: flex;
+    display: grid;
     align-items: flex-start;
-    flex-wrap: wrap;
-    align-items: center;
     gap: 1rem;
-    justify-content: space-between;
+    grid-template-columns: 3fr 2fr 1fr;
+    justify-items: flex-start;
 }
 
 .descText {
@@ -20,7 +19,7 @@
 }
 
 .readingDiv::-webkit-scrollbar {
-    display: none;
+    /* display: none; */
 }
 
 .storyTextboardHolder {
@@ -31,5 +30,20 @@
 
 .gameModeOverFlowCont::-webkit-scrollbar {
     display: none;
+
+}
+
+.gameModeParty {
+    position: fixed;
+    top: 0;
+    right: 0;
+}
+
+@media only screen and (min-width: 1000px) {
+    .gameModeParty {
+        position: sticky;
+        top: 0;
+        left: 0;
+    }
 
 }
