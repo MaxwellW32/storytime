@@ -228,7 +228,7 @@ async function getStories() {
 
 
 export default async function page() {
-  const stories = await getStories()
+  let stories = await getStories()
 
   if (!stories) {
     return <p>Loading Up Stories...</p>
@@ -316,7 +316,7 @@ export interface pronounceType {
 
 export interface wordsToMeaningType {
   gameDataFor: "wordmeaning",
-
+  wordMeaningsArr: string[][] | null,
 }
 
 export interface crosswordType {

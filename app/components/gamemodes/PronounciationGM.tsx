@@ -36,7 +36,7 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
         gameSelection: "pronounce"
     }
 
-    const [gameObj, gameObjSet] = useState<gameObjType>(sentGameObj ?? { ...initialState })
+    const [gameObj, gameObjSet] = useState<gameObjType>(sentGameObj ? { ...sentGameObj } : { ...initialState })
 
     // const myWords = ["APPLE", "BANANA", "CHerry", "doG", "ELEphant", "flower", "grape", "house", "igloo", "jacket", "kiwi", "lemon", "melon", "orange", "penguin", "queen", "rabbit", "strawberry", "turtle", "umbrella"];
 
@@ -47,6 +47,38 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
         })
         return seenArr
     })
+
+    //handle top level sentgameobj change
+    const mounted = useRef(false)
+    const amtTimesReset = useRef(0)
+    useEffect(() => {
+        if (mounted.current && sentGameObj) {
+            const seenGameData = sentGameObj.gameData as pronounceType
+            console.log(`$hey i should reset pronounce gamestate now`);
+
+            gameObjSet({ ...sentGameObj })
+            givenWordsSet(() => {
+                let seenArr = seenGameData.givenWords ? [...seenGameData.givenWords] : []
+                seenArr = seenArr.map(eachWord => {
+                    return eachWord.toLowerCase()
+                })
+                return seenArr
+            })
+
+        }
+
+        mounted.current = true
+        return () => {
+            if (amtTimesReset.current < 1) {
+                mounted.current = false
+            }
+
+            if (!mounted.current) {
+                amtTimesReset.current = 1
+            }
+        }
+    }, [sentGameObj])
+
     const [userMatchedWords, userMatchedWordsSet] = useState<string[]>([])
     const [gameOverState, gameOverStateSet] = useState<boolean>(() => {
         if (!isEditing) {
@@ -220,7 +252,7 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
             setTimeout(() => {
                 inputRef.current.value = ""
                 inputRef.current.focus()
-            }, 500)
+            }, 50)
             return newArr
         })
     }

@@ -88,7 +88,6 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
     const [showDescriptionFull, showDescriptionFullSet] = useState(false)
     const [descOverFlowing, descOverFlowingSet] = useState(false)
     const [userTriedToDelete, userTriedToDeleteSet] = useState(false)
-    const [reloader, reloaderSet] = useState(true)
     const [wantsToEditCurrentGamemodes, wantsToEditCurrentGamemodesSet] = useState(false)
     const [canPlayAudio, canPlayAudioSet] = useState(false)
 
@@ -96,13 +95,6 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
     useEffect(() => {
         canPlayAudioSet(reading)
     }, [reading])
-
-    useEffect(() => {
-        reloaderSet(false)
-        setTimeout(() => {
-            reloaderSet(true)
-        }, 5)
-    }, [fullData.gamemodes])
 
     useEffect(() => {
         const element = descRef.current;
@@ -174,20 +166,20 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
 
             {/* storyboard container */}
             {reading && (
-                <div style={{ position: "fixed", top: 0, left: 0, height: "100dvh", width: "100%", zIndex: 1, overflowY: "auto", backgroundColor: "var(--backgroundColor)", display: "grid", gridTemplateColumns: gameModesShowing ? "1fr 1fr" : "1fr", gridAutoFlow: "row" }}>
-
-                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem", color: "var(--textColor)", position: "relative" }} className={styles.readingDiv}>
-
+                <div className={styles.readingArea} style={{ gridTemplateColumns: gameModesShowing ? "1fr 1fr" : "1fr" }}>
+                    <div>
                         <p style={{ position: "absolute", top: 0, right: 0, margin: "1rem", scale: .8 }} onClick={() => { canPlayAudioSet(prev => !prev) }}>{canPlayAudio ? "Pause Music" : "Play"}</p>
 
-                        <div style={{ display: "flex", gap: ".5rem", alignItems: "center", padding: ".5rem" }}>
+                        <span style={{ display: "flex", gap: ".5rem", alignItems: "center", padding: ".5rem" }}>
                             <button style={{}} onClick={() => { readingSet(false) }}>close</button>
                             {true && <button style={{}} onClick={() => { gameModesShowingSet(true) }}>Play Some Games</button>}
-                        </div>
+                        </span>
+
                         <h3 style={{ textAlign: "center", fontSize: "2rem" }}>{fullData.title}</h3>
 
                         <div style={{ alignSelf: "flex-end", textAlign: "center", marginRight: "1rem" }}>
                             {fullData.likes > 0 && <p>{fullData.likes} {fullData.likes === 1 ? "Like" : "Likes"}</p>}
+
                             <div style={{ display: "flex", gap: ".5rem", alignItems: "center", padding: ".5rem", cursor: "pointer" }}>
                                 <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512"><path d="M47.6 300.4L228.3 469.1c7.5 7 17.4 10.9 27.7 10.9s20.2-3.9 27.7-10.9L464.4 300.4c30.4-28.3 47.6-68 47.6-109.5v-5.8c0-69.9-50.5-129.5-119.4-141C347 36.5 300.6 51.4 268 84L256 96 244 84c-32.6-32.6-79-47.5-124.6-39.9C50.5 55.6 0 115.2 0 185.1v5.8c0 41.5 17.2 81.2 47.6 109.5z" /></svg>
 
@@ -199,6 +191,7 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
                                     sentLikesAlreadySet(true)
                                 }}>I like this</p>
                             </div>
+
                             <HandleRating rating={fullData.rating} ratingAmt={fullData.amtofratings} seenStory={fullData} />
                         </div>
 
@@ -206,8 +199,8 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
 
                             if (eachElemnt.boardType === "text") {
                                 return (
-                                    <div key={index} className={styles.storyTextboardHolder} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                        <p style={{ whiteSpace: "pre-wrap", padding: "1rem", borderRadius: ".7rem", maxWidth: "750px", fontSize: "var(--medium-font-size)" }}>{eachElemnt.storedText}</p>
+                                    <div key={index} className={styles.storyTextboardHolder}>
+                                        <p>{eachElemnt.storedText}</p>
                                     </div>
                                 )
                             } else if (eachElemnt.boardType === "image") {
@@ -223,8 +216,8 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
                         })}
                     </div>
 
-                    <div className={styles.gameModeParty} style={{ backgroundColor: "green", height: "100dvh", overflowY: "auto", translate: gameModesShowing ? "0px 0px" : "100% 0px", zIndex: 2, transition: "translate 600ms", display: gameModesShowing ? "grid" : "none" }}>
 
+                    <div className={styles.gameModeParty} style={{ display: gameModesShowing ? "grid" : "none" }}>
                         <div>
                             <div>
                                 <button onClick={() => { gameModesShowingSet(false) }}>Go Back</button>
@@ -238,7 +231,7 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
                                     wantsToEditCurrentGamemodesSet(prev => !prev)
                                 }}>Edit Current Gamemodes</button>
                                 <div style={{}}>
-                                    {wantsToEditCurrentGamemodes && reloader && fullData.gamemodes?.map((eachGameObj, gameModeIndex) => {
+                                    {wantsToEditCurrentGamemodes && fullData.gamemodes?.map((eachGameObj, gameModeIndex) => {
                                         let chosenEl: JSX.Element | null = null
 
                                         if (eachGameObj.gameSelection === "matchup") {
@@ -248,23 +241,22 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
                                         } else if (eachGameObj.gameSelection === "pronounce") {
                                             chosenEl = <PronounciationGM isEditing={true} sentGameObj={eachGameObj} updateGamemodeDirectly={true} storyid={fullData.storyid} />
                                         } else if (eachGameObj.gameSelection === "wordmeaning") {
-                                            chosenEl = <WordsToMeaningGM />
+                                            chosenEl = <WordsToMeaningGM isEditing={true} sentGameObj={eachGameObj} updateGamemodeDirectly={true} storyid={fullData.storyid} />
                                         }
 
 
                                         return (
-                                            <div key={eachGameObj.boardObjId} style={{ marginBottom: "2rem" }}>
+                                            <div key={eachGameObj.boardObjId} style={{ display: "grid" }}>
                                                 {chosenEl}
                                             </div>
                                         )
                                     })}
                                 </div>
                             </div>
-
                         </div>
 
-                        <div className={styles.gameModeOverFlowCont} style={{ width: "100%", height: "100%", display: showNewGameModeButton ? "none" : "flex", overflowX: "scroll", gap: "1rem", scrollSnapType: "x mandatory", whiteSpace: "nowrap" }}>
-                            {reloader && fullData.gamemodes?.map((eachGameObj, gmIndex) => {
+                        <div className={styles.gameModeOverFlowCont} style={{ display: showNewGameModeButton ? "none" : "grid" }}>
+                            {fullData.gamemodes?.map((eachGameObj) => {
                                 let chosenEl: JSX.Element | null = null
 
                                 if (eachGameObj.gameSelection === "matchup") {
@@ -274,21 +266,65 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
                                 } else if (eachGameObj.gameSelection === "pronounce") {
                                     chosenEl = <PronounciationGM sentGameObj={eachGameObj} />
                                 } else if (eachGameObj.gameSelection === "wordmeaning") {
-                                    chosenEl = <WordsToMeaningGM />
+                                    chosenEl = <WordsToMeaningGM sentGameObj={eachGameObj} />
                                 }
 
 
                                 return (
-                                    <div key={eachGameObj.boardObjId} style={{ backgroundColor: "rgba(200,200,200,0.5)", minWidth: "100%", height: "100%", overflowY: "auto", flex: "0 0 auto", scrollSnapAlign: "start", display: "inline-block" }}>
+                                    <div key={eachGameObj.boardObjId} className={styles.gameModeDisplay} style={{}}>
                                         {chosenEl}
                                     </div>
                                 )
                             })}
                         </div>
-
                     </div>
                 </div>
             )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
             {/* audio */}

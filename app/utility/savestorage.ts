@@ -22,7 +22,7 @@ export function handleStoriesWhereGameOver(seenStoryId: string, seenObjId: strin
     type seenObjtype = {
         [key: string]: string[]
     }
-    let seenObj: seenObjtype = retreiveFromLocalStorage("storiesWhereGameOver") as seenObjtype
+    let seenObj: seenObjtype | null = retreiveFromLocalStorage("storiesWhereGameOver")
 
     if (option === "read") {
         if (seenObj === null) {

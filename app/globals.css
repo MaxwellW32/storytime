@@ -72,10 +72,10 @@ html {
   background-position-x: left;
   background-color: #23201d;
   height: 100dvh;
-  max-width: 100dvw;
-  overflow: auto;
+  width: 100dvw;
+  overflow-y: auto;
+  overflow-x: hidden;
   font-family: var(--font-roboto-mono);
-
 }
 
 img {

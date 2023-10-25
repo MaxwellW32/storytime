@@ -24,7 +24,7 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
         gameSelection: "crossword"
     }
 
-    const [gameObj, gameObjSet] = useState<gameObjType>(sentGameObj ?? { ...initialState })
+    const [gameObj, gameObjSet] = useState<gameObjType>(sentGameObj ? { ...sentGameObj } : { ...initialState })
 
     // const myWords = ["apple", "banana", "cherry", "dog", "elephant", "flower", "grape", "house", "igloo", "jacket", "kiwi", "lemon", "melon", "orange", "penguin", "queen", "rabbit", "strawberry", "turtle", "umbrella"];
 
@@ -44,6 +44,42 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
 
         return { ...gameObj?.gameData as crosswordType }.hintObj ?? { ...newHintObj }
     })
+
+    //handle top level sentgameobj change
+    const mounted = useRef(false)
+    const amtTimesReset = useRef(0)
+    useEffect(() => {
+        if (mounted.current && sentGameObj) {
+            const seenGameData = sentGameObj.gameData as crosswordType
+            console.log(`$hey i should reset crossword gamestate now`);
+
+            gameObjSet(sentGameObj)
+            wordsArraySet(seenGameData.wordArray ?? [])
+            hintObjSet(() => {
+                const newHintObj: {
+                    [key: string]: string
+                } = {}
+
+                seenGameData.wordArray ?? [].forEach(eachWord => {
+                    newHintObj[eachWord] = ""
+                })
+
+                return seenGameData.hintObj ?? { ...newHintObj }
+            })
+        }
+
+        mounted.current = true
+        return () => {
+            if (amtTimesReset.current < 1) {
+                mounted.current = false
+            }
+
+            if (!mounted.current) {
+                amtTimesReset.current = 1
+            }
+        }
+    }, [sentGameObj])
+
 
     const [wordArrSkipIndex, wordArrSkipIndexSet] = useState(0)
 
@@ -472,7 +508,7 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
 
 
     return (
-        <div className={styles.crossWordMain} style={{ padding: "1rem" }}>
+        <div className={styles.crossWordMain} style={{}}>
             {isEditing ? (
                 <div style={{ display: "grid" }} >
                     <label>Enter Words you&apos;d like to appear in the Crossword</label>
@@ -539,7 +575,7 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
                     <button onClick={submit}>Submit Gamemode</button>
                 </div>
             ) : (
-                <div style={{ display: "flex", flexDirection: "column", maxHeight: "100%" }}>
+                <div style={{ display: "flex", flexDirection: "column" }}>
                     <div style={{ flex: 1 }}>
                         <p className={styles.leftToFind}>Words left to find {amtOfAnswersLeft}</p>
                         <p onClick={showHints} style={{ textAlign: "end", marginBottom: "1rem", cursor: "pointer" }}>hint?</p>

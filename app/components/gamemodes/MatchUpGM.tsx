@@ -16,7 +16,7 @@ import {
 } from "@dnd-kit/core";
 
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import Container from "@/app/using/container";
+import Container from "@/app/components/gamemodes/using/container";
 import { handleStoriesWhereGameOver } from "@/app/utility/savestorage";
 import DisplayGameOVer from "../useful/DisplayGameOver";
 import { useAtom } from "jotai";
@@ -35,6 +35,7 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
 
     const gameSelection = useRef<gameSelectionTypes>(gameObj?.gameSelection ?? "matchup")
     const boardObjId = useRef<string>(gameObj?.boardObjId ?? uuidv4())
+
     const [gameData, gameDataSet] = useState<matchupType>(() => {
         const newObj: matchupType = {
             gameDataFor: "matchup",
@@ -42,7 +43,8 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
             questionsArr: null
         }
 
-        return gameObj?.gameData as matchupType ?? newObj
+        const seenData = gameObj?.gameData as matchupType
+        return seenData ? { ...seenData } : { ...newObj }
     })
 
     const [questions, questionsSet] = useState<string[]>(() => {
@@ -54,6 +56,40 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
             return [""]
         })
     })
+
+    //handle top level sentgameobj change
+    const mounted = useRef(false)
+    const amtTimesReset = useRef(0)
+    useEffect(() => {
+        if (mounted.current && gameObj) {
+            const seenGameData = gameObj.gameData as matchupType
+            console.log(`$hey i should reset the gamestate now`);
+
+            gameDataSet(seenGameData)
+            questionsSet(seenGameData.questionsArr ?? ["", "", "", ""])
+            choicesSet(() => {
+                return seenGameData.choicesArr ?? questions.map(eachItem => {
+                    return [""]
+                })
+            })
+            gameSelection.current = gameObj.gameSelection ?? "matchup"
+            boardObjId.current = gameObj.boardObjId ?? uuidv4()
+        }
+
+        mounted.current = true
+        return () => {
+            if (amtTimesReset.current < 1) {
+                mounted.current = false
+            }
+
+            if (!mounted.current) {
+                amtTimesReset.current = 1
+            }
+        }
+    }, [gameObj])
+
+
+
 
     const [gameFinishedState, gameFinishedStateSet] = useState<boolean>(() => {
         if (!isEditing) {

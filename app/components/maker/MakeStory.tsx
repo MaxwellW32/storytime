@@ -511,7 +511,7 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                             } else if (eachGameObj.gameSelection === "pronounce") {
                                 chosenEl = <PronounciationGM addGameModeLocally={addGameModeLocally} sentGameObj={eachGameObj} isEditing={true} />
                             } else if (eachGameObj.gameSelection === "wordmeaning") {
-                                chosenEl = <WordsToMeaningGM />
+                                chosenEl = <WordsToMeaningGM addGameModeLocally={addGameModeLocally} sentGameObj={eachGameObj} isEditing={true} />
                             }
 
 
