@@ -230,6 +230,7 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
                                 <button style={{ marginTop: "5rem", }} onClick={() => {
                                     wantsToEditCurrentGamemodesSet(prev => !prev)
                                 }}>Edit Current Gamemodes</button>
+
                                 <div style={{}}>
                                     {wantsToEditCurrentGamemodes && fullData.gamemodes?.map((eachGameObj, gameModeIndex) => {
                                         let chosenEl: JSX.Element | null = null
@@ -255,7 +256,7 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
                             </div>
                         </div>
 
-                        <div className={styles.gameModeOverFlowCont} style={{ display: showNewGameModeButton ? "none" : "grid" }}>
+                        <div className={`${styles.gameModeOverFlowCont} niceScrollbar`} style={{ display: showNewGameModeButton ? "none" : "grid" }}>
                             {fullData.gamemodes?.map((eachGameObj) => {
                                 let chosenEl: JSX.Element | null = null
 

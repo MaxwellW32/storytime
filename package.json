@@ -10,9 +10,6 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@dnd-kit/core": "^6.0.8",
-    "@dnd-kit/modifiers": "^6.0.1",
-    "@dnd-kit/sortable": "^7.0.2",
     "@prisma/client": "^5.4.2",
     "epubjs": "^0.3.93",
     "jotai": "^2.4.3",

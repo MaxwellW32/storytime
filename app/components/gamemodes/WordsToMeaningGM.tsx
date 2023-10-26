@@ -8,7 +8,7 @@ import { allServerFunctionsAtom } from "@/app/utility/globalState"
 import { v4 as uuidv4 } from "uuid";
 import { handleStoriesWhereGameOver } from "@/app/utility/savestorage"
 import DisplayGameOVer from "../useful/DisplayGameOver"
-import { Draggable } from "@/app/Draggable"
+import shuffle from "../useful/shuffleArray"
 
 export default function WordsToMeaningGM({ sentGameObj, isEditing = false, storyid, addGameModeLocally, updateGamemodeDirectly }
     : { isEditing?: boolean, sentGameObj?: gameObjType, storyid?: string, addGameModeLocally?: (gamemode: gameObjType) => void, updateGamemodeDirectly?: boolean, storyId?: string }) {
@@ -28,8 +28,7 @@ export default function WordsToMeaningGM({ sentGameObj, isEditing = false, story
 
     let wordMeaningPairs: string[][] | null = [
         ['Serendipity', 'The occurrence of events by chance in a happy or beneficial way.'],
-        ['Ephemeral', 'Lasting for a very short time.'],
-        ['Ubiquitous', 'Present, appearing, or found everywhere.'],
+        ['Ephemeral', 'Lasting for a very short time.'], ['Ubiquitous', 'Present, appearing, or found everywhere.'],
         ['Eloquent', 'Fluent or persuasive in speaking or writing.'],
         ['Mellifluous', 'Sweet-sounding; smoothly flowing.'],
         ['Sycophant', 'A person who acts obsequiously towards someone important in order to gain advantage.'],
@@ -95,7 +94,7 @@ export default function WordsToMeaningGM({ sentGameObj, isEditing = false, story
         <div className={styles.wordMeaningMainDiv} style={{}}>
             {isEditing ? (
                 <>
-                    <div className={styles.wordMeaningMapCont} style={{}}>
+                    <div className={`${styles.wordMeaningMapCont} niceScrollbar`} style={{}}>
                         {wordMeaningsArr.map((eachWordArr, eachWordArrIndex) => {
                             return (
                                 <div key={eachWordArrIndex} className={styles.eachWordMEaningDiv}>
@@ -152,8 +151,23 @@ function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, game
     //isediting here used to send off gamestate to local storage or not
 
     const wordMeaningsAnswersArr = useMemo(() => {
-        //randomize array
         return [...wordMeaningsArr]
+    }, [wordMeaningsArr])
+
+    const shuffledWords = useMemo(() => {
+
+        const flattendedArr: string[] = []
+        wordMeaningsArr.forEach(eachStrArr => {
+            flattendedArr.push(eachStrArr[0])
+        })
+
+        if (!isEditing) {
+            //final mode
+            const shuffleArr: string[] = shuffle(flattendedArr)
+            return shuffleArr
+        }
+
+        return flattendedArr
     }, [wordMeaningsArr])
 
     const [userAnswersArr, userAnswersArrSet] = useState<string[][]>([])
@@ -188,7 +202,6 @@ function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, game
         if (e !== null) {
             meaningWordHolders.current[arrIndex] = e
         }
-
     }
 
     //refs for each word
@@ -203,12 +216,20 @@ function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, game
 
     const activePos = useRef<{ x: number, y: number } | undefined>()
 
+    const wordMapCont = useRef<HTMLDivElement>(null)
+
+    const [isDragging, isDraggingSet] = useState(false)
+
+    const displayWordMeaningsMapCont = useRef<HTMLDivElement>(null)
+
+    const DisplayWordMeaningsMainDiv = useRef<HTMLDivElement>(null)
 
     function start(event: React.PointerEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) {
         event.preventDefault();
+        isDraggingSet(true)
 
         if (seenOnPhone.current) {
-            console.log(`$hey started - touch`);
+            // console.log(`$hey started - touch`);
 
             event = event as React.TouchEvent<HTMLDivElement>
             const eventTouch = event.changedTouches?.[0]
@@ -228,7 +249,7 @@ function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, game
         } else {
             event = event as React.PointerEvent<HTMLDivElement>
 
-            console.log(`$hey started - Pointer`);
+            // console.log(`$hey started - Pointer`);
 
             if (event.button! !== 0) return; // left button only
 
@@ -250,10 +271,12 @@ function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, game
 
     function end(event: React.PointerEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) {
 
+        isDraggingSet(false)
+
         const seenWordEl = event.target as HTMLDivElement
 
         if (seenOnPhone.current) {
-            console.log(`$ended for touch`);
+            // console.log(`$ended for touch`);
             dragging.current = null;
             findClosestElement(seenWordEl)
 
@@ -263,7 +286,7 @@ function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, game
             seenWordEl.style.left = `${0}px`
 
         } else {
-            console.log(`$ended for pointer`);
+            // console.log(`$ended for pointer`);
             dragging.current = null;
             findClosestElement(seenWordEl)
 
@@ -319,12 +342,15 @@ function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, game
     }
 
     function move(event: React.PointerEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) {
+        event.preventDefault();
+
+        scrollElement(event)
 
         if (!dragging.current) return
 
 
         if (seenOnPhone.current) {
-            console.log(`$moving touch`);
+            // console.log(`$moving touch`);
             event = event as React.TouchEvent<HTMLDivElement>
 
             if (!event.changedTouches) return
@@ -342,7 +368,7 @@ function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, game
 
             styleElMove(event.target as HTMLDivElement, { ...activeOffset })
         } else {
-            console.log(`$moving pointer`);
+            // console.log(`$moving pointer`);
             event = event as React.PointerEvent<HTMLDivElement>
 
             let { x, y } = { x: event.clientX, y: event.clientY };
@@ -359,18 +385,13 @@ function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, game
     }
 
     const styleElMove = (element: HTMLDivElement, position: { x: number, y: number }) => {
-        // console.log(`$position`, position);
         // const {width, height} = element.getBoundingClientRect()
         position.x -= element.clientWidth / 2
         position.y -= element.clientHeight / 2
         element.style.translate = `${position.x}px ${position.y}px`
     }
 
-    useEffect(() => {
-        console.table(userAnswersArr);
-    }, [userAnswersArr])
 
-    const wordMapCont = useRef<HTMLDivElement>(null)
     const checkAnswers = () => {
         let amtCorrect = 0
         wordMeaningsAnswersArr.map((eachStrArr, eachStrArrIndex) => {
@@ -388,13 +409,48 @@ function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, game
 
     function refreshGame() {
         gameFinishedStateSet(false)
+        userAnswersArrSet([])
+
+        meaningWordHolders.current!.forEach(eachHolder => {
+            const secondElement = eachHolder.childNodes[2]
+            wordMapCont.current!.appendChild(secondElement)
+        })
     }
 
+    const scrollElement = (event: React.PointerEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+        if (!isDragging) return
+
+        let posObj: { seenX: number, seenY: number } | undefined = undefined
+
+        if (seenOnPhone.current) {
+            event = event as React.TouchEvent<HTMLDivElement>
+
+            if (!event.changedTouches) return
+
+            const eventTouch = event.changedTouches[0]
+            posObj = { seenX: eventTouch.clientX, seenY: eventTouch.clientY }
+
+        } else {
+            event = event as React.PointerEvent<HTMLDivElement>
+            posObj = { seenX: event.clientX, seenY: event.clientY }
+
+        }
+        const { left: windowMin, right: windowMax } = DisplayWordMeaningsMainDiv.current!.getBoundingClientRect()
+        const rangeBuffer = 60
+
+        if (!posObj) return
+
+        if (posObj.seenX >= windowMin && posObj.seenX <= windowMin + rangeBuffer) {
+            displayWordMeaningsMapCont.current!.scrollLeft -= 4
+        } else if (posObj.seenX >= windowMax - rangeBuffer && posObj.seenX <= windowMax) {
+            displayWordMeaningsMapCont.current!.scrollLeft += 4
+        }
+    }
 
     return (
-        <div className={styles.DisplayWordMeaningsMainDiv}>
+        <div className={styles.DisplayWordMeaningsMainDiv} ref={DisplayWordMeaningsMainDiv}>
             <DisplayGameOVer gameOver={gameFinishedState}>
-                <div className={styles.displayWordMeaningsMapCont}>
+                <div ref={displayWordMeaningsMapCont} className={`${styles.displayWordMeaningsMapCont} niceScrollbar`}>
                     {wordMeaningsAnswersArr.map((eachWordArray, eachWordArrayIndex) => {
                         return (
                             <div key={eachWordArrayIndex} ref={(e) => addDivsTomeaningWordHolders(e, eachWordArrayIndex)}
@@ -434,10 +490,10 @@ function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, game
                     })}
                 </div>
 
-                <div className={styles.displayWordsMap} ref={wordMapCont}>
-                    {wordMeaningsAnswersArr.map((eachWordArray, eachWordArrayIndex) => {
+                <div className={`${styles.displayWordsMap} niceScrollbar`} ref={wordMapCont}>
+                    {shuffledWords.map((eachWord, eachWordIndex) => {
                         return (
-                            <div className={`${styles.displayWordsMapwords} preserve-background`} key={eachWordArrayIndex} draggable={false} ref={(e) => { addDivsToWordDivs(e, eachWordArrayIndex) }}
+                            <div className={`${styles.displayWordsMapwords} preserve-background`} key={eachWordIndex} draggable={false} ref={(e) => { addDivsToWordDivs(e, eachWordIndex) }}
 
                                 onPointerDown={(e) => {
                                     if (!seenOnPhone.current) {
@@ -466,7 +522,7 @@ function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, game
                                 onTouchEnd={end}
                                 onTouchCancel={end}
                             >
-                                {eachWordArray[0]}
+                                {eachWord}
                             </div>
                         )
                     })}

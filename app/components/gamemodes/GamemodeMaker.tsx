@@ -10,9 +10,9 @@ import { v4 as uuidv4 } from "uuid";
 import styles from "./style.module.css"
 
 
-export default function GamemodeMaker({ addGameModeLocally, updateGamemodeDirectly, storyId }: { addGameModeLocally?: (gamemode: gameObjType) => void, updateGamemodeDirectly?: boolean, storyId?: string }) {
+export default function GamemodeMaker({ addGameModeLocally, updateGamemodeDirectly, storyId, showDefault }: { addGameModeLocally?: (gamemode: gameObjType) => void, updateGamemodeDirectly?: boolean, storyId?: string, showDefault?: boolean }) {
 
-    const [gameModeViewing, gameModeViewingSet] = useState<"cross" | "match" | "pro" | "wordmean">()
+    const [gameModeViewing, gameModeViewingSet] = useState<"cross" | "match" | "pro" | "wordmean" | undefined>(showDefault ? "match" : undefined)
 
     const [showObjList, showObjListSet] = useState({
         "cross": true,

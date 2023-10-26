@@ -4,23 +4,11 @@ import { v4 as uuidv4 } from "uuid";
 import styles from "./style.module.css"
 import { gameObjType, gameSelectionTypes, matchupType, storyBoardType, updateGameModesParams } from "@/app/page";
 
-
-import {
-    DndContext,
-    DragOverlay,
-    closestCorners,
-    KeyboardSensor,
-    PointerSensor,
-    useSensor,
-    useSensors
-} from "@dnd-kit/core";
-
-import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import Container from "@/app/components/gamemodes/using/container";
 import { handleStoriesWhereGameOver } from "@/app/utility/savestorage";
 import DisplayGameOVer from "../useful/DisplayGameOver";
 import { useAtom } from "jotai";
 import { allServerFunctionsAtom } from "@/app/utility/globalState";
+import shuffle from "../useful/shuffleArray";
 
 
 export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGameModeLocally, updateGamemodeDirectly }: {
@@ -34,6 +22,7 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
     const [allServerFunctions,] = useAtom(allServerFunctionsAtom)
 
     const gameSelection = useRef<gameSelectionTypes>(gameObj?.gameSelection ?? "matchup")
+
     const boardObjId = useRef<string>(gameObj?.boardObjId ?? uuidv4())
 
     const [gameData, gameDataSet] = useState<matchupType>(() => {
@@ -47,14 +36,29 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
         return seenData ? { ...seenData } : { ...newObj }
     })
 
+    const tempQACombo = [
+        ["What is red?", "red ball"],
+        ["What is up", "the sky"],
+        ["Is an Apple a fruit?", "apple is fruit apple is fruit apple is fruit apple is fruit"],
+        ["Does an orange have acid", "orange three acids"]
+    ]
     const [questions, questionsSet] = useState<string[]>(() => {
-        return gameData.questionsArr ?? ["", "", "", ""]
+        // tempQACombo.map(e => e[0])
+        return gameData.questionsArr ?? [""]
     })
 
     const [choices, choicesSet] = useState<string[][]>(() => {
-        return gameData.choicesArr ?? questions.map(eachItem => {
-            return [""]
-        })
+        // tempQACombo.map(e => [e[1]]
+        return gameData.choicesArr ?? questions.map(e => [""])
+    })
+
+    const [gameFinishedState, gameFinishedStateSet] = useState<boolean>(() => {
+        if (!isEditing) {
+            const isGameOver = handleStoriesWhereGameOver(storyid!, boardObjId.current, "read")
+            return isGameOver!
+        } else {
+            return false
+        }
     })
 
     //handle top level sentgameobj change
@@ -89,66 +93,6 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
     }, [gameObj])
 
 
-
-
-    const [gameFinishedState, gameFinishedStateSet] = useState<boolean>(() => {
-        if (!isEditing) {
-            const isGameOver = handleStoriesWhereGameOver(storyid!, boardObjId.current, "read")
-            return isGameOver!
-        } else {
-            return false
-        }
-    })
-
-    const [userAnswers, userAnswersSet] = useState<string[][]>([])
-
-    const [activeId, setActiveId] = useState<null>();
-
-    const sensors = useSensors(
-        useSensor(PointerSensor),
-        useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates
-        })
-    );
-
-    const handleItemsWithChanges = () => {
-
-        //get all data, questions, choices, display em
-        let newItemObj: {
-            [key: string]: any
-        } = {
-
-        }
-
-        questions.forEach((eachQuestion, index) => {
-            newItemObj[`container${index}`] = []
-        })
-
-        const choicesStringArray: string[] = []
-
-        //flatten the array of arrays into 1 string array
-        choices.forEach((choiceStrArr, index) => {
-            choiceStrArr.forEach((strVal) => {
-
-                if (strVal !== "") {
-                    choicesStringArray.push(strVal)
-                }
-            })
-        })
-
-        //randomize string arrays
-        for (let i = choicesStringArray.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [choicesStringArray[i], choicesStringArray[j]] = [choicesStringArray[j], choicesStringArray[i]];
-        }
-
-        newItemObj["root"] = choicesStringArray
-
-        return { ...newItemObj }
-    }
-
-    const [items, setItems] = useState<any>(() => handleItemsWithChanges());
-
     function submit() {
         //local submit to parent make Story - saved to the storyTextboard
         const newGameMode: gameObjType = {
@@ -156,32 +100,175 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
             gameData: {
                 ...gameData,
                 choicesArr: choices,
-                questionsArr: questions //in future make gamedata work with choices and questions arr
+                questionsArr: questions
             },
             boardObjId: boardObjId.current
         }
 
         if (addGameModeLocally) {
             addGameModeLocally(newGameMode)
-            console.log(`$add ran`);
         }
 
         if (updateGamemodeDirectly && storyid) {
             allServerFunctions!.updateGameModes(newGameMode, storyid, "normal")
-            console.log(`$handle ran`);
+        }
+    }
+
+    //write change to local storage
+    const gameFinishedOnce = useRef(false)
+    useEffect(() => {
+        if (gameFinishedState) {
+            gameFinishedOnce.current = true
         }
 
-        //reset
-        // boardObjId.current = uuidv4()
-        // gameDataSet({
-        //     gameDataFor: "matchup",
-        //     choicesArr: null,
-        //     questionsArr: null
-        // })
-        // questionsSet(["", "", "", ""])
-        // choicesSet([[""], [""], [""], [""]])
+        if (gameFinishedOnce.current && !isEditing) {
+            handleStoriesWhereGameOver(storyid!, boardObjId.current, "update")
+        }
 
-    }
+    }, [gameFinishedState])
+
+    const questionInputMapCont = useRef<HTMLDivElement>(null)
+
+    return (
+        <div className={styles.gmMainDiv} style={{}}>
+            {isEditing ? (
+                <>
+                    <div ref={questionInputMapCont} className={`${styles.questionInputMapCont} niceScrollbar`}>
+                        {questions.map((temp, questionsIndex) => (
+                            <div className={styles.questionDiv} key={questionsIndex}>
+                                <div style={{ display: "flex", gap: ".7rem" }}>
+                                    <label>Question {questionsIndex + 1}</label>
+
+                                    <svg className={styles.deleteQuestion}
+                                        onClick={() => {
+                                            if (questions.length > 1) {
+                                                questionsSet(prevQuestions => {
+                                                    return prevQuestions.filter((eachQuestion, qindex) => qindex !== questionsIndex)
+                                                })
+
+                                                choicesSet(prevChoices => {
+                                                    return prevChoices.filter((eachStrArr, seeIn) => questionsIndex !== seeIn)
+                                                })
+                                            }
+                                        }}
+                                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
+                                </div>
+
+                                <input style={{ width: "100%" }} type='text' placeholder={`Enter Question ${questionsIndex + 1}`} value={questions[questionsIndex] ?? ""} onChange={(e) => {
+                                    questionsSet(prevQuestions => {
+                                        const newQuestions = [...prevQuestions]
+
+                                        newQuestions[questionsIndex] = e.target.value
+
+                                        return newQuestions
+                                    })
+                                }} />
+
+                                <div className={styles.choicesMapCont}>
+                                    {choices[questionsIndex]?.map((eachChoice, smallerIndex) => (
+                                        <div key={`${questionsIndex}${smallerIndex}`} className={styles.choiceInputDiv} style={{}}>
+                                            <input type='text' placeholder={`Choice ${smallerIndex + 1}`}
+                                                value={choices[questionsIndex][smallerIndex] ?? ""} onChange={(e) => {
+                                                    choicesSet(prevChoices => {
+                                                        const newChoices = prevChoices.map(e => {
+                                                            if (!e) e = []
+                                                            return e
+                                                        })
+
+                                                        newChoices[questionsIndex][smallerIndex] = e.target.value
+
+                                                        return newChoices
+                                                    })
+                                                }} />
+
+                                            <svg className={styles.deleteChoice}
+                                                onClick={() => {
+                                                    if (choices[questionsIndex].length > 1) {
+                                                        choicesSet(prevChoices => {
+                                                            const newChoices = prevChoices.map(e => {
+                                                                if (!e) e = []
+                                                                return e
+                                                            })
+                                                            newChoices[questionsIndex] = newChoices[questionsIndex].filter((each, eachInd) => eachInd !== smallerIndex)
+                                                            return newChoices
+                                                        })
+                                                    }
+                                                }}
+                                                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <button className='secondButton' onClick={() => {
+                                    choicesSet(prevArr => {
+                                        const updatedChoices = prevArr.map(e => e)
+                                        updatedChoices[questionsIndex] = [...updatedChoices[questionsIndex], ""]
+                                        return updatedChoices;
+                                    })
+
+                                }}>Add Choice</button>
+                            </div>
+                        ))}
+                    </div>
+
+                    <button className='secondButton' style={{ borderRadius: ".2rem" }} onClick={() => {
+
+                        questionsSet(prevQuestions => {
+                            const newQuestions = [...prevQuestions, ""]
+                            return newQuestions
+                        })
+
+
+                        choicesSet(prevArr => {
+                            const updatedChoices = [...prevArr, [""]]
+
+                            return updatedChoices;
+                        })
+
+                        setTimeout(() => {
+                            questionInputMapCont.current!.scrollLeft = questionInputMapCont.current!.scrollWidth - questionInputMapCont.current!.clientWidth
+                        }, 100)
+
+                    }}>Add Question</button>
+
+                    <DisplayMatchupGM questions={questions} choices={choices} isEditing={true} gameFinishedState={gameFinishedState} gameFinishedStateSet={gameFinishedStateSet} />
+
+                    <button onClick={submit}>Submit Gamemode</button>
+                </>
+            ) : (
+                <div >
+                    <DisplayMatchupGM questions={questions} choices={choices} gameFinishedState={gameFinishedState} gameFinishedStateSet={gameFinishedStateSet} />
+                </div>
+            )}
+
+        </div>
+    )
+
+}
+
+function DisplayMatchupGM({ questions, choices, isEditing = false, gameFinishedState, gameFinishedStateSet }: { questions: string[], choices: string[][], isEditing?: boolean, gameFinishedState: boolean, gameFinishedStateSet: React.Dispatch<React.SetStateAction<boolean>> }) {
+
+    const [userAnswers, userAnswersSet] = useState<string[][]>([])
+
+    const shuffledQuestions = useMemo(() => {
+        if (!isEditing) {
+            //final mode
+            return shuffle([...questions])
+        }
+
+        return questions
+    }, [questions])
+
+    const shuffledChoices = useMemo(() => {
+        const flattendedArr = [...[] as string[]].concat(...choices)
+
+        if (!isEditing) {
+            //final mode
+            return shuffle(flattendedArr)
+        }
+
+        return flattendedArr
+    }, [choices])
 
     function checkAnswers() {
 
@@ -209,343 +296,245 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
         }
     }
 
+
     function refreshGame() {
         gameFinishedStateSet(false)
-    }
+        userAnswersSet([])
 
-    function findContainer(id: any) {
-        if (id in items) {
-            return id;
-        }
+        questionsContainers.current.forEach(eachContainer => {
 
-        return Object.keys(items).find((key) => items[key].includes(id));
-    }
-
-    function handleDragStart(event: any) {
-        const { active } = event;
-        const { id } = active;
-
-        setActiveId(id);
-    }
-
-    function handleDragOver(event: any) {
-        const { active, over, draggingRect } = event;
-        const { id } = active;
-        const { id: overId } = over;
-
-        // console.log(`dragging ${id} over ${overId}`);
-        // Find the containers
-        const activeContainer = findContainer(id);
-        const overContainer = findContainer(overId);
-
-        if (
-            !activeContainer ||
-            !overContainer ||
-            activeContainer === overContainer
-        ) {
-            return;
-        }
-
-        setItems((prev: any) => {
-            const activeItems = prev[activeContainer];
-            const overItems = prev[overContainer];
-
-            // Find the indexes for the items
-            const activeIndex = activeItems.indexOf(id);
-            const overIndex = overItems.indexOf(overId);
-
-            let newIndex;
-            if (overId in prev) {
-                // We're at the root droppable of a container
-                newIndex = overItems.length + 1;
-            } else {
-                const isBelowLastItem =
-                    over &&
-                    overIndex === overItems.length - 1 &&
-                    draggingRect?.offsetTop > over.rect.offsetTop + over.rect.height;
-
-                const modifier = isBelowLastItem ? 1 : 0;
-
-                newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length + 1;
-            }
-
-            return {
-                ...prev,
-                [activeContainer]: [
-                    ...prev[activeContainer].filter((item: any) => item !== active.id)
-                ],
-                [overContainer]: [
-                    ...prev[overContainer].slice(0, newIndex),
-                    items[activeContainer][activeIndex],
-                    ...prev[overContainer].slice(newIndex, prev[overContainer].length)
-                ]
-            };
-        });
-    }
-
-    function handleDragEnd(event: any) {
-        const { active, over } = event;
-        const { id } = active; //id is the info it contains
-        const { id: overId } = over; //element already in the container 
-
-        const activeContainer = findContainer(id);
-        const overContainer = findContainer(overId);
-
-        const containerIndex = event.active.data.current.arrPos
-        const seenText = event.active.data.current.choiceText
-
-        if (containerIndex !== 4) {
-            //set it to my user answers arr
-            userAnswersSet((prevUsrAnwers) => {
-                const newArr = prevUsrAnwers.map(eachArr => eachArr)
-
-                //its empty
-                if (!newArr[containerIndex]) {
-                    newArr[containerIndex] = [seenText]
-                    return newArr
-
-                } else {
-                    const clearUsrAnsArr = newArr.map((eachStrArr, index) => {
-                        if (!eachStrArr) {
-                            return [""]
-
-                        } else {
-                            return eachStrArr.filter(eachStr => {
-                                if (eachStr !== seenText) {
-                                    return eachStr
-                                } else {
-                                    return ""
-                                }
-                            })
-                        }
-                    })
-
-                    clearUsrAnsArr[containerIndex] = [...clearUsrAnsArr[containerIndex], seenText]
-
-                    return clearUsrAnsArr
+            eachContainer.childNodes.forEach(eachNode => {
+                if (eachNode.nodeType === 1) {
+                    ogChoicesHolder.current!.appendChild(eachNode)
                 }
             })
-        }
+        })
 
-        if (
-            !activeContainer ||
-            !overContainer ||
-            activeContainer !== overContainer
-        ) {
-            return;
-        }
-
-        const activeIndex = items[activeContainer].indexOf(active.id);
-        const overIndex = items[overContainer].indexOf(overId);
-
-        if (activeIndex !== overIndex) {
-            setItems((items: any) => ({
-                ...items,
-                [overContainer]: arrayMove(items[overContainer], activeIndex, overIndex)
-            }));
-        }
-
-        setActiveId(null);
     }
 
-    useEffect(() => {
-        setItems(handleItemsWithChanges())
-    }, [questions, choices])
+    const seenOnPhone = useRef<boolean>(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
 
-    //write change to local storage
-    const gameFinishedOnce = useRef(false)
-    useEffect(() => {
-        if (gameFinishedState) {
-            gameFinishedOnce.current = true
+    const ogChoicesHolder = useRef<HTMLDivElement>(null)
+
+    const dragging = useRef<{ dx: number; dy: number } | null>(null);
+
+    const activePos = useRef<{ x: number, y: number } | undefined>()
+
+    //refs for each container
+    const questionsContainers = useRef<HTMLDivElement[]>([])
+    const addToQuestionsContainers = (e: HTMLDivElement | null, arrIndex: number) => {
+        if (e !== null) {
+            questionsContainers.current[arrIndex] = e
+        }
+    }
+
+    //refs for each word
+    const choiceDivs = useRef<HTMLDivElement[]>([])
+    const addToChoiceDivs = (e: HTMLDivElement | null, arrIndex: number) => {
+        if (e !== null) {
+            choiceDivs.current[arrIndex] = e
+        }
+    }
+
+    function start(event: React.PointerEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) {
+        event.preventDefault();
+
+        if (seenOnPhone.current) {
+            // console.log(`$hey started - touch`);
+
+            event = event as React.TouchEvent<HTMLDivElement>
+            const eventTouch = event.changedTouches?.[0]
+
+            let { x, y } = { x: eventTouch?.clientX ?? 0, y: eventTouch?.clientY ?? 0 };
+
+            activePos.current = { x: x, y: y }
+
+            dragging.current = { dx: x, dy: y };
+
+            const newEl = event.target as HTMLDivElement;
+            newEl.style.position = "fixed"
+            newEl.style.top = `${y}px`
+            newEl.style.left = `${x}px`
+            styleElMove(newEl, { x: 0, y: 0 })
+
+        } else {
+            event = event as React.PointerEvent<HTMLDivElement>
+
+            // console.log(`$hey started - Pointer`);
+
+            if (event.button! !== 0) return; // left button only
+
+            let { x, y } = { x: event.clientX, y: event.clientY };
+
+            activePos.current = { x: x, y: y }
+
+            dragging.current = { dx: x, dy: y };
+
+            const newEl = event.target as HTMLDivElement;
+            newEl.setPointerCapture(event.pointerId!);
+
+            newEl.style.position = "fixed"
+            newEl.style.top = `${y}px`
+            newEl.style.left = `${x}px`
+            styleElMove(newEl, { x: 0, y: 0 })
+        }
+    }
+
+    function end(event: React.PointerEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) {
+
+        const seenWordEl = event.target as HTMLDivElement
+
+        if (seenOnPhone.current) {
+            // console.log(`$ended for touch`);
+            dragging.current = null;
+            findClosestElement(seenWordEl)
+
+            seenWordEl.style.position = "relative"
+            seenWordEl.style.translate = "0 0"
+            seenWordEl.style.top = `${0}px`
+            seenWordEl.style.left = `${0}px`
+
+        } else {
+            // console.log(`$ended for pointer`);
+            dragging.current = null;
+            findClosestElement(seenWordEl)
+
+            seenWordEl.style.position = "relative"
+            seenWordEl.style.translate = "0 0"
+            seenWordEl.style.top = `${0}px`
+            seenWordEl.style.left = `${0}px`
+        }
+    }
+
+    const findClosestElement = (seenWordEl: HTMLDivElement) => {
+        //get closest element
+        questionsContainers.current.forEach((eachContDiv, eachContDivIndex) => {
+            const { left, right, top, bottom } = eachContDiv.getBoundingClientRect()
+
+            if (activePos.current!.x >= left && activePos.current!.x <= right) {
+                if (activePos.current!.y >= top && activePos.current!.y <= bottom) {
+
+                    eachContDiv.insertBefore(seenWordEl, eachContDiv.children[0]);
+
+                    userAnswersSet(prevUserAns => {
+
+                        if (!prevUserAns[eachContDivIndex]) prevUserAns[eachContDivIndex] = []
+
+                        //filter from array
+                        const filteredArr = prevUserAns.map(eachStrArr => {
+                            return eachStrArr.filter(eachStr => eachStr !== seenWordEl.innerText)
+                        })
+
+                        filteredArr[eachContDivIndex] = [seenWordEl.innerText, ...filteredArr[eachContDivIndex]]
+
+                        return filteredArr
+                    })
+                }
+            }
+        })
+    }
+
+    function move(event: React.PointerEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) {
+        event.preventDefault();
+
+        if (!dragging.current) return
+
+
+        if (seenOnPhone.current) {
+            // console.log(`$moving touch`);
+            event = event as React.TouchEvent<HTMLDivElement>
+
+            if (!event.changedTouches) return
+
+            const eventTouch = event.changedTouches[0]
+
+            let { x, y } = { x: eventTouch.clientX, y: eventTouch.clientY };
+
+            activePos.current = { x: x, y: y }
+
+            if (!dragging.current) dragging.current = { dx: x - 1, dy: y - 1 }
+            const activeOffset = { x: dragging.current!.dx - x, y: dragging.current!.dy - y }
+            activeOffset.x *= -1
+            activeOffset.y *= -1
+
+            styleElMove(event.target as HTMLDivElement, { ...activeOffset })
+        } else {
+            // console.log(`$moving pointer`);
+            event = event as React.PointerEvent<HTMLDivElement>
+
+            let { x, y } = { x: event.clientX, y: event.clientY };
+
+            activePos.current = { x: x, y: y }
+
+            if (!dragging.current) dragging.current = { dx: x - 1, dy: y - 1 }
+            const activeOffset = { x: dragging.current!.dx - x, y: dragging.current!.dy - y }
+            activeOffset.x *= -1
+            activeOffset.y *= -1
+            styleElMove(event.target as HTMLDivElement, { ...activeOffset })
         }
 
-        if (gameFinishedOnce.current && !isEditing) {
-            handleStoriesWhereGameOver(storyid!, boardObjId.current, "update")
-        }
+    }
 
-    }, [gameFinishedState])
-
+    const styleElMove = (element: HTMLDivElement, position: { x: number, y: number }) => {
+        position.x -= element.clientWidth / 2
+        position.y -= element.clientHeight / 2
+        element.style.translate = `${position.x}px ${position.y}px`
+    }
 
     return (
-        <div className={styles.gmMainDiv} style={{}}>
-
-            {isEditing ? (
-                <>
-                    {questions.map((temp, index) => (
-                        <div className={styles.questionCont} key={index}>
-                            <div style={{ display: "flex", gap: ".7rem" }}>
-                                <label>Question {index + 1}</label>
-
-                                <svg className={styles.deleteQuestion}
-                                    onClick={() => {
-                                        if (questions.length > 1) {
-                                            questionsSet(prevQuestions => {
-                                                return prevQuestions.filter((eachQuestion, qindex) => qindex !== index)
-                                            })
-
-                                            choicesSet(prevChoices => {
-                                                return prevChoices.filter((eachStrArr, seeIn) => index !== seeIn)
-                                            })
-                                        }
-                                    }}
-                                    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
+        <div className={styles.displayMathcupMainDiv} style={{}}>
+            <DisplayGameOVer gameOver={gameFinishedState}>
+                <div className={styles.questionsGrid} style={{}}>
+                    {shuffledQuestions?.map((eachQuestion, questionContIndex) => {
+                        return (
+                            <div key={questionContIndex} className={styles.eachQuestionCont} ref={(e) => { addToQuestionsContainers(e, questionContIndex) }}>
+                                {eachQuestion}
                             </div>
-                            <input style={{ width: "100%" }} type='text' placeholder={`Enter Question ${index + 1}`} value={questions[index]} onChange={(e) => {
-                                questionsSet(prevQuestions => {
-                                    const newQuestions = [...prevQuestions]
-
-                                    newQuestions[index] = e.target.value
-
-                                    return newQuestions
-                                })
-                            }} />
-
-
-
-                            {choices && choices[index] && (
-                                <>
-                                    <div className={styles.choicesDivCont}>
-                                        {choices[index].map((choice, smallerIndex) => (
-                                            <div key={`${index}${smallerIndex}`} style={{ display: "flex", gap: ".5rem" }}>
-                                                <input type='text' placeholder={`Answer ${smallerIndex + 1}`}
-                                                    value={choices[index][smallerIndex]} onChange={(e) => {
-                                                        choicesSet(prevChoices => {
-                                                            const newChoices = [...prevChoices]
-
-                                                            newChoices[index][smallerIndex] = e.target.value
-
-                                                            return newChoices
-                                                        })
-                                                    }} />
-
-                                                <svg className={styles.deleteChoice}
-                                                    onClick={() => {
-                                                        if (choices[index].length > 1) {
-                                                            choicesSet(prevChoices => {
-                                                                const newChoices = prevChoices.map(e => e)
-                                                                newChoices[index] = newChoices[index].filter((each, eachInd) => eachInd !== smallerIndex)
-                                                                return newChoices
-                                                            })
-                                                        }
-                                                    }}
-                                                    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
-
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <button className='secondButton' onClick={() => {
-
-                                        choicesSet(prevArr => {
-                                            const updatedChoices = [...prevArr]
-                                            updatedChoices[index] = [...updatedChoices[index], ""]
-
-                                            return updatedChoices;
-                                        })
-
-                                    }}>Add Answer</button>
-                                </>
-                            )}
-                        </div>
-                    ))
-                    }
-
-                    <button className='secondButton' style={{ borderRadius: ".2rem" }} onClick={() => {
-
-                        questionsSet(prevQuestions => {
-                            const newQuestions = [...prevQuestions, ""]
-                            return newQuestions
-                        })
-
-
-                        choicesSet(prevArr => {
-                            const updatedChoices = [...prevArr, [""]]
-
-                            return updatedChoices;
-                        })
-
-                    }}>Add Question</button>
-
-                    <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCorners}
-                        onDragStart={handleDragStart}
-                        onDragOver={handleDragOver}
-                        onDragEnd={handleDragEnd}
-                    >
-                        <div style={{
-                            display: "grid",
-                            gridTemplateColumns: "1fr 1fr",
-                        }}>
-
-                            {questions?.map((eachQuestion, index) => {
-
-                                return (
-                                    <Container key={index} id={`container${index}`} items={items[`container${index}`]} arrPos={index} questionAsked={eachQuestion} />
-                                )
-                            })}
-                        </div>
-                        <Container id="root" items={items.root} arrPos={4} />
-
-                    </DndContext>
-
-                    {gameFinishedState ? (
-                        <button className='secondButton' onClick={refreshGame}>Game Finished - refresh?</button>
-                    ) : (
-                        <button className='secondButton' onClick={checkAnswers}>Check Answers</button>
-                    )}
-
-                    <button onClick={submit}>Submit Gamemode</button>
-
-                </>
-            ) : (
-
-
-                <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-                    <div style={{ flex: 1 }}>
-                        <DisplayGameOVer gameOver={gameFinishedState}>
-
-                            <DndContext
-                                sensors={sensors}
-                                collisionDetection={closestCorners}
-                                onDragStart={handleDragStart}
-                                onDragOver={handleDragOver}
-                                onDragEnd={handleDragEnd}
-                            >
-
-                                <div style={{
-                                    display: "grid",
-                                    gridTemplateColumns: "50% 50%",
-                                    maxWidth: "100dvw",
-
-                                }}>
-                                    {questions!.map((eachQuestion, index) => {
-                                        return (
-                                            <Container key={index} id={`container${index}`} items={items[`container${index}`]} arrPos={index} questionAsked={eachQuestion} />
-                                        )
-                                    })}
-                                </div>
-                                <Container id="root" items={items.root} arrPos={4} />
-
-                            </DndContext>
-
-                        </DisplayGameOVer>
-                    </div>
-
-                    <div>
-                        {gameFinishedState ? (
-                            <button className='secondButton' onClick={refreshGame}>Game Finished - refresh?</button>
-                        ) : (
-                            <button className='secondButton' onClick={checkAnswers}>Check Answers</button>
-                        )}
-                    </div>
-
+                        )
+                    })}
                 </div>
-            )
-            }
+
+                <div className={styles.choiceDisplayMapCont} ref={ogChoicesHolder}>{shuffledChoices.map((eachChoice, eachChoiceIndex) => {
+                    return (
+                        <div className={styles.eachChoice} key={eachChoiceIndex} ref={(e) => { addToChoiceDivs(e, eachChoiceIndex) }}
+
+                            onPointerDown={(e) => {
+                                if (!seenOnPhone.current) {
+                                    start(e)
+                                }
+                            }}
+                            onPointerMove={(e) => {
+                                if (!seenOnPhone.current) {
+                                    move(e)
+                                }
+                            }}
+                            onPointerUp={(e) => {
+                                if (!seenOnPhone.current) {
+                                    end(e)
+                                }
+                            }}
+                            onPointerCancel={(e) => {
+                                if (!seenOnPhone.current) {
+                                    end(e)
+                                }
+                            }}
+
+                            //handles mobile actions
+                            onTouchStart={start}
+                            onTouchMove={move}
+                            onTouchEnd={end}
+                            onTouchCancel={end}>{eachChoice}</div>
+                    )
+                })}
+                </div>
+            </DisplayGameOVer>
+
+            {gameFinishedState ? (
+                <button className='secondButton' onClick={refreshGame}>Game Finished - refresh?</button>
+            ) : (
+                <button className='secondButton' onClick={checkAnswers}>Check Answers</button>
+            )}
         </div>
     )
-
 }
-
 

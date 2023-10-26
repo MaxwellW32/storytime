@@ -164,3 +164,18 @@ body {
 body::-webkit-scrollbar {
   display: none;
 }
+
+.niceScrollbar::-webkit-scrollbar {
+  height: 5px;
+  width: 5px;
+  border-radius: 1rem;
+}
+
+.niceScrollbar::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 1rem;
+}
+
+.niceScrollbar::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

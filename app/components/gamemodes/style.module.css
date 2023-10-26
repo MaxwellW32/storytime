@@ -90,6 +90,17 @@
     gap: 1rem;
     padding: .5rem 0 .5rem 0;
     border-radius: 1rem;
+    width: 100%;
+}
+
+.questionInputMapCont {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 100%;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    background-color: #bbb;
 }
 
 .gmMainDiv label {
@@ -97,11 +108,15 @@
     margin: .2rem 0 .2rem 0;
 }
 
-.questionCont svg {
+.questionDiv {
+    scroll-snap-align: start;
+}
+
+.questionDiv svg {
     cursor: pointer;
 }
 
-.questionCont svg:hover {
+.questionDiv svg:hover {
     scale: 1.05;
 }
 
@@ -118,15 +133,70 @@
     fill: gold
 }
 
-.questionCont {
+.questionDiv {
     padding: .5rem;
 }
 
-.choicesDivCont {
+.choicesMapCont {
     display: flex;
     column-gap: 1rem;
     flex-wrap: wrap;
 }
+
+.choiceInputDiv {
+    display: flex;
+    gap: .5rem;
+}
+
+
+.displayMathcupMainDiv {
+    background-color: #eee;
+}
+
+.questionsGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 30dvh 30dvh;
+    padding: 1rem;
+    gap: 1rem;
+    text-align: center;
+}
+
+.eachQuestionCont {
+    background-color: #ddd;
+    border-radius: .5rem;
+    overflow-y: auto;
+    display: grid;
+    justify-items: center;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+
+.choiceDisplayMapCont {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    align-items: flex-start;
+    padding: 1rem;
+    background-color: #bbb;
+}
+
+.eachChoice {
+    padding: 1rem;
+    background-color: var(--primaryColor);
+    border-radius: .7rem;
+    max-width: 200px;
+    text-align: center;
+    cursor: move;
+}
+
+
+
+
+
 
 
 
