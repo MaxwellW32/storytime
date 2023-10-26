@@ -331,6 +331,24 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
 
     const [contentMaking, contentMakingSet] = useState<"story" | "gamemode">("story")
 
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const itemsPerPage = 10
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const paginatedStoryBoard = storyBoards?.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(storyBoards?.length ?? 1 / itemsPerPage);
+
+    const handleNext = () => {
+        setCurrentPage(currentPage + 1);
+    };
+
+    const handlePrev = () => {
+        setCurrentPage(currentPage - 1);
+    };
+
+
     return (
         <div className={styles.makeStoryMainDiv}>
             <button style={{ margin: ".5rem .5rem 0 auto" }}
@@ -343,7 +361,7 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
 
                 }}>Cancel</button>
 
-            <h3 style={{ color: "#fff", textAlign: "center" }}>Lets make a wonderful story</h3>
+            <h3 style={{ color: "#fff", textAlign: "center" }}>Let&apos;s make a wonderful story</h3>
 
             <div className={styles.makeStoryLabelInputCont}>
                 <label htmlFor='msTitle'>Title</label>
@@ -369,16 +387,17 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
             <div>
                 {/* make gamemode / make story switch */}
                 <button onClick={() => { contentMakingSet("story") }}>Make Story</button>
-                <button onClick={() => { contentMakingSet("gamemode") }} style={{ opacity: storyBoards !== null ? 1 : 0, userSelect: storyBoards !== null ? "auto" : "none" }}>Make Gamemode</button>
+                <button onClick={() => { contentMakingSet("gamemode") }} style={{ opacity: storyBoards !== null ? 1 : 0, userSelect: storyBoards !== null ? "auto" : "none" }}>Add Gamemodes</button>
             </div>
 
             <div className={styles.editCont}>
                 <div style={{ display: contentMaking === "story" ? "block" : "none" }} className={styles.storyContent}>
                     <h3 style={{ color: "#fff", textAlign: "center" }}>Story Board</h3>
-                    <div style={{ margin: "0 auto" }}>
-                        <p style={{ color: "#fff", textAlign: "center" }}>Make new paragraph after {regNewLineLimit} {regNewLineLimit === 1 ? "linebreak" : "linebreaks"}</p>
 
-                        <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
+                    <div style={{ margin: "0 auto" }}>
+
+                        <div style={{ fontSize: ".6em", display: "grid", gap: ".2rem", justifyContent: "center", textAlign: "center", gridTemplateColumns: "70px 70px", rowGap: ".2rem", marginBottom: ".2rem" }}>
+                            <p style={{ gridColumn: "span 2", color: "#fff", textAlign: "center" }}>New Paragraph After {regNewLineLimit} {regNewLineLimit === 1 ? "Linebreak" : "Linebreaks"}</p>
                             <button onClick={() => {
                                 regNewLineLimitSet(prev => {
                                     const newNum = prev - 1
@@ -398,24 +417,28 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                         </div>
                     </div>
 
-
                     {!storyBoards ? (
                         <>
-                            <textarea className={styles.textAreaEdit} style={{ width: "100%", }} placeholder='Enter your story - image and Youtube links will be loaded automaitcally' value={preProcessedText}
-
+                            <textarea className={styles.textAreaEdit} style={{ width: "100%", }} placeholder='Enter your story! Image and Youtube links will be automaitcally processed' value={preProcessedText}
                                 onChange={(e) => {
                                     e.target.style.height = 'auto';
                                     e.target.style.height = e.target.scrollHeight + 'px';
 
                                     preProcessedTextSet(e.target.value)
                                 }} />
+
                             <button disabled={preProcessedText === ""} onClick={() => { convertTextToStoryBoards(preProcessedText) }}>{preProcessedText ? "Process" : "Enter text to Process"}</button>
                         </>
                     ) : (
 
                         <>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                            <div style={{ display: "grid", marginTop: "1rem", gridTemplateColumns: "1fr 1fr 1fr", color: "var(--textColorAnti)", textAlign: "center", alignItems: "center", justifyItems: "center" }}>
+                                <button onClick={handlePrev} style={{ opacity: currentPage === 1 ? 0 : 1 }} disabled={currentPage === 1}>Previous Page</button>
+                                <h3>Page {currentPage}</h3>
+                                <button onClick={handleNext} style={{ opacity: currentPage === totalPages ? 0 : 1 }} disabled={currentPage === totalPages}>Next Page</button>
+                            </div>
 
+                            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                                 {/* if no storyboards still show options to add */}
                                 {storyBoards.length === 0 && (
                                     <div style={{ display: 'flex', flexWrap: "wrap" }}>
@@ -430,31 +453,29 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                                         <button onClick={() => {
                                             addSpecificStoryToBoard(0, "newvideo")
                                         }}>add new youtube</button>
-
-
                                     </div>
                                 )}
 
-                                {storyBoards.map((eachElemnt, index) => {
+                                {paginatedStoryBoard?.map((eachElemnt, eachElemntIndex) => {
                                     return (
-                                        <div key={index} tabIndex={0} className={styles.addMore}>
+                                        <div key={eachElemnt.boardObjId} tabIndex={0} className={styles.addMore}>
                                             <svg className={styles.deleteBoardBttn} onClick={() => {
-                                                deleteBoardAtIndex(index)
+                                                deleteBoardAtIndex(eachElemntIndex)
                                             }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
 
                                             {eachElemnt.boardType === "text" ? (
 
-                                                <textarea key={uuidv4()} className={styles.textAreaEdit2} defaultValue={eachElemnt.storedText ?? ""} ref={(e: HTMLTextAreaElement) => { addToTextAreaRefs(e, index) }}
+                                                <textarea key={eachElemntIndex} className={styles.textAreaEdit2} defaultValue={eachElemnt.storedText ?? ""} ref={(e: HTMLTextAreaElement) => { addToTextAreaRefs(e, eachElemntIndex) }}
                                                     onInput={(e) => {
                                                         const el = e.target as HTMLTextAreaElement
                                                         el.style.height = 'auto';
                                                         el.style.height = el.scrollHeight + 'px';
                                                     }}
                                                     onBlur={(e) => {
-                                                        const seenTextObj = storyBoards[index] as textType
+                                                        const seenTextObj = storyBoards[eachElemntIndex] as textType
 
                                                         if (e.target.value !== seenTextObj.storedText) {
-                                                            convertTextToStoryBoards(e.target.value, index)
+                                                            convertTextToStoryBoards(e.target.value, eachElemntIndex)
                                                         }
                                                     }} />
 
@@ -467,36 +488,38 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
 
                                             <div className={styles.bttnHolder}>
                                                 <button onClick={() => {
-                                                    addSpecificStoryToBoard(index, "newstring")
+                                                    addSpecificStoryToBoard(eachElemntIndex, "newstring")
                                                 }}>add new text</button>
                                                 <button onClick={() => {
-                                                    addSpecificStoryToBoard(index, "newimage")
+                                                    addSpecificStoryToBoard(eachElemntIndex, "newimage")
                                                 }}
 
                                                 >add new image</button>
                                                 <button onClick={() => {
-                                                    addSpecificStoryToBoard(index, "newvideo")
+                                                    addSpecificStoryToBoard(eachElemntIndex, "newvideo")
                                                 }}>add new youtube</button>
-
-
                                             </div>
                                         </div>
                                     )
                                 })}
+                            </div>
 
+                            <div style={{ display: "grid", marginTop: "1rem", gridTemplateColumns: "1fr 1fr 1fr", color: "var(--textColorAnti)", textAlign: "center", alignItems: "center", justifyItems: "center" }}>
+                                <button onClick={handlePrev} style={{ opacity: currentPage === 1 ? 0 : 1 }} disabled={currentPage === 1}>Previous Page</button>
+                                <h3>Page {currentPage}</h3>
+                                <button onClick={handleNext} style={{ opacity: currentPage === totalPages ? 0 : 1 }} disabled={currentPage === totalPages}>Next Page</button>
                             </div>
                         </>
                     )}
-
                 </div>
 
                 <div style={{ display: contentMaking === "gamemode" ? "block" : "none" }} className={styles.gamemodeContent}>
                     <GamemodeMaker addGameModeLocally={addGameModeLocally} showDefault={true} />
 
-                    <div style={{ marginTop: "6rem" }}>
-                        <p>Gamemodes added</p>
+                    <div className={styles.makestoryDisplayGamemodes}>
+                        {gameModes !== null && gameModes!.length > 0 && <h3 style={{ color: "white" }}>Gamemodes added</h3>}
 
-                        {gameModes?.map((eachGameObj, index) => {
+                        {gameModes?.map((eachGameObj, eachGameObjIndex) => {
                             let chosenEl: JSX.Element | null = null
 
                             if (eachGameObj.gameSelection === "matchup") {
@@ -511,12 +534,12 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
 
 
                             return (
-                                <div key={uuidv4()}>
-                                    <p onClick={() => {
+                                <div key={eachGameObjIndex} className={styles.makeStoryEachGamemode}>
+                                    <svg onClick={() => {
                                         gameModesSet(prevGameModes => {
-                                            return prevGameModes!.filter((e, eindex) => eindex !== index)
+                                            return prevGameModes!.filter((e, eindex) => eindex !== eachGameObjIndex)
                                         })
-                                    }}>x</p>
+                                    }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
                                     {chosenEl}
                                 </div>
                             )
@@ -526,7 +549,7 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                 </div>
             </div>
 
-            <button style={{ marginTop: "4rem" }} onClick={handleSubmit}>Submit</button>
+            <button style={{ marginBlock: "1.5rem", marginLeft: "1rem" }} onClick={handleSubmit}>Submit Story!</button>
         </div>
     )
 }

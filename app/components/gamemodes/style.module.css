@@ -19,6 +19,7 @@
     margin: 0 auto;
     aspect-ratio: 1/1;
     height: 50dvh;
+    user-select: none;
 
 }
 
@@ -168,7 +169,7 @@
     overflow-y: auto;
     display: grid;
     justify-items: center;
-    align-items: center;
+    align-items: flex-start;
     gap: 1rem;
     padding: 1rem;
 }
@@ -240,7 +241,6 @@
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
-    overflow-x: hidden;
 }
 
 .wordMeaningMapCont::-webkit-scrollbar {

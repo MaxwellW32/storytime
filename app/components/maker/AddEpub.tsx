@@ -37,7 +37,6 @@ export default function AddEpubFile({ convertTextToStoryBoards }: { convertTextT
                 const chapters = await getChaptersFromEpub(fileContent);
                 const newString = chapters.join('\n\n\n');
 
-                console.log(newString);
                 convertTextToStoryBoards(newString, 0)
             };
 
@@ -50,7 +49,7 @@ export default function AddEpubFile({ convertTextToStoryBoards }: { convertTextT
     return (
         <div>
             <input type="file" ref={inputRef} />
-            <button onClick={handleFileSubmit}>Submit</button>
+            <button onClick={handleFileSubmit}>Add Ebook</button>
         </div>
     )
 }

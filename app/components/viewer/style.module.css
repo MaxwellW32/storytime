@@ -1,10 +1,11 @@
 /* view story */
 .titleCont {
     display: grid;
-    align-items: flex-start;
-    gap: 1rem;
-    grid-template-columns: 3fr 2fr 1fr;
-    justify-items: flex-start;
+    align-items: center;
+    gap: 1.5rem;
+    grid-template-columns: 2fr 1fr auto;
+    justify-items: center;
+
 }
 
 .descText {

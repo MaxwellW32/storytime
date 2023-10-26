@@ -32,7 +32,7 @@ export default function Home({ allstories, getStories, newAllStory, updateStory,
         <main className={styles.homeDiv}>
 
             {makingStory ? <MakeStory makingStorySet={makingStorySet} />
-                : (<button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => { makingStorySet(true) }}>Add a Story</button>)
+                : (<button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => { makingStorySet(true) }}>Add A Story</button>)
             }
 
             {allstories?.map((eachStory: StoryData) => (

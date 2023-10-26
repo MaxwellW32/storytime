@@ -79,7 +79,6 @@
 
 
 .storyContent {
-    background-color: purple;
     width: 100%;
 }
 
@@ -100,8 +99,26 @@
 
 }
 
+.makestoryDisplayGamemodes {
+    display: grid;
+    gap: 2rem;
+}
+
+.makestoryDisplayGamemodes>div {
+    display: grid;
+}
 
 
+.makeStoryEachGamemode>svg {
+    aspect-ratio: 1/1;
+    fill: white;
+    width: 2rem;
+    transition: rotate 600ms;
+}
+
+.makeStoryEachGamemode>svg:hover {
+    rotate: 180deg;
+}
 
 @media screen and (max-width: 500px) {
 

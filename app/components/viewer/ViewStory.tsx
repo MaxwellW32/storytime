@@ -115,23 +115,20 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
             {editClicked && <MakeStory shouldUpdateStory={true} passedData={fullData} editClickedSet={editClickedSet} />}
 
             <div className={styles.titleCont}>
-
-                <h3>{fullData.title}</h3>
+                <h3 style={{ justifySelf: "flex-start" }}>{fullData.title}</h3>
 
                 <div className="flex flex-col gap-1 items-center">
                     <DisplayStars starRating={fullData.amtofratings > 0 ? fullData.rating / fullData.amtofratings : undefined} />
                 </div>
 
-                <div style={{ display: "flex", gap: "1rem" }}>
-                    <button onClick={() => {
-                        readingSet(true)
-                    }}> Let&apos;s Read </button>
+                <div style={{ display: "grid", gap: "1rem", gridAutoFlow: "column", gridTemplateColumns: "1fr 20px" }}>
                     {!userTriedToDelete ? (
-
-                        <svg style={{ fill: "var(--secondaryColor)" }} onClick={() => { userTriedToDeleteSet(true) }} xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512"><path d="M64 32C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64H64zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z" /></svg>
-
+                        <>
+                            <button onClick={() => { readingSet(true) }}> Let&apos;s Read </button>
+                            <svg style={{ fill: "var(--secondaryColor)" }} onClick={() => { userTriedToDeleteSet(true) }} xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512"><path d="M64 32C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64H64zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z" /></svg>
+                        </>
                     ) : (
-                        <div >
+                        <div>
                             <p>Are you sure you want to delete?</p>
                             <div style={{ display: "flex", width: "100%", justifyContent: "center", gap: ".5rem", marginTop: ".5rem" }}>
                                 <button onClick={() => {
@@ -143,9 +140,7 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
                                 }}>No</button>
                             </div>
                         </div>
-
                     )}
-
                 </div>
             </div>
 
@@ -168,11 +163,22 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
             {reading && (
                 <div className={styles.readingArea} style={{ gridTemplateColumns: gameModesShowing ? "1fr 1fr" : "1fr" }}>
                     <div>
-                        <p style={{ position: "absolute", top: 0, right: 0, margin: "1rem", scale: .8 }} onClick={() => { canPlayAudioSet(prev => !prev) }}>{canPlayAudio ? "Pause Music" : "Play"}</p>
+                        <span style={{ width: "1rem", aspectRatio: "1/1", position: "absolute", right: 0, margin: "1rem" }} onClick={() => { canPlayAudioSet(prev => !prev) }}>
+                            {canPlayAudio ? (
+                                <>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48H80c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H48zm192 0c-26.5 0-48 21.5-48 48V400c0 26.5 21.5 48 48 48h32c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H240z" /></svg>
+                                </>
+                            ) : (
+                                <>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z" /></svg>
+                                </>)
+                            }
+                        </span>
 
                         <span style={{ display: "flex", gap: ".5rem", alignItems: "center", padding: ".5rem" }}>
-                            <button style={{}} onClick={() => { readingSet(false) }}>close</button>
-                            {true && <button style={{}} onClick={() => { gameModesShowingSet(true) }}>Play Some Games</button>}
+                            <button style={{}} onClick={() => { readingSet(false) }}>Close</button>
+
+                            {true && <button style={{}} onClick={() => { gameModesShowingSet(true) }}>Story Games</button>}
                         </span>
 
                         <h3 style={{ textAlign: "center", fontSize: "2rem" }}>{fullData.title}</h3>
