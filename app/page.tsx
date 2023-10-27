@@ -6,12 +6,7 @@ import saveDataToFile from "./utility/TempDb";
 
 const prisma = new PrismaClient()
 
-const cantDeleteList = false ? [
-  '873d3425-0c04-4d1c-b204-383b190823b3',
-  '9ccd61b1-d75a-41fd-a28e-7b53977441ef',
-  'a1a9f994-8516-478f-b37b-ae4ed5793336',
-  'da8cd1c6-2aa2-443d-911e-07678ead954b',
-] : []
+
 
 //if you're using maker its new
 
@@ -21,52 +16,77 @@ const cantDeleteList = false ? [
 async function updateStory(option: "story" | "likes" | "rating", seenStory: StoryData) {
   "use server";
 
-  if (option === "story") {
-    if (cantDeleteList.includes(seenStory.storyid)) {
-      console.log(`$protected gamemode, cant delete / update`);
-      return
+  let responseObj = {
+    message: "",
+  }
+
+  try {
+    if (option === "story") {
+
+      let checkStory = await prisma.story.findUnique(
+        {
+          where: {
+            storyid: seenStory.storyid,
+          },
+        }
+      )
+
+      if (!checkStory) {
+        responseObj.message += "Couldn't read records |"
+        return responseObj
+      }
+
+      if (checkStory.storypass !== seenStory.storypass) {
+        responseObj.message += "Wrong Password |"
+        return responseObj
+      }
+
+      const savableStory: story = { ...seenStory, storyboard: seenStory.storyboard !== null ? JSON.stringify(seenStory.storyboard) : null, gamemodes: seenStory.gamemodes !== null ? JSON.stringify(seenStory.gamemodes) : null, storypass: checkStory.storypass }
+
+      await prisma.story.update({
+        where: {
+          storyid: seenStory.storyid,
+        },
+        data: savableStory,
+      })
+
+    } else if (option === "likes") {
+      await prisma.story.update({
+        where: {
+          storyid: seenStory.storyid,
+        },
+        data: {
+          likes: {
+            increment: 1
+          }
+        },
+      })
+
+    } else if (option === "rating") {
+
+      await prisma.story.update({
+        where: {
+          storyid: seenStory.storyid,
+        },
+        data: {
+          rating: {
+            increment: seenStory.rating
+          },
+          amtofratings: {
+            increment: 1
+          }
+
+        },
+      })
     }
 
-    const savableStory: story = { ...seenStory, storyboard: seenStory.storyboard !== null ? JSON.stringify(seenStory.storyboard) : null, gamemodes: seenStory.gamemodes !== null ? JSON.stringify(seenStory.gamemodes) : null }
-
-    await prisma.story.update({
-      where: {
-        storyid: seenStory.storyid,
-      },
-      data: savableStory,
-    })
-
-
-  } else if (option === "likes") {
-    await prisma.story.update({
-      where: {
-        storyid: seenStory.storyid,
-      },
-      data: {
-        likes: {
-          increment: 1
-        }
-      },
-    })
-  } else if (option === "rating") {
-
-    await prisma.story.update({
-      where: {
-        storyid: seenStory.storyid,
-      },
-      data: {
-        rating: {
-          increment: seenStory.rating
-        },
-        amtofratings: {
-          increment: 1
-        }
-
-      },
-    })
+  } catch (error) {
+    responseObj.message = "something else went wrong |"
   }
 
   revalidatePath("/")
+
+  return responseObj
 }
 
 export type updateGameModesParams = (sentGameModeObj: gameObjType, storyId: string, option: "normal" | "delete") => Promise<void>
@@ -172,12 +192,6 @@ async function newAllStory(newStoriesArr: StoryData[]) {
 async function deleteStory(seenId: string) {
   "use server";
 
-  if (cantDeleteList.includes(seenId)) {
-    console.log(`$protected gamemode, cant delete / update`);
-    return
-  }
-
-
   await prisma.story.delete({
     where: { storyid: seenId },
   });
@@ -220,7 +234,10 @@ async function getStories() {
           eachstory.gamemodes = JSON.parse(eachstory.gamemodes)
         }
 
+        eachstory.storypass = ""
+
         return eachstory
+
       }) as StoryData[]
 
     }
@@ -232,13 +249,13 @@ async function getStories() {
 
 }
 
-
 export default async function page() {
   let stories = await getStories()
 
   if (!stories) {
     return <p>Loading Up Stories...</p>
   }
+
 
   return (
     <>
@@ -247,7 +264,8 @@ export default async function page() {
   )
 }
 
-
+//prisma has all final types of expected data - good for reading
+//make a dataype to show what can be sent to prisma - undefined null
 
 export interface textType { //default add
   boardObjId: string,
@@ -281,6 +299,7 @@ export type storyBoardType = videoType | imageType | textType
 
 export interface StoryData {//story is raw from database, storydata is what is usable
   title: string;
+  storypass: string,
   storyid: string;
   createdat: Date;
   likes: number;
@@ -294,18 +313,17 @@ export interface StoryData {//story is raw from database, storydata is what is u
 
 export interface StoryDataSend {
   title: string,
-
+  storypass: string,
   storyid: string | undefined, //will give a value if undefined
   createdat: Date | undefined,
   likes: number | undefined,
   rating: number | undefined;
   amtofratings: number | undefined;
 
-  storyboard: string | null, //send as string to be saved
+  storyboard: string | null,
   gamemodes: string | null,
   backgroundaudio: string | null,
   shortdescription: string | null,
-
 }
 
 

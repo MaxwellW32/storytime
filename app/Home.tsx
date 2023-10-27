@@ -10,7 +10,7 @@ import { useAtom } from "jotai";
 
 
 
-export default function Home({ allstories, getStories, newAllStory, updateStory, newStory, deleteStory, updateGameModes }: { allstories: StoryData[],getStories(): Promise<StoryData[] | undefined>, updateStory: (option: "story" | "likes" | "rating", seeBoard: StoryData) => Promise<void>, newStory: (newStory: StoryDataSend) => Promise<void>, deleteStory: (seenId: string) => Promise<void>, newAllStory: (newStoriesArr: StoryData[]) => Promise<void>, updateGameModes:updateGameModesParams}) {
+export default function Home({ allstories, getStories, newAllStory, updateStory, newStory, deleteStory, updateGameModes }: { allstories: StoryData[],getStories(): Promise<StoryData[] | undefined>, updateStory: (option: "story" | "likes" | "rating", seeBoard: StoryData) => Promise<{message: string}>, newStory: (newStory: StoryDataSend) => Promise<void>, deleteStory: (seenId: string) => Promise<void>, newAllStory: (newStoriesArr: StoryData[]) => Promise<void>, updateGameModes:updateGameModesParams}) {
 
     const [, allServerFunctionsSet] = useAtom(allServerFunctionsAtom)
 

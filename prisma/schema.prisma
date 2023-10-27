@@ -11,16 +11,16 @@ generator client {
 }
 
 model story {
-  title String
+  title     String
+  storypass String
 
-  storyid      String   @id @default(uuid()) //@default values can take undefined and give it a value
-  createdat    DateTime @default(now())
-  likes        Int      @default(0)
-  rating       Int      @default(0)
-  amtofratings Int      @default(0)
-
-  storyboard       String? @db.LongText //anything with a ? can be stored as null in the db
-  gamemodes        String? @db.LongText
-  backgroundaudio  String? @db.Text
-  shortdescription String? @db.Text
+  storyid          String   @id @default(uuid()) //@default values can take undefined and give it a value
+  createdat        DateTime @default(now())
+  likes            Int      @default(0)
+  rating           Int      @default(0)
+  amtofratings     Int      @default(0)
+  storyboard       String?  @db.LongText //anything with a ? can be stored as null in the db
+  gamemodes        String?  @db.LongText
+  backgroundaudio  String?  @db.Text
+  shortdescription String?  @db.Text
 }

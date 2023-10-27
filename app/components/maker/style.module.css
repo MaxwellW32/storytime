@@ -76,7 +76,7 @@
 }
 
 .editCont {
-    padding: 2rem .5rem 2rem .5rem;
+    padding-inline: .5rem;
     gap: .5rem;
     display: grid;
     position: relative;
@@ -98,6 +98,7 @@
     overflow: hidden;
     min-height: 200px;
     background-color: var(--primaryColor);
+    margin-top: 1rem;
 }
 
 .textAreaEdit2 {

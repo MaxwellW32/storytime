@@ -13,6 +13,8 @@ import GamemodeMaker from "../gamemodes/GamemodeMaker";
 import { useAtom } from "jotai";
 import { allServerFunctionsAtom } from "@/app/utility/globalState";
 import AddEpubFile from "./AddEpub";
+import AddPassword from "./AddPassword";
+import ShowServerErrors from "../useful/ShowServerErrors";
 
 
 
@@ -28,6 +30,8 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
     const [storyTitle, storyTitleSet] = useState(passedData?.title ?? "")
 
     const [storyId, storyIdSet] = useState(passedData?.storyid ?? undefined)
+    const [storyPassword, storyPasswordSet] = useState("")
+
     const [likes, likesSet] = useState(passedData?.likes ?? undefined)
     const [createdAt, createdAtSet] = useState(passedData?.createdat ?? undefined)
 
@@ -41,6 +45,10 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
 
     const [storyBoards, storyBoardsSet] = useState<storyBoardType[] | null>(passedData?.storyboard ?? null)
     const [gameModes, gameModesSet] = useState<gameObjType[] | null>(passedData?.gamemodes ?? null)
+
+    const [errorsSeen, errorsSeenSet] = useState<{
+        [key: string]: string
+    }>()
 
     function convertTextToStoryBoards(passedText: string, indexToAdd?: number) {
         //sets up my original array from text only blank
@@ -244,12 +252,15 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
         })
     }
 
-    function handleSubmit() {
+    async function handleSubmit() {
+
+        let successFromServer = false
 
         if (shouldUpdateStory) {
 
             const updatedStoryObj: StoryData = {
                 storyid: storyId!,
+                storypass: storyPassword,
                 createdat: createdAt!,
                 likes: likes!,
                 rating: storyRating!,
@@ -261,7 +272,13 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                 gamemodes: gameModes,
             }
 
-            allServerFunctions!.updateStory("story", updatedStoryObj)
+            const serverMessageObj = await allServerFunctions!.updateStory("story", updatedStoryObj)
+
+            if (serverMessageObj["message"].length !== 0) {
+                errorsSeenSet(serverMessageObj)
+            } else {
+                successFromServer = true
+            }
 
         } else {
 
@@ -269,6 +286,7 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
 
             const newStoryObj: StoryDataSend = {
                 storyid: storyId,
+                storypass: storyPassword,
                 createdat: createdAt,
                 likes: likes,
                 rating: storyRating,
@@ -284,7 +302,7 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
         }
 
 
-        if (editClickedSet) {
+        if (editClickedSet && successFromServer) {
             editClickedSet(false)
         }
 
@@ -393,7 +411,7 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
 
             <div className={styles.editCont}>
                 <div style={{ display: contentMaking === "story" ? "block" : "none" }} className={styles.storyContent}>
-                    <h3 style={{ textAlign: "center", color: "#fff" }}>Story Board</h3>
+                    <h3 style={{ textAlign: "center", color: "#fff", fontSize: "2rem" }}>Story Board</h3>
 
                     <div style={{ margin: "0 auto", backgroundColor: "var(--primaryColor)", padding: "1rem", borderRadius: "1rem" }}>
                         <div style={{ fontSize: ".6em", display: "grid", gap: ".2rem", justifyContent: "center", textAlign: "center", gridTemplateColumns: "70px 70px", rowGap: ".2rem", marginBottom: ".2rem" }}>
@@ -546,11 +564,14 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                             )
                         })}
                     </div>
-
                 </div>
             </div>
 
-            <button style={{ marginBlock: "1.5rem", marginLeft: "1rem" }} onClick={handleSubmit}>Submit Story!</button>
+            <ShowServerErrors errorsSeen={errorsSeen} />
+
+            {storyPassword.length > 0 && <button style={{ marginBlock: "1rem", marginLeft: "1rem" }} onClick={handleSubmit}>Submit Story!</button>}
+
+            <AddPassword password={storyPassword} storyPasswordSet={storyPasswordSet} option="story" />
         </div>
     )
 }

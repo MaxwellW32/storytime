@@ -44,10 +44,10 @@ export default function GamemodeMaker({ addGameModeLocally, updateGamemodeDirect
 
     return (
         <div style={{ backgroundColor: "var(--primaryColor)", padding: "1rem", borderRadius: "1rem" }}>
-            <button className="switchTabButton" onClick={(e) => { gameModeViewingSet("match"); handleDoubleClick(e) }}>Make Matchbup</button>
-            <button className="switchTabButton" onClick={(e) => { gameModeViewingSet("cross"); handleDoubleClick(e) }}>Make Crossword</button>
-            <button className="switchTabButton" onClick={(e) => { gameModeViewingSet("pro"); handleDoubleClick(e) }}>Make Pronounciation</button>
-            <button className="switchTabButton" onClick={(e) => { gameModeViewingSet("wordmean"); handleDoubleClick(e) }}>Make Word Meaning</button>
+            <button className="switchTabButton" onClick={(e) => { gameModeViewingSet("match"); handleDoubleClick(e) }}>Matchbup</button>
+            <button className="switchTabButton" onClick={(e) => { gameModeViewingSet("cross"); handleDoubleClick(e) }}>Crossword</button>
+            <button className="switchTabButton" onClick={(e) => { gameModeViewingSet("pro"); handleDoubleClick(e) }}>Pronounciation</button>
+            <button className="switchTabButton" onClick={(e) => { gameModeViewingSet("wordmean"); handleDoubleClick(e) }}>Word Meaning</button>
 
             {gameModeViewing === undefined ? <p style={{ marginTop: "1rem", fontSize: "1.5rem" }}>Add Gamemodes Here</p> : (
                 <>
