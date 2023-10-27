@@ -7,7 +7,7 @@ export default function NavBar() {
     const [theme, themeSet] = useAtom(globalTheme)
 
     return (
-        <nav className='grid gap-4 grid-flow-col p-3 w-full justify-items-center' style={{ backgroundColor: "var(--backgroundColor)", position: "sticky", top: 0, zIndex: 1 }}>
+        <nav className='grid gap-4 grid-flow-col p-3 w-full justify-items-center' style={{ backgroundColor: "var(--primaryColor)", position: "sticky", top: 0, zIndex: 1 }}>
 
             <li style={{ display: "flex" }}>
                 <Link href={"/"}>

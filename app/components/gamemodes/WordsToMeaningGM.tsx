@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import styles from "./style.module.css"
 import { gameObjType, matchupType, wordsToMeaningType } from "@/app/page"
 import { useAtom } from "jotai"
-import { allServerFunctionsAtom } from "@/app/utility/globalState"
+import { allServerFunctionsAtom, globalTheme } from "@/app/utility/globalState"
 import { v4 as uuidv4 } from "uuid";
 import { handleStoriesWhereGameOver } from "@/app/utility/savestorage"
 import DisplayGameOVer from "../useful/DisplayGameOver"
@@ -41,7 +41,7 @@ export default function WordsToMeaningGM({ sentGameObj, isEditing = false, story
     // wordMeaningPairs = null
 
     const [wordMeaningsArr, wordMeaningsArrSet] = useState<string[][]>(() => {
-        return { ...gameObj?.gameData as wordsToMeaningType }.wordMeaningsArr ?? wordMeaningPairs ?? [[]]
+        return { ...gameObj?.gameData as wordsToMeaningType }.wordMeaningsArr ?? [[]]
     })
 
 
@@ -91,7 +91,7 @@ export default function WordsToMeaningGM({ sentGameObj, isEditing = false, story
     }
 
     return (
-        <div className={styles.wordMeaningMainDiv} style={{}}>
+        <div className={`${styles.wordMeaningMainDiv} niceScrollbar`} style={{}}>
             {isEditing ? (
                 <>
                     <div className={`${styles.wordMeaningMapCont} niceScrollbar`} style={{}}>
@@ -447,13 +447,15 @@ function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, game
         }
     }
 
+    const [theme, themeSet] = useAtom(globalTheme)
+
     return (
         <div className={styles.DisplayWordMeaningsMainDiv} ref={DisplayWordMeaningsMainDiv}>
             <DisplayGameOVer gameOver={gameFinishedState}>
                 <div ref={displayWordMeaningsMapCont} className={`${styles.displayWordMeaningsMapCont} niceScrollbar`}>
                     {wordMeaningsAnswersArr.map((eachWordArray, eachWordArrayIndex) => {
                         return (
-                            <div key={eachWordArrayIndex} ref={(e) => addDivsTomeaningWordHolders(e, eachWordArrayIndex)}
+                            <div key={eachWordArrayIndex} style={{ backgroundColor: theme ? "#ffe0b2" : "var(--textColorAnti)" }} ref={(e) => addDivsTomeaningWordHolders(e, eachWordArrayIndex)}
                             >
                                 {eachWordArray[1]}
                                 <svg onClick={() => {
@@ -493,7 +495,7 @@ function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, game
                 <div className={`${styles.displayWordsMap} niceScrollbar`} ref={wordMapCont}>
                     {shuffledWords.map((eachWord, eachWordIndex) => {
                         return (
-                            <div className={`${styles.displayWordsMapwords} preserve-background`} key={eachWordIndex} draggable={false} ref={(e) => { addDivsToWordDivs(e, eachWordIndex) }}
+                            <div className={styles.displayWordsMapwords} key={eachWordIndex} draggable={false} ref={(e) => { addDivsToWordDivs(e, eachWordIndex) }}
 
                                 onPointerDown={(e) => {
                                     if (!seenOnPhone.current) {

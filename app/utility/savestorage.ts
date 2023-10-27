@@ -57,3 +57,24 @@ export function handleStoriesWhereGameOver(seenStoryId: string, seenObjId: strin
         saveToLocalStorage("storiesWhereGameOver", seenObj)
     }
 }
+
+export function handleLikedStories(seenStoryId: string, option: "check" | "add") {
+
+    // game finished - obj with storyid's as index, each has an array with obj id's check there if game finished / save changes
+
+    type seenObjtype = {
+        [key: string]: boolean
+    }
+
+    let seenObj: seenObjtype | null = retreiveFromLocalStorage("storiesLiked")
+
+    if (!seenObj) seenObj = {}
+
+    if (option === "check") {
+        return seenObj[seenStoryId] ? true : false
+
+    } else if (option === "add") {
+        seenObj[seenStoryId] = true
+        saveToLocalStorage("storiesLiked", seenObj)
+    }
+}

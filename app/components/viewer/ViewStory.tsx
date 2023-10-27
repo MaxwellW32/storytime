@@ -15,6 +15,7 @@ import { StoryData, gameObjType, updateGameModesParams } from '@/app/page';
 import GamemodeMaker from '../gamemodes/GamemodeMaker';
 import { useAtom } from 'jotai';
 import { allServerFunctionsAtom } from '@/app/utility/globalState';
+import { handleLikedStories, retreiveFromLocalStorage, saveToLocalStorage } from '@/app/utility/savestorage';
 
 function HandleRating({ rating, ratingAmt, seenStory }: { rating: number, ratingAmt: number, seenStory: StoryData }) {
     const [allServerFunctions,] = useAtom(allServerFunctionsAtom)
@@ -104,13 +105,17 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
     }, [])
 
     const [editClicked, editClickedSet] = useState(false)
-    const [sentLikesAlready, sentLikesAlreadySet] = useState(false)
+    const [sentLikesAlready, sentLikesAlreadySet] = useState(() => {
+        return handleLikedStories(fullData.storyid, "check")
+    })
 
     const [gameModesShowing, gameModesShowingSet] = useState(false)
     const [showNewGameModeButton, showNewGameModeButtonSet] = useState(false)
 
+    const [showedHelpOnce, showedHelpOnceSet] = useState<boolean>(retreiveFromLocalStorage("ShowedMultipleGamemodesTip") ?? false)
+
     return (
-        <div style={{ width: "95%", margin: "0 auto", borderRadius: ".7rem", padding: "1rem", backgroundColor: "var(--backgroundColor)", position: "relative", display: "grid" }}>
+        <div style={{ width: "95%", margin: "0 auto", borderRadius: ".7rem", padding: "1rem", backgroundColor: "var(--primaryColor)", position: "relative", display: "grid" }}>
 
             {editClicked && <MakeStory shouldUpdateStory={true} passedData={fullData} editClickedSet={editClickedSet} />}
 
@@ -161,9 +166,9 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
 
             {/* storyboard container */}
             {reading && (
-                <div className={styles.readingArea} style={{ gridTemplateColumns: gameModesShowing ? "1fr 1fr" : "1fr" }}>
+                <div className={`${styles.readingArea} niceScrollbar`} style={{ gridTemplateColumns: gameModesShowing ? "1fr 1fr" : "1fr" }}>
                     <div>
-                        <span style={{ width: "1rem", aspectRatio: "1/1", position: "absolute", right: 0, margin: "1rem" }} onClick={() => { canPlayAudioSet(prev => !prev) }}>
+                        <span style={{ width: "1rem", aspectRatio: "1/1", position: "absolute", right: 0, margin: "1rem", fill: "var(--textColor)" }} onClick={() => { canPlayAudioSet(prev => !prev) }}>
                             {canPlayAudio ? (
                                 <>
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48H80c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H48zm192 0c-26.5 0-48 21.5-48 48V400c0 26.5 21.5 48 48 48h32c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H240z" /></svg>
@@ -176,7 +181,7 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
                         </span>
 
                         <span style={{ display: "flex", gap: ".5rem", alignItems: "center", padding: ".5rem" }}>
-                            <button style={{}} onClick={() => { readingSet(false) }}>Close</button>
+                            <button style={{}} onClick={() => { readingSet(false) }}>Home</button>
 
                             {true && <button style={{}} onClick={() => { gameModesShowingSet(true) }}>Story Games</button>}
                         </span>
@@ -186,16 +191,17 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
                         <div style={{ alignSelf: "flex-end", textAlign: "center", marginRight: "1rem" }}>
                             {fullData.likes > 0 && <p>{fullData.likes} {fullData.likes === 1 ? "Like" : "Likes"}</p>}
 
-                            <div style={{ display: "flex", gap: ".5rem", alignItems: "center", padding: ".5rem", cursor: "pointer" }}>
-                                <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512"><path d="M47.6 300.4L228.3 469.1c7.5 7 17.4 10.9 27.7 10.9s20.2-3.9 27.7-10.9L464.4 300.4c30.4-28.3 47.6-68 47.6-109.5v-5.8c0-69.9-50.5-129.5-119.4-141C347 36.5 300.6 51.4 268 84L256 96 244 84c-32.6-32.6-79-47.5-124.6-39.9C50.5 55.6 0 115.2 0 185.1v5.8c0 41.5 17.2 81.2 47.6 109.5z" /></svg>
+                            <div onClick={() => {
+                                if (!sentLikesAlready) {
+                                    const newStoryObj: StoryData = { ...fullData, likes: 1 }
+                                    allServerFunctions!.updateStory("likes", newStoryObj)
+                                }
+                                sentLikesAlreadySet(true)
+                                handleLikedStories(fullData.storyid, "add")
+                            }} style={{ display: "flex", gap: ".5rem", alignItems: "center", padding: ".5rem", cursor: "pointer" }}>
+                                <svg style={{ fill: sentLikesAlready ? "var(--secondaryColor)" : "var(--textColor)" }} xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512"><path d="M47.6 300.4L228.3 469.1c7.5 7 17.4 10.9 27.7 10.9s20.2-3.9 27.7-10.9L464.4 300.4c30.4-28.3 47.6-68 47.6-109.5v-5.8c0-69.9-50.5-129.5-119.4-141C347 36.5 300.6 51.4 268 84L256 96 244 84c-32.6-32.6-79-47.5-124.6-39.9C50.5 55.6 0 115.2 0 185.1v5.8c0 41.5 17.2 81.2 47.6 109.5z" /></svg>
 
-                                <p style={{ fontSize: ".6rem" }} onClick={() => {
-                                    if (!sentLikesAlready) {
-                                        const newStoryObj: StoryData = { ...fullData, likes: 1 }
-                                        allServerFunctions!.updateStory("likes", newStoryObj)
-                                    }
-                                    sentLikesAlreadySet(true)
-                                }}>I like this</p>
+                                <p style={{ fontSize: ".6rem", color: sentLikesAlready ? "var(--secondaryColor)" : "var(--textColor)" }} >I like{sentLikesAlready && "'d"} this</p>
                             </div>
 
                             <HandleRating rating={fullData.rating} ratingAmt={fullData.amtofratings} seenStory={fullData} />
@@ -225,19 +231,28 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
 
                     <div className={styles.gameModeParty} style={{ display: gameModesShowing ? "grid" : "none" }}>
                         <div>
-                            <div>
-                                <button onClick={() => { gameModesShowingSet(false) }}>Go Back</button>
-                                <button onClick={() => { showNewGameModeButtonSet(prev => !prev) }}>{showNewGameModeButton ? "View Games" : "Add A Game?"}</button>
+                            <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: ".5rem", padding: ".5rem" }}>
+                                <svg style={{ height: "2.5rem", fill: "var(--secondaryColor)", cursor: "pointer", rotate: "180deg" }} onClick={() => { gameModesShowingSet(false) }} xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512"><path d="M217.9 105.9L340.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L217.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1L32 320c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM352 416l64 0c17.7 0 32-14.3 32-32l0-256c0-17.7-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32s14.3-32 32-32l64 0c53 0 96 43 96 96l0 256c0 53-43 96-96 96l-64 0c-17.7 0-32-14.3-32-32s14.3-32 32-32z" /></svg><button onClick={() => { showNewGameModeButtonSet(prev => !prev) }}>{showNewGameModeButton ? "View Games" : "Add Game"}</button>
+                                {!showedHelpOnce && fullData.gamemodes && fullData.gamemodes.length > 1 && (
+                                    <div style={{ flex: 1, display: "flex", paddingRight: "3rem", gap: "1rem" }}>
+                                        <h3 style={{ flex: 1, textAlign: "end" }}>Multiple Gamemodes - Swipe Left</h3>
+
+                                        <svg style={{ fill: "var(--secondaryColor)" }} onClick={() => {
+                                            showedHelpOnceSet(true)
+                                            saveToLocalStorage("ShowedMultipleGamemodesTip", true)
+                                        }} xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512"><path d="M64 32C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64H64zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z" /></svg>
+                                    </div>
+                                )}
                             </div>
 
                             <div style={{ display: showNewGameModeButton ? "block" : "none" }}>
                                 <GamemodeMaker updateGamemodeDirectly={true} storyId={fullData.storyid} />
 
-                                <button style={{ marginTop: "5rem", }} onClick={() => {
+                                <button className='switchTabButton' style={{ marginTop: "5rem" }} onClick={() => {
                                     wantsToEditCurrentGamemodesSet(prev => !prev)
-                                }}>Edit Current Gamemodes</button>
+                                }}>Edit Story Gamemodes</button>
 
-                                <div style={{}}>
+                                <div style={{ display: "grid", gap: "5rem" }}>
                                     {wantsToEditCurrentGamemodes && fullData.gamemodes?.map((eachGameObj, gameModeIndex) => {
                                         let chosenEl: JSX.Element | null = null
 
@@ -262,7 +277,7 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
                             </div>
                         </div>
 
-                        <div className={`${styles.gameModeOverFlowCont} niceScrollbar`} style={{ display: showNewGameModeButton ? "none" : "grid" }}>
+                        <div className={`${styles.gameModeDisplayMapCont} niceScrollbar`} style={{ display: showNewGameModeButton ? "none" : "grid" }}>
                             {fullData.gamemodes?.map((eachGameObj) => {
                                 let chosenEl: JSX.Element | null = null
 
@@ -278,7 +293,7 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
 
 
                                 return (
-                                    <div key={eachGameObj.boardObjId} className={styles.gameModeDisplay} style={{}}>
+                                    <div key={eachGameObj.boardObjId} className={`${styles.eachGameModeDisplay} niceScrollbar`} style={{}}>
                                         {chosenEl}
                                     </div>
                                 )

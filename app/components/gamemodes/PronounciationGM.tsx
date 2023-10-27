@@ -120,7 +120,7 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
                     wordTileRefs.current.forEach(eachTileRef => {
                         if (eachTileRef.innerText.toLowerCase() === seenTranscript) {
 
-                            eachTileRef.style.backgroundColor = "var(--primaryColor)"
+                            eachTileRef.style.backgroundColor = "var(--thirdColor)"
                             setTimeout(() => {
                                 eachTileRef.classList.remove(styles.highlightText)
                                 eachTileRef.style.backgroundColor = "var(--secondaryColor)"
@@ -133,7 +133,7 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
 
             wordTileRefs.current.forEach(eachTileRef => {
                 if (eachTileRef.innerText.toLowerCase() === workingTranscript) {
-                    eachTileRef.style.backgroundColor = "var(--primaryColor)"
+                    eachTileRef.style.backgroundColor = "var(--thirdColor)"
                     setTimeout(() => {
                         eachTileRef.style.backgroundColor = "var(--secondaryColor)"
                     }, 1500)
@@ -263,10 +263,9 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
     return (
         <div style={{ padding: "1rem", maxWidth: "100dvw" }}>
             {isEditing ? (
-                <div style={{ display: "grid", justifyItems: "center" }}>
-
-                    <div>
-                        <input type='text' ref={inputRef} placeholder='Add a word to pronounce here' onKeyDown={(e) => {
+                <div style={{ display: "grid", justifyItems: "center", gap: "1rem" }}>
+                    <div style={{}}>
+                        <input style={{ backgroundColor: "var(--textColorAnti)" }} type='text' ref={inputRef} placeholder='Add a word to pronounce here' onKeyDown={(e) => {
                             if (e.key === "Enter") {
                                 handleAddWord()
                             }
@@ -274,14 +273,11 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
                         <button onClick={handleAddWord}>Add</button>
                     </div>
 
-
                     <DisplayGameOVer gameOver={gameOverState}>
                         <div style={{ display: "grid", gap: ".5rem", width: "100%" }}>
-
                             <p>Amount left to match {wordsLeftToMAtch.length}</p>
 
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
-
                                 {givenWords.map((eachWord, index) => {
                                     return (
                                         <div key={index} style={{ display: "flex", alignItems: "start" }}>
@@ -295,9 +291,6 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
                                                     })
                                                 }}
                                                 xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
-
-
-
                                         </div>
                                     )
                                 })}
@@ -309,14 +302,13 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
                             <p>Microphone: {listening ? 'on' : 'off'}</p>
 
                             <div className={styles.probuttonholderread} style={{ display: "flex", gap: ".3rem" }}>
-
                                 <button onClick={start}>Start</button>
                                 <button onClick={SpeechRecognition.stopListening}>Stop</button>
                                 <button onClick={resetTranscript}>Reset</button>
                             </div>
                         </div>
-
                     </DisplayGameOVer>
+
                     <button onClick={handleSubmit}>Submit Gamemode</button>
                 </div>
             ) : (

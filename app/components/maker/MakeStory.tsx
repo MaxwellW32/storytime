@@ -260,6 +260,7 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                 storyboard: storyBoards,
                 gamemodes: gameModes,
             }
+
             allServerFunctions!.updateStory("story", updatedStoryObj)
 
         } else {
@@ -361,7 +362,7 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
 
                 }}>Cancel</button>
 
-            <h3 style={{ color: "#fff", textAlign: "center" }}>Let&apos;s make a wonderful story</h3>
+            <h3 style={{ textAlign: "center", color: "white" }}>Let&apos;s make a wonderful story</h3>
 
             <div className={styles.makeStoryLabelInputCont}>
                 <label htmlFor='msTitle'>Title</label>
@@ -386,19 +387,18 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
 
             <div>
                 {/* make gamemode / make story switch */}
-                <button onClick={() => { contentMakingSet("story") }}>Make Story</button>
-                <button onClick={() => { contentMakingSet("gamemode") }} style={{ opacity: storyBoards !== null ? 1 : 0, userSelect: storyBoards !== null ? "auto" : "none" }}>Add Gamemodes</button>
+                <button className='switchTabButton' onClick={() => { contentMakingSet("story") }}>Make Story</button>
+                <button className='switchTabButton' onClick={() => { contentMakingSet("gamemode") }} style={{ opacity: storyBoards !== null ? 1 : 0, userSelect: storyBoards !== null ? "auto" : "none" }}>Add Gamemodes</button>
             </div>
 
             <div className={styles.editCont}>
                 <div style={{ display: contentMaking === "story" ? "block" : "none" }} className={styles.storyContent}>
-                    <h3 style={{ color: "#fff", textAlign: "center" }}>Story Board</h3>
+                    <h3 style={{ textAlign: "center", color: "#fff" }}>Story Board</h3>
 
-                    <div style={{ margin: "0 auto" }}>
-
+                    <div style={{ margin: "0 auto", backgroundColor: "var(--primaryColor)", padding: "1rem", borderRadius: "1rem" }}>
                         <div style={{ fontSize: ".6em", display: "grid", gap: ".2rem", justifyContent: "center", textAlign: "center", gridTemplateColumns: "70px 70px", rowGap: ".2rem", marginBottom: ".2rem" }}>
-                            <p style={{ gridColumn: "span 2", color: "#fff", textAlign: "center" }}>New Paragraph After {regNewLineLimit} {regNewLineLimit === 1 ? "Linebreak" : "Linebreaks"}</p>
-                            <button onClick={() => {
+                            <p style={{ gridColumn: "span 2", textAlign: "center", color: "var(--textColor)" }}>New Paragraph After {regNewLineLimit} {regNewLineLimit === 1 ? "Linebreak" : "Linebreaks"}</p>
+                            <button className='utilityButton' onClick={() => {
                                 regNewLineLimitSet(prev => {
                                     const newNum = prev - 1
 
@@ -409,7 +409,7 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                                     }
                                 })
                             }}>Decrease</button>
-                            <button onClick={() => { regNewLineLimitSet(prev => prev + 1) }}>Increase</button>
+                            <button className='utilityButton' onClick={() => { regNewLineLimitSet(prev => prev + 1) }}>Increase</button>
                         </div>
 
                         <div>
@@ -432,9 +432,9 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                     ) : (
 
                         <>
-                            <div style={{ display: "grid", marginTop: "1rem", gridTemplateColumns: "1fr 1fr 1fr", color: "var(--textColorAnti)", textAlign: "center", alignItems: "center", justifyItems: "center" }}>
+                            <div style={{ display: "grid", marginTop: "1rem", gridTemplateColumns: "1fr 1fr 1fr", textAlign: "center", alignItems: "center", justifyItems: "center" }}>
                                 <button onClick={handlePrev} style={{ opacity: currentPage === 1 ? 0 : 1 }} disabled={currentPage === 1}>Previous Page</button>
-                                <h3>Page {currentPage}</h3>
+                                <h3 style={{ color: "#fff" }}>Page {currentPage}</h3>
                                 <button onClick={handleNext} style={{ opacity: currentPage === totalPages ? 0 : 1 }} disabled={currentPage === totalPages}>Next Page</button>
                             </div>
 
@@ -504,9 +504,9 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                                 })}
                             </div>
 
-                            <div style={{ display: "grid", marginTop: "1rem", gridTemplateColumns: "1fr 1fr 1fr", color: "var(--textColorAnti)", textAlign: "center", alignItems: "center", justifyItems: "center" }}>
+                            <div style={{ display: "grid", marginTop: "1rem", gridTemplateColumns: "1fr 1fr 1fr", textAlign: "center", alignItems: "center", justifyItems: "center" }}>
                                 <button onClick={handlePrev} style={{ opacity: currentPage === 1 ? 0 : 1 }} disabled={currentPage === 1}>Previous Page</button>
-                                <h3>Page {currentPage}</h3>
+                                <h3 style={{ color: "#fff" }}>Page {currentPage}</h3>
                                 <button onClick={handleNext} style={{ opacity: currentPage === totalPages ? 0 : 1 }} disabled={currentPage === totalPages}>Next Page</button>
                             </div>
                         </>
@@ -516,9 +516,9 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                 <div style={{ display: contentMaking === "gamemode" ? "block" : "none" }} className={styles.gamemodeContent}>
                     <GamemodeMaker addGameModeLocally={addGameModeLocally} showDefault={true} />
 
-                    <div className={styles.makestoryDisplayGamemodes}>
-                        {gameModes !== null && gameModes!.length > 0 && <h3 style={{ color: "white" }}>Gamemodes added</h3>}
+                    {gameModes !== null && gameModes!.length > 0 && <h3 style={{ fontSize: "1.5rem", color: "var(--textColor)", textAlign: "center", marginTop: "1rem" }}>Gamemodes added</h3>}
 
+                    <div className={styles.makestoryDisplayGamemodes}>
                         {gameModes?.map((eachGameObj, eachGameObjIndex) => {
                             let chosenEl: JSX.Element | null = null
 
@@ -537,7 +537,8 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                                 <div key={eachGameObjIndex} className={styles.makeStoryEachGamemode}>
                                     <svg onClick={() => {
                                         gameModesSet(prevGameModes => {
-                                            return prevGameModes!.filter((e, eindex) => eindex !== eachGameObjIndex)
+                                            const newGamemodes = prevGameModes!.filter((e, eindex) => eindex !== eachGameObjIndex)
+                                            return newGamemodes
                                         })
                                     }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
                                     {chosenEl}

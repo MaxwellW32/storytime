@@ -13,8 +13,8 @@ export default function DisplayVideo({ passedVideoData, editing = false, handleS
 
             {editing ? (
                 <>
-                    <p>Add A Video</p>
-                    <input style={{ backgroundColor: "var(--backgroundColor)", color: "var(--textColor)", borderBottom: "2px solid var(--textColor)" }} type='text' placeholder='Enter a Youtube Url' value={videoObj.videoUrl ?? ""} onChange={(e) => {
+                    <p className="bold">Add A Video</p>
+                    <input style={{ borderBottom: "2px solid var(--textColor)" }} type='text' placeholder='Enter a Youtube Url' value={videoObj.videoUrl ?? ""} onChange={(e) => {
                         videoObjSet(prevVideoObj => {
                             prevVideoObj.videoUrl = e.target.value
                             return { ...prevVideoObj }

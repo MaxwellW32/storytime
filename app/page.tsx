@@ -6,12 +6,12 @@ import saveDataToFile from "./utility/TempDb";
 
 const prisma = new PrismaClient()
 
-const cantDeleteList = [
+const cantDeleteList = false ? [
   '873d3425-0c04-4d1c-b204-383b190823b3',
   '9ccd61b1-d75a-41fd-a28e-7b53977441ef',
   'a1a9f994-8516-478f-b37b-ae4ed5793336',
   'da8cd1c6-2aa2-443d-911e-07678ead954b',
-]
+] : []
 
 //if you're using maker its new
 
@@ -22,7 +22,10 @@ async function updateStory(option: "story" | "likes" | "rating", seenStory: Stor
   "use server";
 
   if (option === "story") {
-    if (cantDeleteList.includes(seenStory.storyid)) return
+    if (cantDeleteList.includes(seenStory.storyid)) {
+      console.log(`$protected gamemode, cant delete / update`);
+      return
+    }
 
     const savableStory: story = { ...seenStory, storyboard: seenStory.storyboard !== null ? JSON.stringify(seenStory.storyboard) : null, gamemodes: seenStory.gamemodes !== null ? JSON.stringify(seenStory.gamemodes) : null }
 
@@ -169,7 +172,10 @@ async function newAllStory(newStoriesArr: StoryData[]) {
 async function deleteStory(seenId: string) {
   "use server";
 
-  if (cantDeleteList.includes(seenId)) return
+  if (cantDeleteList.includes(seenId)) {
+    console.log(`$protected gamemode, cant delete / update`);
+    return
+  }
 
 
   await prisma.story.delete({

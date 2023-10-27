@@ -7,7 +7,7 @@ import { gameObjType, gameSelectionTypes, matchupType, storyBoardType, updateGam
 import { handleStoriesWhereGameOver } from "@/app/utility/savestorage";
 import DisplayGameOVer from "../useful/DisplayGameOver";
 import { useAtom } from "jotai";
-import { allServerFunctionsAtom } from "@/app/utility/globalState";
+import { allServerFunctionsAtom, globalTheme } from "@/app/utility/globalState";
 import shuffle from "../useful/shuffleArray";
 
 
@@ -36,20 +36,12 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
         return seenData ? { ...seenData } : { ...newObj }
     })
 
-    const tempQACombo = [
-        ["What is red?", "red ball"],
-        ["What is up", "the sky"],
-        ["Is an Apple a fruit?", "apple is fruit apple is fruit apple is fruit apple is fruit"],
-        ["Does an orange have acid", "orange three acids"]
-    ]
     const [questions, questionsSet] = useState<string[]>(() => {
-        // tempQACombo.map(e => e[0])
         return gameData.questionsArr ?? [""]
     })
 
     const [choices, choicesSet] = useState<string[][]>(() => {
-        // tempQACombo.map(e => [e[1]]
-        return gameData.choicesArr ?? questions.map(e => [""])
+        return gameData.choicesArr ?? questions.map(() => [""])
     })
 
     const [gameFinishedState, gameFinishedStateSet] = useState<boolean>(() => {
@@ -128,6 +120,12 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
     }, [gameFinishedState])
 
     const questionInputMapCont = useRef<HTMLDivElement>(null)
+
+    const [refresher, refresherSet] = useState(0)
+    function refreshGame() {
+        gameFinishedStateSet(false)
+        refresherSet(prev => prev + 1)
+    }
 
     return (
         <div className={styles.gmMainDiv} style={{}}>
@@ -231,13 +229,13 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
 
                     }}>Add Question</button>
 
-                    <DisplayMatchupGM questions={questions} choices={choices} isEditing={true} gameFinishedState={gameFinishedState} gameFinishedStateSet={gameFinishedStateSet} />
+                    <DisplayMatchupGM key={refresher} questions={questions} choices={choices} isEditing={true} refreshGame={refreshGame} gameFinishedState={gameFinishedState} gameFinishedStateSet={gameFinishedStateSet} />
 
                     <button onClick={submit}>Submit Gamemode</button>
                 </>
             ) : (
                 <div >
-                    <DisplayMatchupGM questions={questions} choices={choices} gameFinishedState={gameFinishedState} gameFinishedStateSet={gameFinishedStateSet} />
+                    <DisplayMatchupGM key={refresher} isEditing={false} questions={questions} choices={choices} refreshGame={refreshGame} gameFinishedState={gameFinishedState} gameFinishedStateSet={gameFinishedStateSet} />
                 </div>
             )}
 
@@ -246,33 +244,46 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
 
 }
 
-function DisplayMatchupGM({ questions, choices, isEditing = false, gameFinishedState, gameFinishedStateSet }: { questions: string[], choices: string[][], isEditing?: boolean, gameFinishedState: boolean, gameFinishedStateSet: React.Dispatch<React.SetStateAction<boolean>> }) {
+function DisplayMatchupGM({ questions, choices, isEditing, gameFinishedState, gameFinishedStateSet, refreshGame }: { questions: string[], choices: string[][], isEditing: boolean, gameFinishedState: boolean, gameFinishedStateSet: React.Dispatch<React.SetStateAction<boolean>>, refreshGame: () => void }) {
 
     const [userAnswers, userAnswersSet] = useState<string[][]>([])
 
-    const shuffledQuestions = useMemo(() => {
-        if (!isEditing) {
-            //final mode
-            return shuffle([...questions])
-        }
+    const [shuffledChoices, shuffledChoicesSet] = useState<string[]>([])
 
-        return questions
-    }, [questions])
-
-    const shuffledChoices = useMemo(() => {
-        const flattendedArr = [...[] as string[]].concat(...choices)
+    useEffect(() => {
+        let flattendedArr = [...[] as string[]].concat(...choices)
 
         if (!isEditing) {
             //final mode
-            return shuffle(flattendedArr)
+            let currentIndex = choices.length, randomIndex;
+
+            // While there remain elements to shuffle.
+            while (currentIndex > 0) {
+
+                // Pick a remaining element.
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+
+                // And swap it with the current element.
+                [choices[currentIndex], choices[randomIndex]] = [choices[randomIndex], choices[currentIndex]];
+                [questions[currentIndex], questions[randomIndex]] = [questions[randomIndex], questions[currentIndex]];
+            }
+
+            flattendedArr = [...[] as string[]].concat(...choices)
+
+            shuffledChoicesSet(shuffle(flattendedArr))
+            return
         }
 
-        return flattendedArr
+        shuffledChoicesSet(flattendedArr)
     }, [choices])
 
     function checkAnswers() {
 
         let globalAmtCorrect = 0
+
+        // console.log(`$userAnswers`, userAnswers);
+        // console.log(`$choices`, choices);
 
         userAnswers.forEach((userAnsStrArr, index) => {
             let correctCount = 0
@@ -291,26 +302,15 @@ function DisplayMatchupGM({ questions, choices, isEditing = false, gameFinishedS
 
         })
 
+
+        // console.log(`$seen globalAmtCorrect ${globalAmtCorrect} questions.length ${questions.length} `);
         if (globalAmtCorrect === questions.length) {
+            // console.log(`$seen correct`);
             gameFinishedStateSet(true)
         }
     }
 
 
-    function refreshGame() {
-        gameFinishedStateSet(false)
-        userAnswersSet([])
-
-        questionsContainers.current.forEach(eachContainer => {
-
-            eachContainer.childNodes.forEach(eachNode => {
-                if (eachNode.nodeType === 1) {
-                    ogChoicesHolder.current!.appendChild(eachNode)
-                }
-            })
-        })
-
-    }
 
     const seenOnPhone = useRef<boolean>(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
 
@@ -484,10 +484,10 @@ function DisplayMatchupGM({ questions, choices, isEditing = false, gameFinishedS
     return (
         <div className={styles.displayMathcupMainDiv} style={{}}>
             <DisplayGameOVer gameOver={gameFinishedState}>
-                <div className={styles.questionsGrid} style={{}}>
-                    {shuffledQuestions?.map((eachQuestion, questionContIndex) => {
+                <div className={`${styles.questionsGrid} niceScrollbar`} style={{}}>
+                    {questions?.map((eachQuestion, questionContIndex) => {
                         return (
-                            <div key={questionContIndex} className={styles.eachQuestionCont} ref={(e) => { addToQuestionsContainers(e, questionContIndex) }}>
+                            <div key={questionContIndex} className={`${styles.eachQuestionCont} niceScrollbar`} ref={(e) => { addToQuestionsContainers(e, questionContIndex) }}>
                                 {eachQuestion}
                             </div>
                         )
@@ -532,7 +532,9 @@ function DisplayMatchupGM({ questions, choices, isEditing = false, gameFinishedS
             {gameFinishedState ? (
                 <button className='secondButton' onClick={refreshGame}>Game Finished - refresh?</button>
             ) : (
-                <button className='secondButton' onClick={checkAnswers}>Check Answers</button>
+                <>
+                    {ogChoicesHolder.current?.children.length === 0 && <button className='secondButton' onClick={checkAnswers}>Check Answers</button>}
+                </>
             )}
         </div>
     )

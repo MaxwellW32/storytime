@@ -55,22 +55,38 @@ export default function RootLayout({
     if (theme !== null) {
       if (theme) {
         newThemeObj = {
-          "--primaryColor": "#ffb200",
+          "--primaryColor": "rgb(255, 233, 203)",
+          "--primaryColorAnti": "#23201d",
+
           "--secondaryColor": "purple",
-          "--backgroundColor": "#ffe9cb",
+          "--secondaryColorAnti": "orange",
+
+          "--thirdColor": "#ffb200",
+          "--thirdColorAnti": "#7777ff",
+
           "--textColor": "#000",
           "--textColorAnti": "#fff",
+
+
           "--backdrop": `url(${homeBackgroundImage.src})`,
           "--editStoryBackdrop": `url(${makeStoryBackground.src})`,
           "--seeThroughBg": "rgba(0,0,0, 0.553)"
         }
       } else {
         newThemeObj = {
-          "--primaryColor": "#7777ff",
+          "--primaryColor": "#23201d",
+          "--primaryColorAnti": "rgb(255, 233, 203)",
+
           "--secondaryColor": "orange",
-          "--backgroundColor": "#23201d",
+          "--secondaryColorAnti": "purple",
+
+          "--thirdColor": "#7777ff",
+          "--thirdColorAnti": "#ffb200",
+
           "--textColor": "#fff",
           "--textColorAnti": "#000",
+
+
           "--backdrop": `url(${homeBackgroundImageDark.src})`,
           "--editStoryBackdrop": `url(${makeStoryBackgroundDark.src})`,
           "--seeThroughBg": "rgba(255,255,255, 0.1)"

@@ -32,8 +32,6 @@ export default function GamemodeMaker({ addGameModeLocally, updateGamemodeDirect
             setTimeout(() => {
                 newEl.classList.remove(styles.bright)
             }, 400)
-
-
         }
 
         canDoubleClick.current = true
@@ -45,44 +43,48 @@ export default function GamemodeMaker({ addGameModeLocally, updateGamemodeDirect
 
 
     return (
-        <div style={{}}>
+        <div style={{ backgroundColor: "var(--primaryColor)", padding: "1rem", borderRadius: "1rem" }}>
+            <button className="switchTabButton" onClick={(e) => { gameModeViewingSet("match"); handleDoubleClick(e) }}>Make Matchbup</button>
+            <button className="switchTabButton" onClick={(e) => { gameModeViewingSet("cross"); handleDoubleClick(e) }}>Make Crossword</button>
+            <button className="switchTabButton" onClick={(e) => { gameModeViewingSet("pro"); handleDoubleClick(e) }}>Make Pronounciation</button>
+            <button className="switchTabButton" onClick={(e) => { gameModeViewingSet("wordmean"); handleDoubleClick(e) }}>Make Word Meaning</button>
 
-            <button onClick={(e) => { gameModeViewingSet("match"); handleDoubleClick(e) }}>Make Matchbup</button>
-            <button onClick={(e) => { gameModeViewingSet("cross"); handleDoubleClick(e) }}>Make Crossword</button>
-            <button onClick={(e) => { gameModeViewingSet("pro"); handleDoubleClick(e) }}>Make Pronounciation</button>
-            <button onClick={(e) => { gameModeViewingSet("wordmean"); handleDoubleClick(e) }}>Make Word Meaning</button>
+            {gameModeViewing === undefined ? <p style={{ marginTop: "1rem", fontSize: "1.5rem" }}>Add Gamemodes Here</p> : (
+                <>
+                    <br />
+                    <button className="utilityButton" onClick={() => {
+                        showObjListSet(prevShowObjList => {
+                            const newObjList = { ...prevShowObjList }
+                            newObjList[gameModeViewing] = false
+                            return newObjList
+                        })
 
-            <br />
-            {gameModeViewing === undefined ? <p>Add Gamemodes Here</p> : <button onClick={() => {
-                showObjListSet(prevShowObjList => {
-                    const newObjList = { ...prevShowObjList }
-                    newObjList[gameModeViewing] = false
-                    return newObjList
-                })
-
-                setTimeout(() => {
-                    showObjListSet(prevShowObjList => {
-                        const newObjList = { ...prevShowObjList }
-                        newObjList[gameModeViewing] = true
-                        return newObjList
-                    })
-                }, 0)
-            }}>Reset</button>}
-
+                        setTimeout(() => {
+                            showObjListSet(prevShowObjList => {
+                                const newObjList = { ...prevShowObjList }
+                                newObjList[gameModeViewing] = true
+                                return newObjList
+                            })
+                        }, 0)
+                    }}>Reset</button>
+                </>
+            )}
 
             <div className={styles.gameMakerDisplayDivs} style={{ display: gameModeViewing === "match" ? "grid" : "none" }}>
                 {showObjList["match"] && <MatchUpGM addGameModeLocally={addGameModeLocally} isEditing={true} updateGamemodeDirectly={updateGamemodeDirectly} storyid={storyId} />}
             </div>
+
             <div className={styles.gameMakerDisplayDivs} style={{ display: gameModeViewing === "cross" ? "grid" : "none" }}>
                 {showObjList["cross"] && <CrosswordGM addGameModeLocally={addGameModeLocally} updateGamemodeDirectly={updateGamemodeDirectly} isEditing={true} storyid={storyId} />}
             </div>
+
             <div className={styles.gameMakerDisplayDivs} style={{ display: gameModeViewing === "pro" ? "grid" : "none" }}>
                 {showObjList["pro"] && <PronounciationGM addGameModeLocally={addGameModeLocally} updateGamemodeDirectly={updateGamemodeDirectly} storyid={storyId} isEditing={true} />}
             </div>
+
             <div className={styles.gameMakerDisplayDivs} style={{ display: gameModeViewing === "wordmean" ? "grid" : "none" }}>
                 {showObjList["wordmean"] && <WordsToMeaningGM addGameModeLocally={addGameModeLocally} updateGamemodeDirectly={updateGamemodeDirectly} storyid={storyId} isEditing={true} />}
             </div>
-
         </div>
     )
 }

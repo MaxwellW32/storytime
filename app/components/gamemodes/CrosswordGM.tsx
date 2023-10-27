@@ -33,6 +33,7 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
     })
 
     //each obj key is a word, the hint is the value
+
     const [hintObj, hintObjSet] = useState(() => {
         const newHintObj: {
             [key: string]: string
@@ -42,12 +43,13 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
             newHintObj[eachWord] = ""
         })
 
-        return { ...gameObj?.gameData as crosswordType }.hintObj ?? { ...newHintObj }
+        return { ...gameObj?.gameData as crosswordType }.hintObj ?? {}
     })
 
     //handle top level sentgameobj change
     const mounted = useRef(false)
     const amtTimesReset = useRef(0)
+
     useEffect(() => {
         if (mounted.current && sentGameObj) {
             const seenGameData = sentGameObj.gameData as crosswordType
@@ -60,11 +62,11 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
                     [key: string]: string
                 } = {}
 
-                seenGameData.wordArray ?? [].forEach(eachWord => {
+                wordsArray.forEach(eachWord => {
                     newHintObj[eachWord] = ""
                 })
 
-                return seenGameData.hintObj ?? { ...newHintObj }
+                return { ...gameObj?.gameData as crosswordType }.hintObj ?? {}
             })
         }
 
@@ -80,25 +82,8 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
         }
     }, [sentGameObj])
 
-
     const [wordArrSkipIndex, wordArrSkipIndexSet] = useState(0)
 
-    const spawnPointRef = useRef<HTMLDivElement>(null!)
-    const tileRefs = useRef<HTMLDivElement[]>([])
-    const initialXYCoordsValue = {
-        xLowerBounds: 0,
-        xHigherBounds: 0,
-        yLowerBounds: 0,
-        yHigherBounds: 0,
-    }
-    const [xyCoords, xyCoordsSet] = useState({ ...initialXYCoordsValue })
-    const [clickedOnBoardAmt, clickedOnBoardAmtSet] = useState(0)
-    const [wordsMatchedAlready, wordsMatchedAlreadySet] = useState<string[]>([])
-
-    const [userChosenWord, userChosenWordSet] = useState("")
-
-    const [userChosenTileArray, userChosenTileArraySet] = useState<number[]>([])
-    const [userAmountCorrect, userAmountCorrectSet] = useState(0)
     const [gameFinishedState, gameFinishedStateSet] = useState(() => {
         if (!isEditing) {
             const isGameOver = handleStoriesWhereGameOver(storyid!, gameObj.boardObjId, "read")
@@ -107,13 +92,10 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
             return false
         }
     })
+
     //function that gets current value from local storage
     //allow freely to switch back and forth
 
-
-    const amtOfAnswersLeft = useMemo(() => {
-        return wordsArray.length - userAmountCorrect
-    }, [userAmountCorrect, wordsArray.length])
 
     const submit = () => {
 
@@ -136,6 +118,7 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
 
     //write change to local storage
     const gameFinishedOnce = useRef(false)
+
     useEffect(() => {
         if (gameFinishedState) {
             gameFinishedOnce.current = true
@@ -148,6 +131,168 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
 
     }, [gameFinishedState])
 
+
+    const inputRef = useRef<HTMLInputElement>(null!)
+
+    //load up tiles
+    useEffect(() => {
+        if (isEditing) inputRef.current.value = ""
+    }, [wordsArray])
+
+
+    const addWord = () => {
+        if (inputRef.current.value) {
+            wordsArraySet(prevwordsArr => {
+
+                let newArr = []
+                if (prevwordsArr) {
+                    newArr = [...prevwordsArr, inputRef.current.value]
+                } else {
+                    newArr = [inputRef.current.value]
+                }
+
+                return newArr
+            })
+        }
+    }
+
+    //ensure wordArrSkipIndex is always in range - handle hintObjData
+    useEffect(() => {
+        if (wordArrSkipIndex > wordsArray.length - 1) {
+            wordArrSkipIndexSet(wordsArray.length - 1 >= 0 ? wordsArray.length - 1 : 0)
+        }
+
+        //ensure word values not in array are removed from obj
+        Object.keys(hintObj).forEach(eachHintKey => {
+            let seenInArr = false
+
+            wordsArray.forEach(eachWord => {
+                if (eachWord === eachHintKey) {
+                    seenInArr = true
+                }
+            })
+
+            if (!seenInArr) {
+                // hintObj
+                hintObjSet(prevHintObj => {
+                    const newHintObj = { ...prevHintObj }
+                    delete newHintObj[eachHintKey];
+                    return newHintObj
+                })
+            }
+
+        })
+    }, [wordsArray])
+
+    const [refresher, refresherSet] = useState(0)
+
+    const refresh = () => {
+        refresherSet(prev => prev + 1)
+        gameFinishedStateSet(false)
+    }
+
+    return (
+        <div className={styles.crossWordMain} style={{}}>
+            {isEditing ? (
+                <div style={{ display: "grid" }} >
+                    <label>Enter Words you&apos;d like to appear in the Crossword</label>
+
+                    <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", margin: "1rem" }}>
+                        {wordsArray.map((eachWord, index) => {
+                            return (
+                                <div key={index} style={{ position: "relative", backgroundColor: "var(--thirdColor)", borderRadius: ".7rem", borderTopRightRadius: 0, padding: ".5rem" }}>
+                                    <svg style={{ position: "absolute", top: 0, right: 0, width: ".8rem", fill: "white" }} onClick={() => {
+                                        wordsArraySet(prevWordsArr => {
+                                            const filteredArr = prevWordsArr.filter((eachWord, wordIndex) => index !== wordIndex)
+                                            return filteredArr
+                                        })
+                                    }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
+
+                                    <p>{eachWord}</p>
+                                </div>
+                            )
+                        })}
+                    </div>
+
+                    <input ref={inputRef} placeholder="Enter a word" onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            addWord()
+                        }
+                    }} type="text" />
+
+                    <button onClick={addWord}>Submit Word</button>
+
+                    {wordsArray[wordArrSkipIndex] && (
+                        <div style={{ display: "flex", flexWrap: "wrap", justifySelf: "center", gap: ".5rem", alignItems: "center" }}>
+                            <button onClick={() => {
+                                wordArrSkipIndexSet(prev => {
+                                    let newNum = prev - 1
+                                    return newNum >= 0 ? newNum : 0
+                                })
+                            }}>Prev Hint</button>
+
+                            <div style={{ display: "flex", flexDirection: "column" }}>
+                                <label>Set a hint for &apos;{wordsArray[wordArrSkipIndex]}&apos;?</label>
+                                <input type="text" placeholder="Enter a hint" value={hintObj[wordsArray[wordArrSkipIndex]] ?? ""} onChange={(e) => {
+                                    hintObjSet(prevHintObj => {
+                                        const newHintObj = { ...prevHintObj }
+                                        newHintObj[wordsArray[wordArrSkipIndex]] = e.target.value
+                                        return newHintObj
+                                    })
+                                }} />
+                            </div>
+
+                            <button onClick={() => {
+                                wordArrSkipIndexSet(prev => {
+                                    let newNum = prev + 1
+                                    const maxArrIndex = wordsArray.length - 1
+                                    return newNum <= maxArrIndex ? newNum : maxArrIndex
+                                })
+                            }}>Next Hint</button>
+                        </div>
+                    )}
+
+                    <DisplayCrossWord key={refresher} gameFinishedState={gameFinishedState} gameFinishedStateSet={gameFinishedStateSet} refresh={refresh} hintObj={hintObj} isEditing={true} wordsArray={wordsArray} />
+
+                    <button style={{ marginTop: "1rem" }} onClick={submit}>Submit Gamemode</button>
+                </div>
+
+            ) : (
+                <DisplayCrossWord key={refresher} gameFinishedState={gameFinishedState} gameFinishedStateSet={gameFinishedStateSet} refresh={refresh} hintObj={hintObj} isEditing={false} wordsArray={wordsArray} />
+            )}
+        </div>
+    )
+}
+
+
+
+
+
+
+
+
+
+
+
+
+function DisplayCrossWord({ wordsArray, hintObj, isEditing, gameFinishedState, gameFinishedStateSet, refresh }: { wordsArray: string[], hintObj: { [key: string]: string }, isEditing: boolean, gameFinishedState: boolean, gameFinishedStateSet: React.Dispatch<React.SetStateAction<boolean>>, refresh: () => void }) {
+
+    const spawnPointRef = useRef<HTMLDivElement>(null!)
+    const tileRefs = useRef<HTMLDivElement[]>([])
+    const initialXYCoordsValue = {
+        xLowerBounds: 0,
+        xHigherBounds: 0,
+        yLowerBounds: 0,
+        yHigherBounds: 0,
+    }
+    const [xyCoords, xyCoordsSet] = useState({ ...initialXYCoordsValue })
+    const [clickedOnBoardAmt, clickedOnBoardAmtSet] = useState(0)
+
+    const [userChosenWord, userChosenWordSet] = useState("")
+
+    const [userChosenTileArray, userChosenTileArraySet] = useState<number[]>([])
+
+    const [userAmountCorrect, userAmountCorrectSet] = useState(0)
 
     //check tiles intersection with selection
     useEffect(() => {
@@ -186,6 +331,38 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
         }
     }, [clickedOnBoardAmt])
 
+    const [wordsMatchedAlready, wordsMatchedAlreadySet] = useState<string[]>([])
+
+    const showHints = () => {
+        console.log(`$called hint`);
+
+        const wordsNotFoundAlready: string[] = []
+
+        wordsArray.forEach(eachWord => {
+            if (!wordsMatchedAlready.includes(eachWord)) {
+                wordsNotFoundAlready.push(eachWord)
+            }
+        })
+
+        if (wordsNotFoundAlready.length === 0) return
+
+        const randIndex = Math.floor(Math.random() * wordsNotFoundAlready.length)
+        const randomWordChosen = wordsNotFoundAlready[randIndex]
+        const letterToShake = randomWordChosen[0]
+
+        tileRefs.current.forEach(eachTileRef => {
+            if (eachTileRef.innerText === letterToShake) {
+                eachTileRef.classList.add(styles.quickShake)
+
+                setTimeout(() => {
+                    eachTileRef.classList.remove(styles.quickShake)
+                }, 2000)
+            }
+        })
+
+
+    }
+
     //check userchosen answers in crossword
     useEffect(() => {
         if (userChosenWord) {
@@ -219,34 +396,10 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
     }, [userChosenWord])
 
 
-    const showHints = () => {
-
-        const wordsNotFoundAlready: string[] = []
-
-        wordsArray.forEach(eachWord => {
-            if (!wordsMatchedAlready.includes(eachWord)) {
-                wordsNotFoundAlready.push(eachWord)
-            }
-        })
-
-        if (wordsNotFoundAlready.length === 0) return
-
-        const randIndex = Math.floor(Math.random() * wordsNotFoundAlready.length)
-        const randomWordChosen = wordsNotFoundAlready[randIndex]
-        const letterToShake = randomWordChosen[0]
-
-        tileRefs.current.forEach(eachTileRef => {
-            if (eachTileRef.innerText === letterToShake) {
-                eachTileRef.classList.add(styles.quickShake)
-
-                setTimeout(() => {
-                    eachTileRef.classList.remove(styles.quickShake)
-                }, 2000)
-            }
-        })
-
-
-    }
+    //load up tiles
+    useEffect(() => {
+        loadUpTiles([...wordsArray])
+    }, [wordsArray])
 
 
     const applyStylesToTiles = (option: "correct" | "incorrect") => {
@@ -277,7 +430,6 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
             gameFinishedStateSet(true)
         }
     }, [userAmountCorrect])
-
 
 
     const loadUpTiles = (wordsSeenArr: string[]) => {
@@ -452,160 +604,43 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
         }
     }
 
-    const inputRef = useRef<HTMLInputElement>(null!)
 
-    //load up tiles
-    useEffect(() => {
-        loadUpTiles([...wordsArray])
-        if (isEditing) inputRef.current.value = ""
-    }, [wordsArray])
-
-
-    const addWord = () => {
-        if (inputRef.current.value) {
-            wordsArraySet(prevwordsArr => {
-
-                let newArr = []
-                if (prevwordsArr) {
-                    newArr = [...prevwordsArr, inputRef.current.value]
-                } else {
-                    newArr = [inputRef.current.value]
-                }
-
-                return newArr
-            })
-        }
-
-    }
-
-    //ensure wordArrSkipIndex is always in range - handle hintObjData
-    useEffect(() => {
-        if (wordArrSkipIndex > wordsArray.length - 1) {
-            wordArrSkipIndexSet(wordsArray.length - 1 >= 0 ? wordsArray.length - 1 : 0)
-        }
-
-        //ensure word values not in array are removed from obj
-        Object.keys(hintObj).forEach(eachHintKey => {
-            let seenInArr = false
-
-            wordsArray.forEach(eachWord => {
-                if (eachWord === eachHintKey) {
-                    seenInArr = true
-                }
-            })
-
-            if (!seenInArr) {
-                // hintObj
-                hintObjSet(prevHintObj => {
-                    const newHintObj = { ...prevHintObj }
-                    delete newHintObj[eachHintKey];
-                    return newHintObj
-                })
-            }
-
-        })
-    }, [wordsArray])
+    const amtOfAnswersLeft = useMemo(() => {
+        return wordsArray.length - userAmountCorrect
+    }, [userAmountCorrect, wordsArray.length])
 
 
     return (
-        <div className={styles.crossWordMain} style={{}}>
-            {isEditing ? (
-                <div style={{ display: "grid" }} >
-                    <label>Enter Words you&apos;d like to appear in the Crossword</label>
-                    <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", margin: "1rem" }}>
-                        {wordsArray.map((eachWord, index) => {
-                            return (
-                                <div key={index} style={{ position: "relative", backgroundColor: "var(--primaryColor)", borderRadius: ".7rem", borderTopRightRadius: 0, padding: ".5rem" }}>
+        <div style={{}}>
+            <div>
+                <p className={styles.leftToFind}>Words left to find {amtOfAnswersLeft}</p>
+                <p onClick={showHints} style={{ textAlign: "end", marginBottom: "1rem", cursor: "pointer" }}>hint?</p>
+            </div>
 
-                                    <svg style={{ position: "absolute", top: 0, right: 0, width: ".8rem", fill: "white" }} onClick={() => {
-                                        wordsArraySet(prevWordsArr => {
-                                            const filteredArr = prevWordsArr.filter((eachWord, wordIndex) => index !== wordIndex)
-                                            return filteredArr
-                                        })
-                                    }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
+            <div>
+                <DisplayGameOVer gameOver={gameFinishedState}>
+                    <div style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(auto-fit, minmax(min(200px, 100%), 1fr))" }}>
+                        <div ref={spawnPointRef} className={styles.spawnArea}></div>
 
+                        <div style={{ display: Object.values(hintObj).length > 0 ? "flex" : "none", flexDirection: "column", gap: "1rem" }}>
+                            {Object.values(hintObj).map((eachHint, clueIndex) => {
+                                let seenEl = wordsMatchedAlready.includes(Object.keys(hintObj)[clueIndex])
 
-                                    <p>{eachWord}</p>
-                                </div>
-                            )
-                        })}
-                    </div>
-
-
-                    <input ref={inputRef} placeholder="Enter a word" onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            addWord()
-                        }
-                    }} type="text" />
-                    <button onClick={addWord}>Submit Word</button>
-
-                    {wordsArray[wordArrSkipIndex] && (
-                        <div style={{ display: "flex", flexWrap: "wrap", justifySelf: "center", gap: ".5rem", alignItems: "center" }}>
-                            <button onClick={() => {
-                                wordArrSkipIndexSet(prev => {
-                                    let newNum = prev - 1
-                                    return newNum >= 0 ? newNum : 0
-                                })
-                            }}>Prev Hint</button>
-
-                            <div style={{ display: "flex", flexDirection: "column" }}>
-                                <label>Set a hint for &apos;{wordsArray[wordArrSkipIndex]}&apos;?</label>
-                                <input type="text" placeholder="Enter a hint" value={hintObj[wordsArray[wordArrSkipIndex]] ?? ""} onChange={(e) => {
-                                    hintObjSet(prevHintObj => {
-                                        const newHintObj = { ...prevHintObj }
-                                        newHintObj[wordsArray[wordArrSkipIndex]] = e.target.value
-                                        return newHintObj
-                                    })
-                                }} />
-                            </div>
-
-
-                            <button onClick={() => {
-                                wordArrSkipIndexSet(prev => {
-                                    let newNum = prev + 1
-                                    const maxArrIndex = wordsArray.length - 1
-                                    return newNum <= maxArrIndex ? newNum : maxArrIndex
-                                })
-                            }}>Next Hint</button>
+                                return (
+                                    <p style={{ color: seenEl ? "var(--thirdColor)" : "var(--textColor)", textTransform: "capitalize" }} key={clueIndex}>{eachHint}:</p>
+                                )
+                            })}
                         </div>
-                    )}
-                    {gameFinishedState && <p>Beat the Game!!!</p>}
-                    <p className={styles.leftToFind}>Words left to find {amtOfAnswersLeft}</p>
-                    <div ref={spawnPointRef} className={styles.spawnArea}></div>
-                    <button onClick={submit}>Submit Gamemode</button>
-                </div>
-            ) : (
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                    <div style={{ flex: 1 }}>
-                        <p className={styles.leftToFind}>Words left to find {amtOfAnswersLeft}</p>
-                        <p onClick={showHints} style={{ textAlign: "end", marginBottom: "1rem", cursor: "pointer" }}>hint?</p>
                     </div>
+                </DisplayGameOVer>
+            </div>
 
-                    <div style={{ flex: 7 }}>
-                        <DisplayGameOVer gameOver={gameFinishedState}>
-                            <div style={{ display: "flex", gap: "1rem" }}>
-
-                                {Object.values(hintObj).map((eachHintClue, clueIndex) => {
-                                    return (
-                                        <div key={clueIndex} >
-                                            <p>{eachHintClue}</p>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                            <div ref={spawnPointRef} className={styles.spawnArea}></div>
-                        </DisplayGameOVer>
-                    </div>
-
-                    {gameFinishedState && (
-                        <div style={{ flex: 1 }}>
-                            <p>Beat the Game!!!</p>
-                            <button onClick={() => { gameFinishedStateSet(false) }}>Refresh</button>
-                        </div>
-                    )}
+            {gameFinishedState && (
+                <div style={{ flex: 1 }}>
+                    <p>Beat the Game!!!</p>
+                    <button onClick={refresh}>Refresh</button>
                 </div>
             )}
-
         </div>
     )
 }

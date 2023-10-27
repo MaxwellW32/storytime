@@ -48,8 +48,11 @@ export default function AddEpubFile({ convertTextToStoryBoards }: { convertTextT
 
     return (
         <div>
-            <input type="file" ref={inputRef} />
-            <button onClick={handleFileSubmit}>Add Ebook</button>
+            <p>Have an Ebook?</p>
+            <div style={{ display: "flex", alignItems: "center" }}>
+                <input type="file" ref={inputRef} style={{ borderBottomRightRadius: 0, borderTopRightRadius: 0, backgroundColor: "var(--primaryColorAnti)", color: "var(--textColorAnti)" }} />
+                <button className='utilityButton' onClick={handleFileSubmit}>Add Ebook</button>
+            </div>
         </div>
     )
 }

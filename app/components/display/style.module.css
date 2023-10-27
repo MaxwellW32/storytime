@@ -16,7 +16,7 @@
 
 .videoCont {
     margin: 0 auto;
-    background-color: var(--backgroundColor);
+    background-color: var(--primaryColor);
     padding: 1rem;
     display: grid;
     gap: 1rem;

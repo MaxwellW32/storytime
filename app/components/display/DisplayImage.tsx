@@ -11,9 +11,9 @@ export default function DisplayImage({ passedImageData, editing = false, handleS
         <>
 
             {editing ? (
-                <div style={{ color: "var(--textColor)", backgroundColor: "var(--backgroundColor)", padding: "1rem", display: "grid", gap: "1rem" }}>
-                    <p>Add An Image</p>
-                    <input style={{ width: '100%', color: "var(--textColor)", borderBottom: "2px solid var(--textColor)", backgroundColor: "var(--backgroundColor)" }} placeholder='Enter an Image url' type='text' value={imageObj.imageUrl ?? ""} onChange={(e) => {
+                <div style={{ backgroundColor: "var(--primaryColor)", padding: "1rem", display: "grid", gap: "1rem" }}>
+                    <p className="bold">Add An Image</p>
+                    <input style={{ width: '100%', borderBottom: "2px solid var(--textColor)" }} placeholder='Enter an Image url' type='text' value={imageObj.imageUrl ?? ""} onChange={(e) => {
                         imageObjSet(prevVideoObj => {
                             prevVideoObj.imageUrl = e.target.value
                             return { ...prevVideoObj }

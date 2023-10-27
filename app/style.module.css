@@ -15,7 +15,6 @@
 }
 
 .canHide {
-    /* background-color: green !important; */
     opacity: 0;
 }
 
@@ -33,7 +32,6 @@
 /* home */
 
 .homeDiv {
-    color: var(--textColor);
     display: flex;
     flex-direction: column;
     gap: 1rem;

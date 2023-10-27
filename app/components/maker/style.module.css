@@ -17,6 +17,9 @@
     gap: 1rem;
 }
 
+.makeStoryMainDiv h3 {
+    color: var(--textColorAnti);
+}
 
 .bttnHolder {
     opacity: 0;
@@ -68,8 +71,11 @@
     background-color: var(--seeThroughBg);
 }
 
+.makeStoryLabelInputCont label {
+    color: #fff;
+}
+
 .editCont {
-    background-color: rgba(0, 0, 0, 0.5);
     padding: 2rem .5rem 2rem .5rem;
     gap: .5rem;
     display: grid;
@@ -91,21 +97,26 @@
     resize: none;
     overflow: hidden;
     min-height: 200px;
+    background-color: var(--primaryColor);
 }
 
 .textAreaEdit2 {
     width: 100%;
     padding: 1rem;
-
+    background-color: var(--primaryColor);
 }
 
 .makestoryDisplayGamemodes {
     display: grid;
-    gap: 2rem;
+    gap: 5rem;
+    margin-top: 1rem;
 }
 
 .makestoryDisplayGamemodes>div {
     display: grid;
+    background-color: var(--primaryColor);
+    padding: 1rem;
+    border-radius: 1rem;
 }
 
 

@@ -27,7 +27,7 @@
     height: 100dvh;
     width: 100%;
     z-index: 1;
-    background-color: var(--backgroundColor);
+    background-color: var(--primaryColor);
     overflow-y: auto;
     display: grid;
     grid-auto-flow: column;
@@ -65,23 +65,27 @@
     overflow-y: auto;
     z-index: 2;
     transition: translate 600ms;
-    background-color: hsl(35, 100%, 80%);
+    background-color: var(--primaryColor);
     height: 100dvh;
+
 }
 
 
 
-.gameModeOverFlowCont {
+.gameModeDisplayMapCont {
     overflow-x: scroll;
     gap: 1rem;
     scroll-snap-type: x mandatory;
-    grid-auto-columns: 100dvw;
+    grid-auto-columns: 100%;
     grid-auto-flow: column;
+    border-left: 3px solid var(--thirdColor);
+
 }
 
-.gameModeDisplay {
+.eachGameModeDisplay {
     scroll-snap-align: start;
     display: grid;
+    overflow-y: auto;
 }
 
 @media only screen and (min-width: 1000px) {
@@ -92,7 +96,7 @@
     }
 
 
-    .gameModeOverFlowCont {
+    .gameModeDisplayMapCont {
         grid-auto-columns: 100%;
     }
 
