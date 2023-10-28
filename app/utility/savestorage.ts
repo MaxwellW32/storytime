@@ -22,33 +22,29 @@ export function handleStoriesWhereGameOver(seenStoryId: string, seenObjId: strin
     type seenObjtype = {
         [key: string]: string[]
     }
+
     let seenObj: seenObjtype | null = retreiveFromLocalStorage("storiesWhereGameOver")
 
     if (option === "read") {
-        if (seenObj === null) {
-            return false //no obj seen so gamefinished is false
-        } else {
+        if (!seenObj) return false
 
-            if (!seenObj[seenStoryId]) {
-                seenObj[seenStoryId] = []
-            }
-            return seenObj[seenStoryId].includes(seenObjId)
-        }
+        if (!seenObj[seenStoryId]) seenObj[seenStoryId] = []
+
+        return seenObj[seenStoryId].includes(seenObjId)
 
     } else if (option === "update") {
         //make sure it is an object
-        if (seenObj === null) {
-            seenObj = {}
-        }
+        if (!seenObj) seenObj = {}
 
         //make sure the obj key exists with an array value to start
-        if (seenObj[seenStoryId] === undefined) {
-            seenObj[seenStoryId] = []
-        }
+        if (!seenObj[seenStoryId]) seenObj[seenStoryId] = []
+
 
         if (seenObj[seenStoryId].includes(seenObjId)) {
+
             const newArr = seenObj[seenStoryId].filter(eachObjId => eachObjId !== seenObjId)
             seenObj[seenStoryId] = newArr
+
         } else {
             const newArr = [...seenObj[seenStoryId], seenObjId]
             seenObj[seenStoryId] = newArr

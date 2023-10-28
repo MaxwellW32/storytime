@@ -13,8 +13,10 @@ import GamemodeMaker from "../gamemodes/GamemodeMaker";
 import { useAtom } from "jotai";
 import { allServerFunctionsAtom } from "@/app/utility/globalState";
 import AddEpubFile from "./AddEpub";
-import AddPassword from "./AddPassword";
+import AddPassword from "../useful/AddPassword";
 import ShowServerErrors from "../useful/ShowServerErrors";
+import UndoRedo from "../useful/UndoRedo";
+import ChangePassword from "../useful/ChangePassword";
 
 
 
@@ -44,6 +46,7 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
     const [preProcessedText, preProcessedTextSet] = useState("")
 
     const [storyBoards, storyBoardsSet] = useState<storyBoardType[] | null>(passedData?.storyboard ?? null)
+
     const [gameModes, gameModesSet] = useState<gameObjType[] | null>(passedData?.gamemodes ?? null)
 
     const [errorsSeen, errorsSeenSet] = useState<{
@@ -238,7 +241,7 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
             if (foundInArr && indexFound !== null) {
                 newGameModes[indexFound] = gamemode
             } else {
-                newGameModes = [...newGameModes, gamemode]
+                newGameModes = [gamemode, ...newGameModes]
             }
 
             return newGameModes
@@ -405,8 +408,8 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
 
             <div>
                 {/* make gamemode / make story switch */}
-                <button className='switchTabButton' onClick={() => { contentMakingSet("story") }}>Make Story</button>
-                <button className='switchTabButton' onClick={() => { contentMakingSet("gamemode") }} style={{ opacity: storyBoards !== null ? 1 : 0, userSelect: storyBoards !== null ? "auto" : "none" }}>Add Gamemodes</button>
+                <button className='switchTabButton' style={{ borderTop: contentMaking === "story" ? "1px solid #fff" : "none" }} onClick={() => { contentMakingSet("story") }}>Make Story</button>
+                <button className='switchTabButton' onClick={() => { contentMakingSet("gamemode") }} style={{ opacity: storyBoards !== null ? 1 : 0, userSelect: storyBoards !== null ? "auto" : "none", borderTop: contentMaking === "gamemode" ? "1px solid #fff" : "none" }}>Add Gamemodes</button>
             </div>
 
             <div className={styles.editCont}>
@@ -414,8 +417,11 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                     <h3 style={{ textAlign: "center", color: "#fff", fontSize: "2rem" }}>Story Board</h3>
 
                     <div style={{ margin: "0 auto", backgroundColor: "var(--primaryColor)", padding: "1rem", borderRadius: "1rem" }}>
+                        <UndoRedo seenArray={storyBoards ?? []} stateSetterFromHistory={storyBoardsSet as React.Dispatch<React.SetStateAction<storyBoardType[]>>} />
+
                         <div style={{ fontSize: ".6em", display: "grid", gap: ".2rem", justifyContent: "center", textAlign: "center", gridTemplateColumns: "70px 70px", rowGap: ".2rem", marginBottom: ".2rem" }}>
                             <p style={{ gridColumn: "span 2", textAlign: "center", color: "var(--textColor)" }}>New Paragraph After {regNewLineLimit} {regNewLineLimit === 1 ? "Linebreak" : "Linebreaks"}</p>
+
                             <button className='utilityButton' onClick={() => {
                                 regNewLineLimitSet(prev => {
                                     const newNum = prev - 1
@@ -427,12 +433,11 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                                     }
                                 })
                             }}>Decrease</button>
+
                             <button className='utilityButton' onClick={() => { regNewLineLimitSet(prev => prev + 1) }}>Increase</button>
                         </div>
 
-                        <div>
-                            <AddEpubFile convertTextToStoryBoards={convertTextToStoryBoards} />
-                        </div>
+                        <AddEpubFile convertTextToStoryBoards={convertTextToStoryBoards} />
                     </div>
 
                     {!storyBoards ? (
@@ -532,6 +537,9 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                 </div>
 
                 <div style={{ display: contentMaking === "gamemode" ? "block" : "none" }} className={styles.gamemodeContent}>
+                    <UndoRedo seenArray={gameModes ?? []} stateSetterFromHistory={gameModesSet as React.Dispatch<React.SetStateAction<gameObjType[]>>} />
+
+                    <br />
                     <GamemodeMaker addGameModeLocally={addGameModeLocally} showDefault={true} />
 
                     {gameModes !== null && gameModes!.length > 0 && <h3 style={{ fontSize: "1.5rem", color: "var(--textColor)", textAlign: "center", marginTop: "1rem" }}>Gamemodes added</h3>}
@@ -566,6 +574,8 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                     </div>
                 </div>
             </div>
+
+            {passedData && <ChangePassword password={storyPassword} storyPasswordSet={storyPasswordSet} option="story" storyId={passedData!.storyid} />}
 
             <ShowServerErrors errorsSeen={errorsSeen} />
 

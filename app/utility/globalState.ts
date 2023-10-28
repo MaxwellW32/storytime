@@ -7,10 +7,11 @@ export const globalTheme = atom<boolean | null>(null);
 
 export const allServerFunctionsAtom = atom<{
     "getStories": () => Promise<StoryData[] | undefined>,
-    "deleteStory": (seenId: string) => Promise<void>,
+    "deleteStory": (seenId: string, sentPAss: string) => Promise<{ message: string }>,
     "newStory": (newStory: StoryDataSend) => Promise<void>,
     "updateStory": (option: "story" | "likes" | "rating", seenStory: StoryData) => Promise<{ message: string }>,
     "newAllStory": (newStoriesArr: StoryData[]) => Promise<void>,
     "updateGameModes": updateGameModesParams,
+    "updatePassword": (option: "story" | "gamemode", sentStoryId: string, oldPass: string, newPass: string) => Promise<{ message: string }>
 } | null>(null);
 

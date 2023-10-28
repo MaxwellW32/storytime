@@ -30,6 +30,7 @@ export default function DisplayVideo({ passedVideoData, editing = false, handleS
                             loop={false}
                             playing={false}
                             url={videoObj.videoUrl ?? ""}
+                            controls={true}
                         />
                     </div>
                 </>
@@ -39,6 +40,7 @@ export default function DisplayVideo({ passedVideoData, editing = false, handleS
                         loop={false}
                         playing={false}
                         url={videoObj.videoUrl ? videoObj.videoUrl : "https://www.youtube.com/watch?v=NJuSStkIZBg"}
+                        controls={true}
                     />
                 </div>
             )}

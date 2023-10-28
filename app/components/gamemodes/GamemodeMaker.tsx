@@ -21,37 +21,15 @@ export default function GamemodeMaker({ addGameModeLocally, updateGamemodeDirect
         "wordmean": true
     })
 
-    const canDoubleClick = useRef(false)
-
-    const handleDoubleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-        if (canDoubleClick.current) {
-            gameModeViewingSet(undefined)
-            const newEl = e.target as HTMLButtonElement
-            newEl.classList.add(styles.bright)
-
-            setTimeout(() => {
-                newEl.classList.remove(styles.bright)
-            }, 400)
-        }
-
-        canDoubleClick.current = true
-
-        setTimeout(() => {
-            canDoubleClick.current = false
-        }, 400)
-    }
-
-
     return (
         <div style={{ backgroundColor: "var(--primaryColor)", padding: "1rem", borderRadius: "1rem" }}>
-            <button className="switchTabButton" onClick={(e) => { gameModeViewingSet("match"); handleDoubleClick(e) }}>Matchbup</button>
-            <button className="switchTabButton" onClick={(e) => { gameModeViewingSet("cross"); handleDoubleClick(e) }}>Crossword</button>
-            <button className="switchTabButton" onClick={(e) => { gameModeViewingSet("pro"); handleDoubleClick(e) }}>Pronounciation</button>
-            <button className="switchTabButton" onClick={(e) => { gameModeViewingSet("wordmean"); handleDoubleClick(e) }}>Word Meaning</button>
+            <button style={{ borderTop: gameModeViewing === "match" ? "1px solid #fff" : "none" }} className="switchTabButton" onClick={() => { gameModeViewingSet("match") }}>Matchbup</button>
+            <button style={{ borderTop: gameModeViewing === "cross" ? "1px solid #fff" : "none" }} className="switchTabButton" onClick={() => { gameModeViewingSet("cross") }}>Crossword</button>
+            <button style={{ borderTop: gameModeViewing === "pro" ? "1px solid #fff" : "none" }} className="switchTabButton" onClick={() => { gameModeViewingSet("pro") }}>Pronounciation</button>
+            <button style={{ borderTop: gameModeViewing === "wordmean" ? "1px solid #fff" : "none" }} className="switchTabButton" onClick={() => { gameModeViewingSet("wordmean") }}>Word Meaning</button>
 
             {gameModeViewing === undefined ? <p style={{ marginTop: "1rem", fontSize: "1.5rem" }}>Add Gamemodes Here</p> : (
-                <>
-                    <br />
+                <div>
                     <button className="utilityButton" onClick={() => {
                         showObjListSet(prevShowObjList => {
                             const newObjList = { ...prevShowObjList }
@@ -67,7 +45,10 @@ export default function GamemodeMaker({ addGameModeLocally, updateGamemodeDirect
                             })
                         }, 0)
                     }}>Reset</button>
-                </>
+                    <button className="utilityButton" onClick={() => {
+                        gameModeViewingSet(undefined)
+                    }}>Minimize</button>
+                </div>
             )}
 
             <div className={styles.gameMakerDisplayDivs} style={{ display: gameModeViewing === "match" ? "grid" : "none" }}>

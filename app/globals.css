@@ -125,6 +125,7 @@ button {
   white-space: nowrap;
   background-color: var(--secondaryColor);
   color: var(--textColorAnti);
+  user-select: none;
 }
 
 button:hover {
@@ -190,7 +191,6 @@ body::-webkit-scrollbar {
 
 .switchTabButton:active {
   background-color: hsl(0, 0%, 10%);
-  border-inline: 1px solid white;
 }
 
 .utilityButton {
@@ -202,5 +202,4 @@ body::-webkit-scrollbar {
 
 .utilityButton:active {
   background-color: hsl(0, 0%, 30%);
-  border-inline: 1px solid white;
 }

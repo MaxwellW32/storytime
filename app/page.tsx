@@ -13,7 +13,7 @@ const prisma = new PrismaClient()
 //if you're editing a story you can edit, from the list its gonna be a replace
 
 
-async function updateStory(option: "story" | "likes" | "rating", seenStory: StoryData) {
+async function updateStory(option: "story" | "likes" | "rating", sentStoryId: StoryData) {
   "use server";
 
   let responseObj = {
@@ -26,7 +26,7 @@ async function updateStory(option: "story" | "likes" | "rating", seenStory: Stor
       let checkStory = await prisma.story.findUnique(
         {
           where: {
-            storyid: seenStory.storyid,
+            storyid: sentStoryId.storyid,
           },
         }
       )
@@ -36,16 +36,16 @@ async function updateStory(option: "story" | "likes" | "rating", seenStory: Stor
         return responseObj
       }
 
-      if (checkStory.storypass !== seenStory.storypass) {
+      if (checkStory.storypass !== sentStoryId.storypass) {
         responseObj.message += "Wrong Password |"
         return responseObj
       }
 
-      const savableStory: story = { ...seenStory, storyboard: seenStory.storyboard !== null ? JSON.stringify(seenStory.storyboard) : null, gamemodes: seenStory.gamemodes !== null ? JSON.stringify(seenStory.gamemodes) : null, storypass: checkStory.storypass }
+      const savableStory: story = { ...sentStoryId, storyboard: sentStoryId.storyboard !== null ? JSON.stringify(sentStoryId.storyboard) : null, gamemodes: sentStoryId.gamemodes !== null ? JSON.stringify(sentStoryId.gamemodes) : null, storypass: checkStory.storypass }
 
       await prisma.story.update({
         where: {
-          storyid: seenStory.storyid,
+          storyid: sentStoryId.storyid,
         },
         data: savableStory,
       })
@@ -53,7 +53,7 @@ async function updateStory(option: "story" | "likes" | "rating", seenStory: Stor
     } else if (option === "likes") {
       await prisma.story.update({
         where: {
-          storyid: seenStory.storyid,
+          storyid: sentStoryId.storyid,
         },
         data: {
           likes: {
@@ -66,11 +66,11 @@ async function updateStory(option: "story" | "likes" | "rating", seenStory: Stor
 
       await prisma.story.update({
         where: {
-          storyid: seenStory.storyid,
+          storyid: sentStoryId.storyid,
         },
         data: {
           rating: {
-            increment: seenStory.rating
+            increment: sentStoryId.rating
           },
           amtofratings: {
             increment: 1
@@ -78,6 +78,82 @@ async function updateStory(option: "story" | "likes" | "rating", seenStory: Stor
 
         },
       })
+    }
+
+  } catch (error) {
+    responseObj.message = "something else went wrong |"
+  }
+
+  revalidatePath("/")
+
+  return responseObj
+}
+
+async function updatePassword(option: "story" | "gamemode", sentStoryId: string, oldPass: string, newPass: string) {
+  "use server";
+
+  let responseObj = {
+    message: "",
+  }
+
+  try {
+    if (option === "story") {
+
+      let checkStory = await prisma.story.findUnique(
+        {
+          where: {
+            storyid: sentStoryId,
+          },
+        }
+      )
+
+      if (!checkStory) {
+        responseObj.message += "Couldn't read records |"
+        return responseObj
+      }
+
+      if (checkStory.storypass !== oldPass) {
+        responseObj.message += "Wrong Password, couldn't update |"
+        return responseObj
+      }
+
+      await prisma.story.update({
+        where: {
+          storyid: sentStoryId,
+        },
+        data: {
+          storypass: newPass
+        },
+      })
+
+    } else if (option === "gamemode") {
+      let checkStory = await prisma.story.findUnique(
+        {
+          where: {
+            storyid: sentStoryId,
+          },
+        }
+      )
+
+      if (!checkStory) {
+        responseObj.message += "Couldn't read records |"
+        return responseObj
+      }
+
+      if (checkStory.storypass !== oldPass) {
+        responseObj.message += "Wrong Password |"
+        return responseObj
+      }
+
+      await prisma.story.update({
+        where: {
+          storyid: sentStoryId,
+        },
+        data: {
+          storypass: newPass
+        },
+      })
+
     }
 
   } catch (error) {
@@ -189,19 +265,39 @@ async function newAllStory(newStoriesArr: StoryData[]) {
   revalidatePath("/");
 }
 
-async function deleteStory(seenId: string) {
+async function deleteStory(seenId: string, sentPAss: string) {
   "use server";
 
-  await prisma.story.delete({
-    where: { storyid: seenId },
-  });
-  console.log(`deleted specific ${seenId}`);
+  let responseObj = {
+    message: "",
+  }
+
+  try {
+
+    const validateOldObj = await prisma.story.findUnique({
+      where: { storyid: seenId },
+    });
+
+    if (validateOldObj?.storypass !== sentPAss) {
+      responseObj.message += "Wrong password"
+      return responseObj
+    }
+
+    await prisma.story.delete({
+      where: { storyid: seenId },
+    });
+
+    console.log(`deleted specific ${seenId}`);
+
+  } catch (error) {
+    responseObj.message += "Some other event happened in error"
+
+  }
+
+
   revalidatePath("/");
 
-  //   const validateOldObj = await prisma.base.findUnique({
-  //     where: { id: input },
-  //   });
-
+  return responseObj
 
 }
 
@@ -259,7 +355,7 @@ export default async function page() {
 
   return (
     <>
-      <Home allstories={stories} getStories={getStories} deleteStory={deleteStory} newStory={newStory} updateStory={updateStory} newAllStory={newAllStory} updateGameModes={updateGameModes} />
+      <Home allstories={stories} getStories={getStories} deleteStory={deleteStory} newStory={newStory} updateStory={updateStory} updatePassword={updatePassword} newAllStory={newAllStory} updateGameModes={updateGameModes} />
     </>
   )
 }
@@ -292,6 +388,7 @@ export interface gameObjType {
   boardObjId: string,
   gameSelection: gameSelectionTypes, //tell different types of gamemodes
   gameData: gameDataType | null,
+  gamePassword: string
 }
 
 

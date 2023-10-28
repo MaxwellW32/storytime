@@ -90,6 +90,21 @@ export default function WordsToMeaningGM({ sentGameObj, isEditing = false, story
         }
     }
 
+    const [refresher, refresherset] = useState(0)
+
+    const refreshGame = () => {
+        refresherset(prev => prev + 1)
+    }
+
+    const [gameFinishedState, gameFinishedStateSet] = useState(() => {
+        if (!isEditing) {
+            const isGameOver = handleStoriesWhereGameOver(storyid!, gameObj.boardObjId, "read")
+            return isGameOver!
+        } else {
+            return false
+        }
+    })
+
     return (
         <div className={`${styles.wordMeaningMainDiv} niceScrollbar`} style={{}}>
             {isEditing ? (
@@ -100,6 +115,7 @@ export default function WordsToMeaningGM({ sentGameObj, isEditing = false, story
                                 <div key={eachWordArrIndex} className={styles.eachWordMEaningDiv}>
                                     <div>
                                         <label>Word {wordMeaningsArr.length - eachWordArrIndex}</label>
+
                                         <input placeholder="Please enter a word" type="text" value={eachWordArr[0] ?? ""}
                                             onChange={(e) => {
                                                 wordMeaningsArrSet(prevArr => {
@@ -112,6 +128,7 @@ export default function WordsToMeaningGM({ sentGameObj, isEditing = false, story
 
                                     <div>
                                         <label>Word {wordMeaningsArr.length - eachWordArrIndex}&apos;s meaning</label>
+
                                         <input placeholder={eachWordArr[0] ? `Enter ${eachWordArr[0]}'s meaning` : "Enter a meaning"} type="text" value={eachWordArr[1] ?? ""}
                                             onChange={(e) => {
                                                 wordMeaningsArrSet(prevArr => {
@@ -121,7 +138,6 @@ export default function WordsToMeaningGM({ sentGameObj, isEditing = false, story
                                                 })
                                             }} />
                                     </div>
-
                                 </div>
                             )
                         })}
@@ -134,12 +150,12 @@ export default function WordsToMeaningGM({ sentGameObj, isEditing = false, story
                         })
                     }}>Add another</button>
 
-                    <DisplayWordMeanings wordMeaningsArr={wordMeaningsArr} isEditing={true} gameObj={gameObj} />
+                    <DisplayWordMeanings key={refresher} refreshGame={refreshGame} wordMeaningsArr={wordMeaningsArr} isEditing={true} gameObj={gameObj} gameFinishedState={gameFinishedState} gameFinishedStateSet={gameFinishedStateSet} />
                     <button style={{}} onClick={submit}>Submit Gamemode</button>
                 </>
             ) : (
                 <>
-                    <DisplayWordMeanings wordMeaningsArr={wordMeaningsArr} gameObj={gameObj} />
+                    <DisplayWordMeanings key={refresher} refreshGame={refreshGame} wordMeaningsArr={wordMeaningsArr} gameObj={gameObj} gameFinishedState={gameFinishedState} gameFinishedStateSet={gameFinishedStateSet} />
                 </>
             )}
         </div>
@@ -147,7 +163,7 @@ export default function WordsToMeaningGM({ sentGameObj, isEditing = false, story
 }
 
 
-function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, gameObj }: { isEditing?: boolean, wordMeaningsArr: string[][], storyid?: string, gameObj: gameObjType }) {
+function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, gameObj, gameFinishedState, gameFinishedStateSet, refreshGame }: { isEditing?: boolean, wordMeaningsArr: string[][], storyid?: string, gameObj: gameObjType, refreshGame: () => void, gameFinishedState: boolean, gameFinishedStateSet: React.Dispatch<React.SetStateAction<boolean>> }) {
     //isediting here used to send off gamestate to local storage or not
 
     const wordMeaningsAnswersArr = useMemo(() => {
@@ -172,14 +188,7 @@ function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, game
 
     const [userAnswersArr, userAnswersArrSet] = useState<string[][]>([])
 
-    const [gameFinishedState, gameFinishedStateSet] = useState(() => {
-        if (!isEditing) {
-            const isGameOver = handleStoriesWhereGameOver(storyid!, gameObj.boardObjId, "read")
-            return isGameOver!
-        } else {
-            return false
-        }
-    })
+
 
     const seenOnPhone = useRef<boolean>(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
 
@@ -391,7 +400,6 @@ function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, game
         element.style.translate = `${position.x}px ${position.y}px`
     }
 
-
     const checkAnswers = () => {
         let amtCorrect = 0
         wordMeaningsAnswersArr.map((eachStrArr, eachStrArrIndex) => {
@@ -405,16 +413,6 @@ function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, game
         if (amtCorrect === wordMeaningsAnswersArr.length) {
             gameFinishedStateSet(true)
         }
-    }
-
-    function refreshGame() {
-        gameFinishedStateSet(false)
-        userAnswersArrSet([])
-
-        meaningWordHolders.current!.forEach(eachHolder => {
-            const secondElement = eachHolder.childNodes[2]
-            wordMapCont.current!.appendChild(secondElement)
-        })
     }
 
     const scrollElement = (event: React.PointerEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
@@ -455,7 +453,7 @@ function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, game
                 <div ref={displayWordMeaningsMapCont} className={`${styles.displayWordMeaningsMapCont} niceScrollbar`}>
                     {wordMeaningsAnswersArr.map((eachWordArray, eachWordArrayIndex) => {
                         return (
-                            <div key={eachWordArrayIndex} style={{ backgroundColor: theme ? "#ffe0b2" : "var(--textColorAnti)" }} ref={(e) => addDivsTomeaningWordHolders(e, eachWordArrayIndex)}
+                            <div key={eachWordArrayIndex} className="niceScrollbar" style={{ backgroundColor: theme ? "#ffe0b2" : "var(--textColorAnti)" }} ref={(e) => addDivsTomeaningWordHolders(e, eachWordArrayIndex)}
                             >
                                 {eachWordArray[1]}
                                 <svg onClick={() => {
@@ -532,8 +530,11 @@ function DisplayWordMeanings({ isEditing = false, wordMeaningsArr, storyid, game
             </DisplayGameOVer>
 
 
-            {!gameFinishedState && <button onClick={checkAnswers}>Check Answers</button>}
-            {gameFinishedState && <button onClick={refreshGame}>Refresh</button>}
+            {!gameFinishedState && wordMapCont.current?.children.length === 0 && <button onClick={checkAnswers}>Check Answers</button>}
+            {gameFinishedState && <button onClick={() => {
+                refreshGame()
+                gameFinishedStateSet(false)
+            }}>Refresh</button>}
         </div>
     )
 

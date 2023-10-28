@@ -1,7 +1,7 @@
 
 export default function ShowServerErrors({ errorsSeen }: { errorsSeen: { [key: string]: string } | undefined }) {
     return (
-        <div>
+        <div style={{ display: errorsSeen ? "block" : "none" }}>
             {errorsSeen && errorsSeen["message"].split("|").map((eachError, eachErrorIndex) => {
                 if (eachError.length === 0) return null
 
