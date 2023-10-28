@@ -13,7 +13,7 @@ const prisma = new PrismaClient()
 //if you're editing a story you can edit, from the list its gonna be a replace
 
 
-async function updateStory(option: "story" | "likes" | "rating", sentStoryId: StoryData) {
+async function updateStory(option: "story" | "likes" | "rating", sentStory: StoryData) {
   "use server";
 
   let responseObj = {
@@ -26,7 +26,7 @@ async function updateStory(option: "story" | "likes" | "rating", sentStoryId: St
       let checkStory = await prisma.story.findUnique(
         {
           where: {
-            storyid: sentStoryId.storyid,
+            storyid: sentStory.storyid,
           },
         }
       )
@@ -36,16 +36,16 @@ async function updateStory(option: "story" | "likes" | "rating", sentStoryId: St
         return responseObj
       }
 
-      if (checkStory.storypass !== sentStoryId.storypass) {
+      if (checkStory.storypass !== sentStory.storypass) {
         responseObj.message += "Wrong Password |"
         return responseObj
       }
 
-      const savableStory: story = { ...sentStoryId, storyboard: sentStoryId.storyboard !== null ? JSON.stringify(sentStoryId.storyboard) : null, gamemodes: sentStoryId.gamemodes !== null ? JSON.stringify(sentStoryId.gamemodes) : null, storypass: checkStory.storypass }
+      const savableStory: story = { ...sentStory, storyboard: sentStory.storyboard !== null ? JSON.stringify(sentStory.storyboard) : null, gamemodes: sentStory.gamemodes !== null ? JSON.stringify(sentStory.gamemodes) : null, storypass: checkStory.storypass }
 
       await prisma.story.update({
         where: {
-          storyid: sentStoryId.storyid,
+          storyid: sentStory.storyid,
         },
         data: savableStory,
       })
@@ -53,7 +53,7 @@ async function updateStory(option: "story" | "likes" | "rating", sentStoryId: St
     } else if (option === "likes") {
       await prisma.story.update({
         where: {
-          storyid: sentStoryId.storyid,
+          storyid: sentStory.storyid,
         },
         data: {
           likes: {
@@ -66,11 +66,11 @@ async function updateStory(option: "story" | "likes" | "rating", sentStoryId: St
 
       await prisma.story.update({
         where: {
-          storyid: sentStoryId.storyid,
+          storyid: sentStory.storyid,
         },
         data: {
           rating: {
-            increment: sentStoryId.rating
+            increment: sentStory.rating
           },
           amtofratings: {
             increment: 1
@@ -388,7 +388,6 @@ export interface gameObjType {
   boardObjId: string,
   gameSelection: gameSelectionTypes, //tell different types of gamemodes
   gameData: gameDataType | null,
-  gamePassword: string
 }
 
 
