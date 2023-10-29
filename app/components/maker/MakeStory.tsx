@@ -239,11 +239,14 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
             })
 
             if (foundInArr && indexFound !== null) {
+                //add back prev password seen
+                gamemode.gamePass = newGameModes[indexFound].gamePass
                 newGameModes[indexFound] = gamemode
             } else {
                 newGameModes = [gamemode, ...newGameModes]
             }
 
+            console.log(`$newGameModes`, newGameModes);
             return newGameModes
         })
     }
@@ -282,6 +285,8 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
             } else {
                 successFromServer = true
             }
+
+
 
         } else {
 

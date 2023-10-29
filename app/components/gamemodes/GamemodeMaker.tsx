@@ -52,19 +52,19 @@ export default function GamemodeMaker({ addGameModeLocally, updateGamemodeDirect
             )}
 
             <div className={styles.gameMakerDisplayDivs} style={{ display: gameModeViewing === "match" ? "grid" : "none" }}>
-                {showObjList["match"] && <MatchUpGM addGameModeLocally={addGameModeLocally} isEditing={true} updateGamemodeDirectly={updateGamemodeDirectly} storyid={storyId} />}
+                {showObjList["match"] && <MatchUpGM sentDirectlyFromMaker={true} addGameModeLocally={addGameModeLocally} isEditing={true} updateGamemodeDirectly={updateGamemodeDirectly} storyid={storyId} />}
             </div>
 
             <div className={styles.gameMakerDisplayDivs} style={{ display: gameModeViewing === "cross" ? "grid" : "none" }}>
-                {showObjList["cross"] && <CrosswordGM addGameModeLocally={addGameModeLocally} updateGamemodeDirectly={updateGamemodeDirectly} isEditing={true} storyid={storyId} />}
+                {showObjList["cross"] && <CrosswordGM sentDirectlyFromMaker={true} addGameModeLocally={addGameModeLocally} updateGamemodeDirectly={updateGamemodeDirectly} isEditing={true} storyid={storyId} />}
             </div>
 
             <div className={styles.gameMakerDisplayDivs} style={{ display: gameModeViewing === "pro" ? "grid" : "none" }}>
-                {showObjList["pro"] && <PronounciationGM addGameModeLocally={addGameModeLocally} updateGamemodeDirectly={updateGamemodeDirectly} storyid={storyId} isEditing={true} />}
+                {showObjList["pro"] && <PronounciationGM sentDirectlyFromMaker={true} addGameModeLocally={addGameModeLocally} updateGamemodeDirectly={updateGamemodeDirectly} isEditing={true} storyid={storyId} />}
             </div>
 
             <div className={styles.gameMakerDisplayDivs} style={{ display: gameModeViewing === "wordmean" ? "grid" : "none" }}>
-                {showObjList["wordmean"] && <WordsToMeaningGM addGameModeLocally={addGameModeLocally} updateGamemodeDirectly={updateGamemodeDirectly} storyid={storyId} isEditing={true} />}
+                {showObjList["wordmean"] && <WordsToMeaningGM sentDirectlyFromMaker={true} addGameModeLocally={addGameModeLocally} updateGamemodeDirectly={updateGamemodeDirectly} isEditing={true} storyid={storyId} />}
             </div>
         </div>
     )

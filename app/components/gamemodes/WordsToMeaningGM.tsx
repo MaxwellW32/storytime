@@ -9,9 +9,23 @@ import { v4 as uuidv4 } from "uuid";
 import { handleStoriesWhereGameOver } from "@/app/utility/savestorage"
 import DisplayGameOVer from "../useful/DisplayGameOver"
 import shuffle from "../useful/shuffleArray"
+import ShowServerErrors from "../useful/ShowServerErrors"
+import AddPassword from "../useful/AddPassword"
+import ChangePassword from "../useful/ChangePassword"
 
-export default function WordsToMeaningGM({ sentGameObj, isEditing = false, storyid, addGameModeLocally, updateGamemodeDirectly }
-    : { isEditing?: boolean, sentGameObj?: gameObjType, storyid?: string, addGameModeLocally?: (gamemode: gameObjType) => void, updateGamemodeDirectly?: boolean, storyId?: string }) {
+export default function WordsToMeaningGM({ sentGameObj, isEditing = false, storyid, addGameModeLocally, updateGamemodeDirectly, sentDirectlyFromMaker }
+    : {
+        isEditing?: boolean, sentGameObj?: gameObjType, storyid?: string, addGameModeLocally?: (gamemode: gameObjType) => void, updateGamemodeDirectly?: boolean, storyId?: string,
+        sentDirectlyFromMaker?: boolean
+    }) {
+
+    const [gamePass, gamePassSet] = useState("")
+
+    const [errorsSeen, errorsSeenSet] = useState<{
+        [key: string]: string
+    }>()
+
+    const [clickedSubmitOnce, clickedSubmitOnceSet] = useState(false)
 
     const [allServerFunctions,] = useAtom(allServerFunctionsAtom)
 
@@ -22,6 +36,7 @@ export default function WordsToMeaningGM({ sentGameObj, isEditing = false, story
             gameDataFor: "wordmeaning",
             wordMeaningsArr: null
         } as wordsToMeaningType,
+        gamePass: gamePass
     }
 
     const [gameObj, gameObjSet] = useState<gameObjType>(sentGameObj ?? { ...initialState })
@@ -74,11 +89,17 @@ export default function WordsToMeaningGM({ sentGameObj, isEditing = false, story
 
 
 
-    const submit = () => {
+    const submit = async () => {
+        if (sentDirectlyFromMaker) {
+            clickedSubmitOnceSet(true)
+        }
+
 
         const newObj: gameObjType = {
             ...gameObj,
-            gameData: { ...gameObj.gameData as wordsToMeaningType, wordMeaningsArr: wordMeaningsArr }
+            gameData: { ...gameObj.gameData as wordsToMeaningType, wordMeaningsArr: wordMeaningsArr },
+            gamePass: gamePass
+
         }
 
         if (addGameModeLocally) {
@@ -86,7 +107,13 @@ export default function WordsToMeaningGM({ sentGameObj, isEditing = false, story
         }
 
         if (updateGamemodeDirectly && storyid) {
-            allServerFunctions!.updateGameModes(newObj, storyid, "normal")
+            const serverMessageObj = await allServerFunctions!.updateGameModes(newObj, storyid, "normal")
+
+            if (serverMessageObj["message"].length !== 0) {
+                errorsSeenSet(serverMessageObj)
+            } else {
+                errorsSeenSet(undefined)
+            }
         }
     }
 
@@ -151,7 +178,30 @@ export default function WordsToMeaningGM({ sentGameObj, isEditing = false, story
                     }}>Add another</button>
 
                     <DisplayWordMeanings key={refresher} refreshGame={refreshGame} wordMeaningsArr={wordMeaningsArr} isEditing={true} gameObj={gameObj} gameFinishedState={gameFinishedState} gameFinishedStateSet={gameFinishedStateSet} />
-                    <button style={{}} onClick={submit}>Submit Gamemode</button>
+                    <ShowServerErrors errorsSeen={errorsSeen} />
+                    {/* Do local function first entirely */}
+
+                    {addGameModeLocally && (
+                        <>
+                            {sentDirectlyFromMaker && !clickedSubmitOnce && <AddPassword option="gamemode" password={gamePass} storyPasswordSet={gamePassSet} />}
+
+                            {(gamePass || !sentDirectlyFromMaker) && <button onClick={() => {
+                                submit()
+                            }}>Submit Gamemode</button>}
+                        </>
+                    )}
+
+                    {updateGamemodeDirectly && (
+                        <>
+                            {!sentDirectlyFromMaker && <ChangePassword option="gamemode" password={gamePass} storyId={storyid!} storyPasswordSet={gamePassSet} gamemodeObjId={gameObj!.boardObjId} />}
+
+                            {<AddPassword option="gamemode" password={gamePass} storyPasswordSet={gamePassSet} showFieldOnly={sentDirectlyFromMaker ? true : undefined} />}
+
+                            {gamePass && <button onClick={() => {
+                                submit()
+                            }}>Submit Gamemode</button>}
+                        </>
+                    )}
                 </>
             ) : (
                 <>

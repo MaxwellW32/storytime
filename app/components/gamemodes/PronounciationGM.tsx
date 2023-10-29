@@ -9,16 +9,28 @@ import styles from "./style.module.css"
 import { handleStoriesWhereGameOver } from '@/app/utility/savestorage';
 import { useAtom } from 'jotai';
 import { allServerFunctionsAtom } from '@/app/utility/globalState';
+import ShowServerErrors from '../useful/ShowServerErrors';
+import AddPassword from '../useful/AddPassword';
+import ChangePassword from '../useful/ChangePassword';
 
 
-export default function PronounciationGM({ isEditing = false, sentGameObj, storyid, addGameModeLocally, updateGamemodeDirectly }: {
+export default function PronounciationGM({ isEditing = false, sentGameObj, storyid, addGameModeLocally, updateGamemodeDirectly, sentDirectlyFromMaker }: {
     isEditing?: boolean,
     sentGameObj?: gameObjType,
     storyid?: string,
     addGameModeLocally?: (gamemode: gameObjType) => void,
-    updateGamemodeDirectly?: boolean, storyId?: string
+    updateGamemodeDirectly?: boolean, storyId?: string,
+    sentDirectlyFromMaker?: boolean
+
 }) {
     const [allServerFunctions,] = useAtom(allServerFunctionsAtom)
+
+    const [gamePass, gamePassSet] = useState("")
+
+    const [errorsSeen, errorsSeenSet] = useState<{
+        [key: string]: string
+    }>()
+
 
     const {
         transcript,
@@ -33,7 +45,8 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
             gameDataFor: "pronounce",
             givenWords: null
         } as pronounceType,
-        gameSelection: "pronounce"
+        gameSelection: "pronounce",
+        gamePass: gamePass
     }
 
     const [gameObj, gameObjSet] = useState<gameObjType>(sentGameObj ? { ...sentGameObj } : { ...initialState })
@@ -88,6 +101,8 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
             return false
         }
     })
+
+    const [clickedSubmitOnce, clickedSubmitOnceSet] = useState(false)
 
     const wordsLeftToMAtch = useMemo(() => {
 
@@ -219,10 +234,16 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
         }
     }
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
+
+        if (sentDirectlyFromMaker) {
+            clickedSubmitOnceSet(true)
+        }
+
         const newObj: gameObjType = {
             ...gameObj,
-            gameData: { ...gameObj.gameData as pronounceType, givenWords: givenWords }
+            gameData: { ...gameObj.gameData as pronounceType, givenWords: givenWords },
+            gamePass: gamePass
         }
 
         if (addGameModeLocally) {
@@ -230,7 +251,13 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
         }
 
         if (updateGamemodeDirectly && storyid) {
-            allServerFunctions!.updateGameModes(newObj, storyid, "normal")
+            const serverMessageObj = await allServerFunctions!.updateGameModes(newObj, storyid, "normal")
+
+            if (serverMessageObj["message"].length !== 0) {
+                errorsSeenSet(serverMessageObj)
+            } else {
+                errorsSeenSet(undefined)
+            }
         }
 
         // gameObjSet({ ...initialState })
@@ -309,7 +336,31 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
                         </div>
                     </DisplayGameOVer>
 
-                    <button onClick={handleSubmit}>Submit Gamemode</button>
+
+                    <ShowServerErrors errorsSeen={errorsSeen} />
+                    {/* Do local function first entirely */}
+
+                    {addGameModeLocally && (
+                        <>
+                            {sentDirectlyFromMaker && !clickedSubmitOnce && <AddPassword option="gamemode" password={gamePass} storyPasswordSet={gamePassSet} />}
+
+                            {(gamePass || !sentDirectlyFromMaker) && <button onClick={() => {
+                                handleSubmit()
+                            }}>Submit Gamemode</button>}
+                        </>
+                    )}
+
+                    {updateGamemodeDirectly && (
+                        <>
+                            {!sentDirectlyFromMaker && <ChangePassword option="gamemode" password={gamePass} storyId={storyid!} storyPasswordSet={gamePassSet} gamemodeObjId={gameObj!.boardObjId} />}
+
+                            {<AddPassword option="gamemode" password={gamePass} storyPasswordSet={gamePassSet} showFieldOnly={sentDirectlyFromMaker ? true : undefined} />}
+
+                            {gamePass && <button onClick={() => {
+                                handleSubmit()
+                            }}>Submit Gamemode</button>}
+                        </>
+                    )}
                 </div>
             ) : (
                 <>

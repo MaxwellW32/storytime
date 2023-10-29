@@ -7,12 +7,17 @@ import DisplayGameOVer from "../useful/DisplayGameOver"
 import { v4 as uuidv4 } from "uuid";
 import { useAtom } from "jotai"
 import { allServerFunctionsAtom } from "@/app/utility/globalState"
+import AddPassword from "../useful/AddPassword"
+import ChangePassword from "../useful/ChangePassword"
+import ShowServerErrors from "../useful/ShowServerErrors"
 
 
-export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, addGameModeLocally, updateGamemodeDirectly }:
-    { sentGameObj?: gameObjType, isEditing?: boolean, storyid?: string, addGameModeLocally?: (gamemode: gameObjType) => void, updateGamemodeDirectly?: boolean, storyId?: string }) {
+export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, addGameModeLocally, updateGamemodeDirectly, sentDirectlyFromMaker }:
+    { sentGameObj?: gameObjType, isEditing?: boolean, storyid?: string, addGameModeLocally?: (gamemode: gameObjType) => void, updateGamemodeDirectly?: boolean, storyId?: string, sentDirectlyFromMaker?: boolean }) {
 
     const [allServerFunctions,] = useAtom(allServerFunctionsAtom)
+
+    const [gamePass, gamePassSet] = useState("")
 
     const initialState: gameObjType = {
         boardObjId: uuidv4(),
@@ -21,7 +26,8 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
             wordArray: null,
             hintObj: null
         } as crosswordType,
-        gameSelection: "crossword"
+        gameSelection: "crossword",
+        gamePass: gamePass
     }
 
     const [gameObj, gameObjSet] = useState<gameObjType>(sentGameObj ? { ...sentGameObj } : { ...initialState })
@@ -45,6 +51,14 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
 
         return { ...gameObj?.gameData as crosswordType }.hintObj ?? {}
     })
+
+
+    const [errorsSeen, errorsSeenSet] = useState<{
+        [key: string]: string
+    }>()
+
+    const [clickedSubmitOnce, clickedSubmitOnceSet] = useState(false)
+
 
     //handle top level sentgameobj change
     const mounted = useRef(false)
@@ -97,11 +111,16 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
     //allow freely to switch back and forth
 
 
-    const submit = () => {
+    const submit = async () => {
+
+        if (sentDirectlyFromMaker) {
+            clickedSubmitOnceSet(true)
+        }
 
         const newObj: gameObjType = {
             ...gameObj,
-            gameData: { ...gameObj.gameData as crosswordType, wordArray: wordsArray, hintObj: hintObj }
+            gameData: { ...gameObj.gameData as crosswordType, wordArray: wordsArray, hintObj: hintObj },
+            gamePass: gamePass
         }
 
         if (addGameModeLocally) {
@@ -109,11 +128,16 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
         }
 
         if (updateGamemodeDirectly && storyid) {
-            allServerFunctions!.updateGameModes(newObj, storyid, "normal")
+            const serverMessageObj = await allServerFunctions!.updateGameModes(newObj, storyid, "normal")
+
+            if (serverMessageObj["message"].length !== 0) {
+                errorsSeenSet(serverMessageObj)
+            } else {
+                errorsSeenSet(undefined)
+            }
         }
 
-        // gameObjSet({ ...initialState })
-        // wordsArraySet([])
+
     }
 
     //write change to local storage
@@ -254,7 +278,30 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
 
                     <DisplayCrossWord key={refresher} gameFinishedState={gameFinishedState} gameFinishedStateSet={gameFinishedStateSet} refresh={refresh} hintObj={hintObj} isEditing={true} wordsArray={wordsArray} />
 
-                    <button style={{ marginTop: "1rem" }} onClick={submit}>Submit Gamemode</button>
+                    <ShowServerErrors errorsSeen={errorsSeen} />
+                    {/* Do local function first entirely */}
+
+                    {addGameModeLocally && (
+                        <>
+                            {sentDirectlyFromMaker && !clickedSubmitOnce && <AddPassword option="gamemode" password={gamePass} storyPasswordSet={gamePassSet} />}
+
+                            {(gamePass || !sentDirectlyFromMaker) && <button onClick={() => {
+                                submit()
+                            }}>Submit Gamemode</button>}
+                        </>
+                    )}
+
+                    {updateGamemodeDirectly && (
+                        <>
+                            {!sentDirectlyFromMaker && <ChangePassword option="gamemode" password={gamePass} storyId={storyid!} storyPasswordSet={gamePassSet} gamemodeObjId={gameObj!.boardObjId} />}
+
+                            {!clickedSubmitOnce && <AddPassword option="gamemode" password={gamePass} storyPasswordSet={gamePassSet} showFieldOnly={sentDirectlyFromMaker ? true : undefined} />}
+
+                            {gamePass && <button onClick={() => {
+                                submit()
+                            }}>Submit Gamemode</button>}
+                        </>
+                    )}
                 </div>
 
             ) : (

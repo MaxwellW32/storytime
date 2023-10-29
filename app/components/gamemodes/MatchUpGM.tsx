@@ -9,14 +9,18 @@ import DisplayGameOVer from "../useful/DisplayGameOver";
 import { useAtom } from "jotai";
 import { allServerFunctionsAtom, globalTheme } from "@/app/utility/globalState";
 import shuffle from "../useful/shuffleArray";
+import ChangePassword from "../useful/ChangePassword";
+import AddPassword from "../useful/AddPassword";
+import ShowServerErrors from "../useful/ShowServerErrors";
 
 
-export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGameModeLocally, updateGamemodeDirectly }: {
+export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGameModeLocally, updateGamemodeDirectly, sentDirectlyFromMaker }: {
     gameObj?: gameObjType,
     isEditing?: boolean,
     storyid?: string,
     addGameModeLocally?: (gamemode: gameObjType) => void,
-    updateGamemodeDirectly?: boolean
+    updateGamemodeDirectly?: boolean,
+    sentDirectlyFromMaker?: boolean
 }) {
 
     const [allServerFunctions,] = useAtom(allServerFunctionsAtom)
@@ -53,6 +57,14 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
         }
     })
 
+    const [gamePass, gamePassSet] = useState("")
+
+    const [errorsSeen, errorsSeenSet] = useState<{
+        [key: string]: string
+    }>()
+
+    const [clickedSubmitOnce, clickedSubmitOnceSet] = useState(false)
+
     //handle top level sentgameobj change
     const mounted = useRef(false)
     const amtTimesReset = useRef(0)
@@ -85,7 +97,10 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
     }, [gameObj])
 
 
-    function submit() {
+    async function submit() {
+        if (sentDirectlyFromMaker) {
+            clickedSubmitOnceSet(true)
+        }
         //local submit to parent make Story - saved to the storyTextboard
         const newGameMode: gameObjType = {
             gameSelection: gameSelection.current,
@@ -94,7 +109,8 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
                 choicesArr: choices,
                 questionsArr: questions
             },
-            boardObjId: boardObjId.current
+            boardObjId: boardObjId.current,
+            gamePass: gamePass
         }
 
         if (addGameModeLocally) {
@@ -102,7 +118,14 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
         }
 
         if (updateGamemodeDirectly && storyid) {
-            allServerFunctions!.updateGameModes(newGameMode, storyid, "normal")
+
+            const serverMessageObj = await allServerFunctions!.updateGameModes(newGameMode, storyid, "normal")
+
+            if (serverMessageObj["message"].length !== 0) {
+                errorsSeenSet(serverMessageObj)
+            } else {
+                errorsSeenSet(undefined)
+            }
         }
     }
 
@@ -231,7 +254,30 @@ export default function MatchUpGM({ gameObj, isEditing = false, storyid, addGame
 
                     <DisplayMatchupGM key={refresher} questions={questions} choices={choices} isEditing={true} refreshGame={refreshGame} gameFinishedState={gameFinishedState} gameFinishedStateSet={gameFinishedStateSet} />
 
-                    <button onClick={submit}>Submit Gamemode</button>
+                    <ShowServerErrors errorsSeen={errorsSeen} />
+                    {/* Do local function first entirely */}
+
+                    {addGameModeLocally && (
+                        <>
+                            {sentDirectlyFromMaker && !clickedSubmitOnce && <AddPassword option="gamemode" password={gamePass} storyPasswordSet={gamePassSet} />}
+
+                            {(gamePass || !sentDirectlyFromMaker) && <button onClick={() => {
+                                submit()
+                            }}>Submit Gamemode</button>}
+                        </>
+                    )}
+
+                    {updateGamemodeDirectly && (
+                        <>
+                            {!sentDirectlyFromMaker && <ChangePassword option="gamemode" password={gamePass} storyId={storyid!} storyPasswordSet={gamePassSet} gamemodeObjId={gameObj!.boardObjId} />}
+
+                            {<AddPassword option="gamemode" password={gamePass} storyPasswordSet={gamePassSet} showFieldOnly={sentDirectlyFromMaker ? true : undefined} />}
+
+                            {gamePass && <button onClick={() => {
+                                submit()
+                            }}>Submit Gamemode</button>}
+                        </>
+                    )}
                 </>
             ) : (
                 <div >

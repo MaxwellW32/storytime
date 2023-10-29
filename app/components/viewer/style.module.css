@@ -67,6 +67,7 @@
     transition: translate 600ms;
     background-color: var(--primaryColor);
     height: 100dvh;
+    width: 100%;
 
 }
 

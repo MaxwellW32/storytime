@@ -10,7 +10,7 @@ import { useAtom } from "jotai";
 
 
 
-export default function Home({ allstories, getStories, newAllStory, updateStory, newStory, deleteStory, updateGameModes, updatePassword }: { allstories: StoryData[],getStories(): Promise<StoryData[] | undefined>, updateStory: (option: "story" | "likes" | "rating", seeBoard: StoryData) => Promise<{message: string}>, newStory: (newStory: StoryDataSend) => Promise<void>, deleteStory(seenId: string, sentPAss: string): Promise<{message: string}>, newAllStory: (newStoriesArr: StoryData[]) => Promise<void>, updateGameModes:updateGameModesParams, updatePassword: (option: "story" | "gamemode", sentStoryId: string, oldPass: string, newPass: string) => Promise<{message: string}>}) {
+export default function Home({ allstories, getStories, newAllStory, updateStory, newStory, deleteStory, updateGameModes, updatePassword }: { allstories: StoryData[],getStories(): Promise<StoryData[] | undefined>, updateStory: (option: "story" | "likes" | "rating", seeBoard: StoryData) => Promise<{message: string}>, newStory: (newStory: StoryDataSend) => Promise<void>, deleteStory(seenId: string, sentPAss: string): Promise<{message: string}>, newAllStory: (newStoriesArr: StoryData[]) => Promise<void>, updateGameModes:updateGameModesParams, updatePassword: (option: "story" | "gamemode", sentStoryId: string, oldPass: string, newPass: string, sentGameModeObjId?: string) => Promise<{message: string}>}) {
 
     const [, allServerFunctionsSet] = useAtom(allServerFunctionsAtom)
 

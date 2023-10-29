@@ -23,10 +23,15 @@ export default function AddPassword({ password, storyPasswordSet, option, showFi
 
             ) : (
                 <>
-                    <p>Add a gamemode password. Nothing related to the story password please. Can be simple. Just something to ensure only you can edit your gamemode.</p>
-                    <input type='password' value={password} onChange={(e) => {
+
+                    {showFieldOnly && <p>Add a gamemode password. Nothing related to the story password please. Can be simple. Just something to ensure only you can edit your gamemode.</p>}
+
+                    <label style={{ fontSize: "1.5rem", color: "var(--textColor)" }}>Gamemode Password:</label>
+                    <br />
+
+                    <input style={{ backgroundColor: "var(--textColorAnti)", color: "var(--textColor)" }} type='password' value={password} onChange={(e) => {
                         storyPasswordSet(e.target.value)
-                    }} />
+                    }} placeholder='Please enter pass' />
                 </>
             )}
         </div>

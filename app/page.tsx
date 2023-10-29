@@ -23,7 +23,7 @@ async function updateStory(option: "story" | "likes" | "rating", sentStory: Stor
   try {
     if (option === "story") {
 
-      let checkStory = await prisma.story.findUnique(
+      let oldStory = await prisma.story.findUnique(
         {
           where: {
             storyid: sentStory.storyid,
@@ -31,17 +31,59 @@ async function updateStory(option: "story" | "likes" | "rating", sentStory: Stor
         }
       )
 
-      if (!checkStory) {
+      if (!oldStory) {
         responseObj.message += "Couldn't read records |"
         return responseObj
       }
 
-      if (checkStory.storypass !== sentStory.storypass) {
+      if (oldStory.storypass !== sentStory.storypass) {
         responseObj.message += "Wrong Password |"
         return responseObj
       }
 
-      const savableStory: story = { ...sentStory, storyboard: sentStory.storyboard !== null ? JSON.stringify(sentStory.storyboard) : null, gamemodes: sentStory.gamemodes !== null ? JSON.stringify(sentStory.gamemodes) : null, storypass: checkStory.storypass }
+      //here manage gamemodes pass
+
+      const oldStoryGamemodes = JSON.parse(oldStory.gamemodes ?? "[]") as unknown as gameObjType[]
+
+      //gives me back passwords that were on server
+      oldStoryGamemodes.forEach(eachOldGamemodeObj => {
+
+        sentStory.gamemodes?.forEach(eachWantedGamemode => {
+
+          if (eachWantedGamemode.boardObjId === eachOldGamemodeObj.boardObjId) {
+            eachWantedGamemode.gamePass = eachOldGamemodeObj.gamePass
+            console.log(`$seenPassNow`, eachWantedGamemode.gamePass);
+            //new passwords from new gamemodes coming in from maksestory will be fine - old gamemodes are protected
+          }
+
+        })
+      })
+
+      //go through oldStorygamemodes to see possible new gamemodes from user entry
+      const gameModesSeenLeftOut: gameObjType[] = []
+
+      oldStoryGamemodes.forEach(eachOldGameModeObj => {
+        let foundInArr = false
+
+        sentStory.gamemodes?.forEach(eachWantedGameObj => {
+          if (eachWantedGameObj.boardObjId === eachOldGameModeObj.boardObjId) {
+            foundInArr = true
+          }
+        })
+
+        if (!foundInArr) {
+          gameModesSeenLeftOut.push(eachOldGameModeObj)
+        }
+      })
+
+      //add user entries to gamemode obj 
+      if (!sentStory.gamemodes) sentStory.gamemodes = []
+      sentStory.gamemodes = [...sentStory.gamemodes, ...gameModesSeenLeftOut]
+
+
+      //now i have password gamemodes, along with any new gamemodes they sent with passwords already
+
+      const savableStory: story = { ...sentStory, storyboard: sentStory.storyboard !== null ? JSON.stringify(sentStory.storyboard) : null, gamemodes: JSON.stringify(sentStory.gamemodes), storypass: oldStory.storypass }
 
       await prisma.story.update({
         where: {
@@ -89,7 +131,7 @@ async function updateStory(option: "story" | "likes" | "rating", sentStory: Stor
   return responseObj
 }
 
-async function updatePassword(option: "story" | "gamemode", sentStoryId: string, oldPass: string, newPass: string) {
+async function updatePassword(option: "story" | "gamemode", sentStoryId: string, oldPass: string, newPass: string, sentGameModeObjId?: string) {
   "use server";
 
   let responseObj = {
@@ -126,8 +168,12 @@ async function updatePassword(option: "story" | "gamemode", sentStoryId: string,
         },
       })
 
+
+
+
     } else if (option === "gamemode") {
-      let checkStory = await prisma.story.findUnique(
+
+      let oldStory = await prisma.story.findUnique(
         {
           where: {
             storyid: sentStoryId,
@@ -135,56 +181,86 @@ async function updatePassword(option: "story" | "gamemode", sentStoryId: string,
         }
       )
 
-      if (!checkStory) {
+      if (!oldStory) {
         responseObj.message += "Couldn't read records |"
         return responseObj
       }
 
-      if (checkStory.storypass !== oldPass) {
-        responseObj.message += "Wrong Password |"
+      if (!sentGameModeObjId) {
+        responseObj.message += "GameModeOBjId not passed |"
         return responseObj
       }
+
+      const oldGameModeObjs = oldStory.gamemodes ? JSON.parse(oldStory.gamemodes) as gameObjType[] : []
+
+      let FoundAtIndex: null | number = null
+      oldGameModeObjs.forEach(async (eachOldGamemode, eachOldGamemodeIndex) => {
+        if (eachOldGamemode.boardObjId === sentGameModeObjId) {
+          FoundAtIndex = eachOldGamemodeIndex
+        }
+      })
+
+
+      if (FoundAtIndex === null) {
+        responseObj.message += "Gamemode not found |"
+        return responseObj
+      }
+
+      if (oldGameModeObjs[FoundAtIndex].gamePass !== oldPass) {
+        responseObj.message += "Wrong Gamemode Password |"
+        return responseObj
+      }
+
+      oldGameModeObjs[FoundAtIndex].gamePass = newPass
+
 
       await prisma.story.update({
         where: {
           storyid: sentStoryId,
         },
         data: {
-          storypass: newPass
+          gamemodes: JSON.stringify(oldGameModeObjs)
         },
       })
-
     }
 
   } catch (error) {
     responseObj.message = "something else went wrong |"
   }
 
-  revalidatePath("/")
 
   return responseObj
 }
 
-export type updateGameModesParams = (sentGameModeObj: gameObjType, storyId: string, option: "normal" | "delete") => Promise<void>
+export type updateGameModesParams = (sentGameModeObj: gameObjType, storyId: string, option: "normal" | "delete") => Promise<{ message: string }>
 const updateGameModes: updateGameModesParams = async (sentGameModeObj, storyId, option) => {
   "use server";
 
-  const seenStory = await prisma.story.findUnique(
+  let responseObj = {
+    message: "",
+  }
+
+  const oldStory = await prisma.story.findUnique(
     {
       where: {
         storyid: storyId,
       },
     }
   )
-  if (seenStory === null) return
 
-  let gameModeObjs: gameObjType[] = seenStory.gamemodes !== null ? JSON.parse(seenStory.gamemodes) : []
+  if (oldStory === null) {
+    responseObj.message += "Couldn't read records |"
+    return responseObj
+  }
+
+  let oldGameModeObjs: gameObjType[] = oldStory.gamemodes !== null ? JSON.parse(oldStory.gamemodes) : []
 
   if (option === "normal") {
 
     let foundInStory = false
     let foundAtIndex: null | number = null
-    gameModeObjs.forEach((eachGameObj, index) => {
+
+    oldGameModeObjs.forEach((eachGameObj, index) => {
       if (eachGameObj.boardObjId === sentGameModeObj.boardObjId) {
         foundInStory = true
         foundAtIndex = index
@@ -192,12 +268,20 @@ const updateGameModes: updateGameModesParams = async (sentGameModeObj, storyId, 
     })
 
     if (foundInStory && foundAtIndex !== null) {
-      gameModeObjs[foundAtIndex] = sentGameModeObj
+      //update gameobj only if passwords correct
+
+      if (oldGameModeObjs[foundAtIndex].gamePass !== sentGameModeObj.gamePass) {
+        responseObj.message += "Wrong Password |"
+        return responseObj
+      }
+
+      oldGameModeObjs[foundAtIndex] = sentGameModeObj
+
     } else {
-      gameModeObjs = [sentGameModeObj, ...gameModeObjs]
+      oldGameModeObjs = [sentGameModeObj, ...oldGameModeObjs]
     }
 
-    const saveableGameModeArr = JSON.stringify(gameModeObjs)
+    const saveableGameModeArr = JSON.stringify(oldGameModeObjs)
 
     await prisma.story.update({
       where: {
@@ -210,7 +294,7 @@ const updateGameModes: updateGameModesParams = async (sentGameModeObj, storyId, 
 
   } else if (option === "delete") {
 
-    const filteredArr = gameModeObjs.filter(eachGObj => eachGObj.boardObjId !== sentGameModeObj.boardObjId)
+    const filteredArr = oldGameModeObjs.filter(eachGObj => eachGObj.boardObjId !== sentGameModeObj.boardObjId)
 
     await prisma.story.update({
       where: {
@@ -225,6 +309,7 @@ const updateGameModes: updateGameModesParams = async (sentGameModeObj, storyId, 
 
 
   revalidatePath("/")
+  return responseObj
 
 }
 
@@ -338,6 +423,15 @@ async function getStories() {
 
     }
 
+    //clear pass for gamemodes
+    usablestories.forEach(eachStorie => {
+      if (eachStorie.gamemodes) {
+        eachStorie.gamemodes.forEach(eachGameMode => {
+          eachGameMode.gamePass = ""
+        })
+      }
+    })
+
     return usablestories
   } catch (error) {
     console.log(`$error`, error);
@@ -388,6 +482,7 @@ export interface gameObjType {
   boardObjId: string,
   gameSelection: gameSelectionTypes, //tell different types of gamemodes
   gameData: gameDataType | null,
+  gamePass: string
 }
 
 
