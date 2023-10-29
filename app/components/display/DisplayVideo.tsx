@@ -35,12 +35,13 @@ export default function DisplayVideo({ passedVideoData, editing = false, handleS
                     </div>
                 </>
             ) : (
-                <div style={{ overflow: "hidden", maxWidth: "100dvw" }}>
+                <div style={{ overflow: "hidden", display: "grid", gridTemplateColumns: "1fr" }}>
                     <ReactPlayer
                         loop={false}
                         playing={false}
                         url={videoObj.videoUrl ? videoObj.videoUrl : "https://www.youtube.com/watch?v=NJuSStkIZBg"}
                         controls={true}
+                        width={"100%"}
                     />
                 </div>
             )}
