@@ -294,6 +294,24 @@ const updateGameModes: updateGameModesParams = async (sentGameModeObj, storyId, 
 
   } else if (option === "delete") {
 
+    let foundInStory = false
+    let foundAtIndex: null | number = null
+
+    oldGameModeObjs.forEach((eachGameObj, index) => {
+      if (eachGameObj.boardObjId === sentGameModeObj.boardObjId) {
+        foundInStory = true
+        foundAtIndex = index
+      }
+    })
+
+    if (foundInStory && foundAtIndex !== null) {
+
+      if (oldGameModeObjs[foundAtIndex].gamePass !== sentGameModeObj.gamePass && oldStory.storypass !== sentGameModeObj.gamePass) {
+        responseObj.message += "Wrong Password |"
+        return responseObj
+      }
+    }
+
     const filteredArr = oldGameModeObjs.filter(eachGObj => eachGObj.boardObjId !== sentGameModeObj.boardObjId)
 
     await prisma.story.update({
