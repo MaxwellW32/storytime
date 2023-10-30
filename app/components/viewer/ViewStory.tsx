@@ -129,15 +129,7 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
 
     const [passForDelete, passForDeleteSet] = useState("")
 
-    const [muted, mutedSet] = useState(true)
 
-    useEffect(() => {
-        if (canPlayAudio) {
-            setTimeout(() => {
-                mutedSet(false)
-            }, 5000)
-        }
-    }, [canPlayAudio])
     return (
         <div style={{ width: "95%", margin: "0 auto", borderRadius: ".7rem", padding: "1rem", backgroundColor: "var(--primaryColor)", position: "relative", display: "grid" }}>
 
@@ -442,8 +434,6 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
                 <ReactPlayer
                     loop={true}
                     playing={canPlayAudio}
-                    volume={1}
-                    muted={muted}
                     url={fullData.backgroundaudio ? fullData.backgroundaudio : "https://www.youtube.com/watch?v=NJuSStkIZBg"} />
             </div>
         </div >
