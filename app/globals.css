@@ -71,8 +71,7 @@ html {
   background-repeat: no-repeat;
   background-position-x: left;
   background-color: #23201d;
-  height: 100dvh;
-  width: 100dvw;
+  height: 100svh;
   overflow-y: auto;
   overflow-x: hidden;
   font-family: var(--font-roboto-mono);

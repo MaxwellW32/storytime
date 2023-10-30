@@ -15,3 +15,5 @@ export const allServerFunctionsAtom = atom<{
     "updatePassword": (option: "story" | "gamemode", sentStoryId: string, oldPass: string, newPass: string, sentGameModeObjId?: string) => Promise<{ message: string }>
 } | null>(null);
 
+
+export const search = atom<string>("");

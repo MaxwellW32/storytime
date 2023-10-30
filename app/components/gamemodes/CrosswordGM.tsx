@@ -295,7 +295,7 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
                         <>
                             {!sentDirectlyFromMaker && <ChangePassword option="gamemode" password={gamePass} storyId={storyid!} storyPasswordSet={gamePassSet} gamemodeObjId={gameObj!.boardObjId} />}
 
-                            {!clickedSubmitOnce && <AddPassword option="gamemode" password={gamePass} storyPasswordSet={gamePassSet} showFieldOnly={sentDirectlyFromMaker ? true : undefined} />}
+                            {!clickedSubmitOnce && <AddPassword option="gamemode" password={gamePass} storyPasswordSet={gamePassSet} showFieldOnly={sentDirectlyFromMaker ? undefined : true} />}
 
                             {gamePass && <button onClick={() => {
                                 submit()

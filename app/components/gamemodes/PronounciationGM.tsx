@@ -354,7 +354,7 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
                         <>
                             {!sentDirectlyFromMaker && <ChangePassword option="gamemode" password={gamePass} storyId={storyid!} storyPasswordSet={gamePassSet} gamemodeObjId={gameObj!.boardObjId} />}
 
-                            {<AddPassword option="gamemode" password={gamePass} storyPasswordSet={gamePassSet} showFieldOnly={sentDirectlyFromMaker ? true : undefined} />}
+                            {<AddPassword option="gamemode" password={gamePass} storyPasswordSet={gamePassSet} showFieldOnly={sentDirectlyFromMaker ? undefined : true} />}
 
                             {gamePass && <button onClick={() => {
                                 handleSubmit()

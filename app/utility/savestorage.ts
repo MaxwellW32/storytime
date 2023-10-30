@@ -1,5 +1,7 @@
 "use client"
 
+import { revalidatePath } from "next/cache";
+
 export function saveToLocalStorage(keyName: any, item: any) {
     localStorage.setItem(keyName, JSON.stringify(item));
 }
@@ -72,5 +74,17 @@ export function handleLikedStories(seenStoryId: string, option: "check" | "add")
     } else if (option === "add") {
         seenObj[seenStoryId] = true
         saveToLocalStorage("storiesLiked", seenObj)
+    }
+}
+
+export function saveRecentlySeenStories(seenStoryId: string) {
+
+    let seenStories: string[] | null = retreiveFromLocalStorage("recentlySeenStories")
+
+    if (!seenStories) seenStories = []
+
+    if (!seenStories.includes(seenStoryId)) {
+        seenStories = [seenStoryId, ...seenStories]
+        saveToLocalStorage("recentlySeenStories", seenStories)
     }
 }
