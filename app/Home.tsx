@@ -90,9 +90,15 @@ export default function Home({ allstories, getStories, newAllStory, updateStory,
                 <button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => { makingStorySet(true) }}>Add A Story</button>
             }
 
-            {searchFilteredStories.length > 0 && searchFilteredStories.map((eachStory: StoryData) => (
-                <ViewStory key={eachStory.storyid} fullData={eachStory}/>
-            ))}
+            {searchFilteredStories.length > 0 && (
+                <>
+                    {searchFilteredStories.map((eachStory: StoryData) => (
+                        <ViewStory key={eachStory.storyid} fullData={eachStory}/>
+                    ))}
+
+                    <div style={{height: '.2rem', backgroundColor: "var(--textColor)"}}></div>
+                </>
+            )}
 
             {storiesSeenAlready.length > 0 && (
                 <div style={{padding: "1rem", display: "grid", gap: "1rem", backgroundColor: theme ?  "rgba(0,0,0,0.2)" :  "rgba(255,255,255,0.2)", borderRadius: "1rem", }}>
