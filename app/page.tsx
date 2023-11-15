@@ -404,6 +404,8 @@ async function deleteStory(seenId: string, sentPAss: string) {
 
 }
 
+let seenError: undefined | string = undefined
+
 async function getStories() {
   "use server";
 
@@ -449,10 +451,13 @@ async function getStories() {
       }
     })
 
+    seenError = undefined
+
     return usablestories
 
   } catch (error) {
     console.log(`$error`, error);
+    seenError = "error seen"
   }
 
 }
@@ -460,14 +465,9 @@ async function getStories() {
 export default async function page() {
   let stories = await getStories()
 
-  if (!stories) {
-    return <p>Loading Up Stories...</p>
-  }
-
-
   return (
     <>
-      <Home allstories={stories} getStories={getStories} deleteStory={deleteStory} newStory={newStory} updateStory={updateStory} updatePassword={updatePassword} newAllStory={newAllStory} updateGameModes={updateGameModes} />
+      <Home seenError={seenError} allstories={stories ?? []} getStories={getStories} deleteStory={deleteStory} newStory={newStory} updateStory={updateStory} updatePassword={updatePassword} newAllStory={newAllStory} updateGameModes={updateGameModes} />
     </>
   )
 }

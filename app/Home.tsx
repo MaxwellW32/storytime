@@ -10,7 +10,16 @@ import { retreiveFromLocalStorage } from "./utility/savestorage";
 
 
 
-export default function Home({ allstories, getStories, newAllStory, updateStory, newStory, deleteStory, updateGameModes, updatePassword }: { allstories: StoryData[],getStories(): Promise<StoryData[] | undefined>, updateStory: (option: "story" | "likes" | "rating", seeBoard: StoryData) => Promise<{message: string}>, newStory: (newStory: StoryDataSend) => Promise<void>, deleteStory(seenId: string, sentPAss: string): Promise<{message: string}>, newAllStory: (newStoriesArr: StoryData[]) => Promise<void>, updateGameModes:updateGameModesParams, updatePassword: (option: "story" | "gamemode", sentStoryId: string, oldPass: string, newPass: string, sentGameModeObjId?: string) => Promise<{message: string}>}) {
+export default function Home({ seenError, allstories, getStories, newAllStory, updateStory, newStory, deleteStory, updateGameModes, updatePassword }: { seenError: undefined | string, allstories: StoryData[],getStories(): Promise<StoryData[] | undefined>, updateStory: (option: "story" | "likes" | "rating", seeBoard: StoryData) => Promise<{message: string}>, newStory: (newStory: StoryDataSend) => Promise<void>, deleteStory(seenId: string, sentPAss: string): Promise<{message: string}>, newAllStory: (newStoriesArr: StoryData[]) => Promise<void>, updateGameModes:updateGameModesParams, updatePassword: (option: "story" | "gamemode", sentStoryId: string, oldPass: string, newPass: string, sentGameModeObjId?: string) => Promise<{message: string}>}) {
+
+    //refresh on error
+    useEffect(()=>{
+        if (seenError){
+            setTimeout(()=>{
+                location.reload();
+            },5000)
+        }
+    },[])
 
     const [, allServerFunctionsSet] = useAtom(allServerFunctionsAtom)
     
@@ -84,6 +93,7 @@ export default function Home({ allstories, getStories, newAllStory, updateStory,
         <main className={styles.homeDiv}>
             {makingStory ? <MakeStory makingStorySet={makingStorySet} /> : <button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => { makingStorySet(true) }}>Add A Story</button>}
 
+            {seenError && <p>Error Loading Stories, refreshing...</p>}
             {seenSearch ? (
                 <>
                  {searchFilteredStories.length > 0 ? (
