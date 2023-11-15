@@ -1,6 +1,5 @@
 "use client"
 import { useEffect, useMemo, useState } from "react"
-import { v4 as uuidv4 } from "uuid";
 import styles from "./style.module.css"
 import MakeStory from './components/maker/MakeStory';
 import ViewStory from './components/viewer/ViewStory';
@@ -56,22 +55,20 @@ export default function Home({ allstories, getStories, newAllStory, updateStory,
     const [showAllRecentStories, showAllRecentStoriesSet] = useState(false)
     
     const searchFilteredStories = useMemo(()=>{
-
+        
         if (seenSearch === "") return []
         
-        seenSearch.toLowerCase()
-
         const storiesMatchingSearch:StoryData[] = []
 
         allstories.forEach(eachStory => {
 
             let seen = false
 
-            if (eachStory.title.toLowerCase().includes(seenSearch)){
+            if (eachStory.title.toLowerCase().includes(seenSearch.toLowerCase())){
                 seen = true
             }
 
-            if (eachStory.shortdescription && eachStory.shortdescription.toLowerCase().includes(seenSearch)){
+            if (eachStory.shortdescription && eachStory.shortdescription.toLowerCase().includes(seenSearch.toLowerCase())){
                 seen = true
             }
 
@@ -85,20 +82,27 @@ export default function Home({ allstories, getStories, newAllStory, updateStory,
 
     return (
         <main className={styles.homeDiv}>
-            {makingStory ? 
-                <MakeStory makingStorySet={makingStorySet} /> : 
-                <button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => { makingStorySet(true) }}>Add A Story</button>
-            }
+            {makingStory ? <MakeStory makingStorySet={makingStorySet} /> : <button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => { makingStorySet(true) }}>Add A Story</button>}
 
-            {searchFilteredStories.length > 0 && (
+            {seenSearch ? (
                 <>
-                    {searchFilteredStories.map((eachStory: StoryData) => (
-                        <ViewStory key={eachStory.storyid} fullData={eachStory}/>
-                    ))}
+                 {searchFilteredStories.length > 0 ? (
+                    <>
+                        <p>Stories matching {seenSearch}:</p>
+                    
+                        {searchFilteredStories.map((eachStory: StoryData) => (
+                            <ViewStory key={eachStory.storyid} fullData={eachStory}/>
+                        ))}
+                    </>
+                ) : (
+                    <>
+                        <p>Story Not Found</p>
+                    </>
+                )}
 
                     <div style={{height: '.2rem', backgroundColor: "var(--textColor)"}}></div>
                 </>
-            )}
+            ) : null}
 
             {storiesSeenAlready.length > 0 && (
                 <div style={{padding: "1rem", display: "grid", gap: "1rem", backgroundColor: theme ?  "rgba(0,0,0,0.2)" :  "rgba(255,255,255,0.2)", borderRadius: "1rem", }}>

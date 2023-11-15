@@ -107,7 +107,12 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
 
     //monitor reading or not, for sound
     useEffect(() => {
-        canPlayAudioSet(reading)
+
+        return () => {
+            if (!reading) {
+                canPlayAudioSet(false)
+            }
+        }
     }, [reading])
 
     useEffect(() => {
@@ -208,17 +213,28 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
             {reading && (
                 <div className={`${styles.readingArea} niceScrollbar`} style={{ gridTemplateColumns: gameModesShowing ? "1fr 1fr" : "1fr" }}>
                     <div>
-                        <span style={{ width: "1rem", aspectRatio: "1/1", position: "absolute", right: 0, margin: "1rem", fill: "var(--textColor)" }} onClick={() => { canPlayAudioSet(prev => !prev) }}>
-                            {canPlayAudio ? (
-                                <>
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48H80c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H48zm192 0c-26.5 0-48 21.5-48 48V400c0 26.5 21.5 48 48 48h32c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H240z" /></svg>
-                                </>
-                            ) : (
-                                <>
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z" /></svg>
-                                </>)
-                            }
-                        </span>
+                        <div style={{ position: "absolute", right: 0, margin: "1rem", display: "flex", alignItems: "center", gap: "1rem" }}>
+                            <ReactPlayer
+                                loop={true}
+                                playing={canPlayAudio}
+                                url={fullData.backgroundaudio ? fullData.backgroundaudio : "https://www.youtube.com/watch?v=NJuSStkIZBg"}
+                                height={50}
+                                width={50}
+                                onPlay={() => canPlayAudioSet(true)}
+                            />
+
+                            <div style={{ width: "1rem", aspectRatio: "1/1", fill: "var(--textColor)" }} onClick={() => { canPlayAudioSet(prev => !prev) }}>
+                                {canPlayAudio ? (
+                                    <>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M48 64C21.5 64 0 85.5 0 112V400c0 26.5 21.5 48 48 48H80c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H48zm192 0c-26.5 0-48 21.5-48 48V400c0 26.5 21.5 48 48 48h32c26.5 0 48-21.5 48-48V112c0-26.5-21.5-48-48-48H240z" /></svg>
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z" /></svg>
+                                    </>)
+                                }
+                            </div>
+                        </div>
 
                         <span style={{ display: "flex", gap: ".5rem", alignItems: "center", padding: ".5rem" }}>
                             <button style={{}} onClick={() => { readingSet(false) }}>Home</button>
@@ -396,15 +412,9 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
             )
             }
 
-            {/* audio */}
             <svg style={{ fill: "var(--secondaryColor)", width: "var(--nav-icon-size)", marginLeft: "auto" }} onClick={() => { editClickedSet(true) }} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z" /></svg>
-
-            <div style={{ display: "none" }}>
-                <ReactPlayer
-                    loop={true}
-                    playing={canPlayAudio}
-                    url={fullData.backgroundaudio ? fullData.backgroundaudio : "https://www.youtube.com/watch?v=NJuSStkIZBg"} />
-            </div>
         </div >
     )
 }
+
+

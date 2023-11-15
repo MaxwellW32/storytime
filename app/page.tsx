@@ -408,8 +408,7 @@ async function getStories() {
   "use server";
 
   try {
-    let rawStories = [] as story[]
-    rawStories = await prisma.story.findMany(
+    let rawStories = await prisma.story.findMany(
       {
         orderBy: {
           likes: 'desc',
@@ -451,6 +450,7 @@ async function getStories() {
     })
 
     return usablestories
+
   } catch (error) {
     console.log(`$error`, error);
   }
