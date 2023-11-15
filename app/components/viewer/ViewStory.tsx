@@ -105,14 +105,12 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
     }>()
 
     const [wantsToDeleteGamemodeArr, wantsToDeleteGamemodeArrSet] = useState<boolean[]>([])
-
-    //monitor reading or not, for sound
+    //show player on open
     useEffect(() => {
-
-        return () => {
-            if (!reading) {
-                canPlayAudioSet(false)
-            }
+        if (reading) {
+            canShowAudioControlsSet(false)
+        } else {
+            canPlayAudioSet(false)
         }
     }, [reading])
 
@@ -135,9 +133,9 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
 
     const [passForDelete, passForDeleteSet] = useState("")
 
-    //track if theyve been reading for 5 mins, then save to recently read
     const readingTimer = useRef<NodeJS.Timeout | undefined>()
 
+    //track if theyve been reading for 5 mins, then save to recently read
     useEffect(() => {
         if (reading) {
             readingTimer.current = setTimeout(() => {
