@@ -3,15 +3,15 @@ import { useEffect, useMemo, useState } from "react"
 import styles from "./style.module.css"
 import MakeStory from './components/maker/MakeStory';
 import ViewStory from './components/viewer/ViewStory';
-import { StoryData, StoryDataSend, gameObjType, updateGameModesParams } from "./page";
-import { allServerFunctionsAtom, globalTheme, search } from "./utility/globalState";
+import type { StoryData } from "./page";
+import { globalTheme, search } from "./utility/globalState";
 import { useAtom } from "jotai";
 import { retreiveFromLocalStorage } from "./utility/savestorage";
 
 
 
-export default function Home({ seenError, allstories, getStories, newAllStory, updateStory, newStory, deleteStory, updateGameModes, updatePassword }: { seenError: undefined | string, allstories: StoryData[],getStories(): Promise<StoryData[] | undefined>, updateStory: (option: "story" | "likes" | "rating", seeBoard: StoryData) => Promise<{message: string}>, newStory: (newStory: StoryDataSend) => Promise<void>, deleteStory(seenId: string, sentPAss: string): Promise<{message: string}>, newAllStory: (newStoriesArr: StoryData[]) => Promise<void>, updateGameModes:updateGameModesParams, updatePassword: (option: "story" | "gamemode", sentStoryId: string, oldPass: string, newPass: string, sentGameModeObjId?: string) => Promise<{message: string}>}) {
-
+export default function Home({ seenError, allstories}: { seenError: undefined | string, allstories: StoryData[]}){
+   
     //refresh on error
     useEffect(()=>{
         if (seenError){
@@ -21,25 +21,11 @@ export default function Home({ seenError, allstories, getStories, newAllStory, u
         }
     },[])
 
-    const [, allServerFunctionsSet] = useAtom(allServerFunctionsAtom)
-    
     const [theme,] = useAtom(globalTheme)
     
     const [seenSearch,] = useAtom(search)
     
     const [makingStory, makingStorySet] = useState(false)
-    //use this instead of drilling props
-    useEffect(()=>{
-        allServerFunctionsSet({
-            "getStories":getStories,
-            "deleteStory":deleteStory,
-            "newStory":newStory,
-            "updateStory":updateStory,
-            "newAllStory":newAllStory,
-            "updateGameModes":updateGameModes,
-            "updatePassword": updatePassword
-                })
-    },[])
  
     const [storiesSeenAlready, storiesSeenAlreadySet] = useState<StoryData[]>([])
 
@@ -94,6 +80,7 @@ export default function Home({ seenError, allstories, getStories, newAllStory, u
             {makingStory ? <MakeStory makingStorySet={makingStorySet} /> : <button style={{ margin: ".5rem 0 0 .5rem" }} onClick={() => { makingStorySet(true) }}>Add A Story</button>}
 
             {seenError && <p>Error Loading Stories, refreshing...</p>}
+            
             {seenSearch ? (
                 <>
                  {searchFilteredStories.length > 0 ? (

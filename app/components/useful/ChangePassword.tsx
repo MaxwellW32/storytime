@@ -1,14 +1,13 @@
 "use client"
-import { allServerFunctionsAtom } from '@/app/utility/globalState'
 import { useAtom } from 'jotai'
 import React, { useState } from 'react'
 import ShowServerErrors from './ShowServerErrors'
+import { updatePassword } from '@/app/utility/serverFunctions'
 
 export default function ChangePassword({ password, storyPasswordSet, option, storyId, gamemodeObjId }: { password: string, storyPasswordSet: React.Dispatch<React.SetStateAction<string>>, storyId: string, option: "story" | "gamemode", gamemodeObjId?: string }) {
     const [expanded, expandedSet] = useState(false)
     const [oldPass, oldPAssSet] = useState("")
     const [newPass, newPassSet] = useState("")
-    const [allServerFunctions] = useAtom(allServerFunctionsAtom)
 
     const [errorsSeen, errorsSeenSet] = useState<{
         [key: string]: string
@@ -46,7 +45,7 @@ export default function ChangePassword({ password, storyPasswordSet, option, sto
                     <button className='utilityButton' onClick={async () => {
                         //takes in the new pass and story id
                         //listens to response errors
-                        const serverMessageObj = await allServerFunctions!.updatePassword("story", storyId, oldPass, newPass)
+                        const serverMessageObj = await updatePassword("story", storyId, oldPass, newPass)
 
                         if (serverMessageObj["message"].length !== 0) {
                             //error seen
@@ -81,7 +80,7 @@ export default function ChangePassword({ password, storyPasswordSet, option, sto
                     <ShowServerErrors errorsSeen={errorsSeen} />
 
                     <button className='utilityButton' onClick={async () => {
-                        const serverMessageObj = await allServerFunctions!.updatePassword("gamemode", storyId, oldPass, newPass, gamemodeObjId)
+                        const serverMessageObj = await updatePassword("gamemode", storyId, oldPass, newPass, gamemodeObjId)
 
                         if (serverMessageObj["message"].length !== 0) {
                             //error seen

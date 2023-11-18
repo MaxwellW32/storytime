@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import styles from "./style.module.css"
 import { gameObjType, matchupType, wordsToMeaningType } from "@/app/page"
 import { useAtom } from "jotai"
-import { allServerFunctionsAtom, globalTheme } from "@/app/utility/globalState"
+import { globalTheme } from "@/app/utility/globalState"
 import { v4 as uuidv4 } from "uuid";
 import { handleStoriesWhereGameOver } from "@/app/utility/savestorage"
 import DisplayGameOVer from "../useful/DisplayGameOver"
@@ -12,6 +12,7 @@ import shuffle from "../useful/shuffleArray"
 import ShowServerErrors from "../useful/ShowServerErrors"
 import AddPassword from "../useful/AddPassword"
 import ChangePassword from "../useful/ChangePassword"
+import { updateGameModes } from "@/app/utility/serverFunctions"
 
 export default function WordsToMeaningGM({ sentGameObj, isEditing = false, storyid, addGameModeLocally, updateGamemodeDirectly, sentDirectlyFromMaker }
     : {
@@ -26,8 +27,6 @@ export default function WordsToMeaningGM({ sentGameObj, isEditing = false, story
     }>()
 
     const [clickedSubmitOnce, clickedSubmitOnceSet] = useState(false)
-
-    const [allServerFunctions,] = useAtom(allServerFunctionsAtom)
 
     const initialState: gameObjType = {
         boardObjId: uuidv4(),
@@ -107,7 +106,7 @@ export default function WordsToMeaningGM({ sentGameObj, isEditing = false, story
         }
 
         if (updateGamemodeDirectly && storyid) {
-            const serverMessageObj = await allServerFunctions!.updateGameModes(newObj, storyid, "normal")
+            const serverMessageObj = await updateGameModes(newObj, storyid, "normal")
 
             if (serverMessageObj["message"].length !== 0) {
                 errorsSeenSet(serverMessageObj)

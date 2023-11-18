@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect, useMemo } from "react"
 import { v4 as uuidv4 } from "uuid";
 import styles from "./style.module.css"
-import { StoryData, StoryDataSend, gameObjType, gameSelectionTypes, imageType, storyBoardType, textType, videoType } from "@/app/page";
+import type { StoryData, StoryDataSend, gameObjType, gameSelectionTypes, imageType, storyBoardType, textType, videoType } from "@/app/page";
 import DisplayImage from "../display/DisplayImage";
 import DisplayVideo from "../display/DisplayVideo";
 import MatchUpGM from "../gamemodes/MatchUpGM";
@@ -10,13 +10,12 @@ import CrosswordGM from "../gamemodes/CrosswordGM";
 import WordsToMeaningGM from "../gamemodes/WordsToMeaningGM";
 import PronounciationGM from "../gamemodes/PronounciationGM";
 import GamemodeMaker from "../gamemodes/GamemodeMaker";
-import { useAtom } from "jotai";
-import { allServerFunctionsAtom } from "@/app/utility/globalState";
 import AddEpubFile from "./AddEpub";
 import AddPassword from "../useful/AddPassword";
 import ShowServerErrors from "../useful/ShowServerErrors";
 import UndoRedo from "../useful/UndoRedo";
 import ChangePassword from "../useful/ChangePassword";
+import { newStory, updateStory } from "@/app/utility/serverFunctions";
 
 
 
@@ -26,8 +25,6 @@ const ISYTVID = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/
 
 
 export default function MakeStory({ passedData, shouldUpdateStory, makingStorySet, editClickedSet }: { passedData?: StoryData, shouldUpdateStory?: boolean, makingStorySet?: React.Dispatch<React.SetStateAction<boolean>>, editClickedSet?: React.Dispatch<React.SetStateAction<boolean>> }) {
-
-    const [allServerFunctions,] = useAtom(allServerFunctionsAtom)
 
     const [storyTitle, storyTitleSet] = useState(passedData?.title ?? "")
 
@@ -278,7 +275,7 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                 gamemodes: gameModes,
             }
 
-            const serverMessageObj = await allServerFunctions!.updateStory("story", updatedStoryObj)
+            const serverMessageObj = await updateStory("story", updatedStoryObj)
 
             if (serverMessageObj["message"].length !== 0) {
                 errorsSeenSet(serverMessageObj)
@@ -306,7 +303,7 @@ export default function MakeStory({ passedData, shouldUpdateStory, makingStorySe
                 gamemodes: gameModes as unknown as string | null
             }
             //using unkown here cause its not a string, i convert it to a string in the update function
-            allServerFunctions!.newStory(newStoryObj)
+            newStory(newStoryObj)
         }
 
 

@@ -1,21 +1,19 @@
 "use client"
 import styles from "./style.module.css"
 import { useRef, useEffect, useState, useMemo } from "react"
-import { crosswordType, gameObjType, storyBoardType, updateGameModesParams } from "@/app/page"
+import type { crosswordType, gameObjType } from "@/app/page"
 import { handleStoriesWhereGameOver } from "@/app/utility/savestorage"
 import DisplayGameOVer from "../useful/DisplayGameOver"
 import { v4 as uuidv4 } from "uuid";
 import { useAtom } from "jotai"
-import { allServerFunctionsAtom } from "@/app/utility/globalState"
 import AddPassword from "../useful/AddPassword"
 import ChangePassword from "../useful/ChangePassword"
 import ShowServerErrors from "../useful/ShowServerErrors"
+import { updateGameModes } from "@/app/utility/serverFunctions"
 
 
 export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, addGameModeLocally, updateGamemodeDirectly, sentDirectlyFromMaker }:
     { sentGameObj?: gameObjType, isEditing?: boolean, storyid?: string, addGameModeLocally?: (gamemode: gameObjType) => void, updateGamemodeDirectly?: boolean, storyId?: string, sentDirectlyFromMaker?: boolean }) {
-
-    const [allServerFunctions,] = useAtom(allServerFunctionsAtom)
 
     const [gamePass, gamePassSet] = useState("")
 
@@ -128,7 +126,7 @@ export default function CrosswordGM({ sentGameObj, isEditing = false, storyid, a
         }
 
         if (updateGamemodeDirectly && storyid) {
-            const serverMessageObj = await allServerFunctions!.updateGameModes(newObj, storyid, "normal")
+            const serverMessageObj = await updateGameModes(newObj, storyid, "normal")
 
             if (serverMessageObj["message"].length !== 0) {
                 errorsSeenSet(serverMessageObj)

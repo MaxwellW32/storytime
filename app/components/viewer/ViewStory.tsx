@@ -1,7 +1,5 @@
 "use client"
-import Image from 'next/image'
 import { useState, useRef, useEffect, useMemo } from "react"
-import { v4 as uuidv4 } from "uuid";
 import styles from "./style.module.css"
 import ReactPlayer from "react-player/youtube";
 import MakeStory from '../maker/MakeStory';
@@ -11,22 +9,20 @@ import MatchUpGM from '../gamemodes/MatchUpGM';
 import CrosswordGM from '../gamemodes/CrosswordGM';
 import WordsToMeaningGM from '../gamemodes/WordsToMeaningGM';
 import PronounciationGM from '../gamemodes/PronounciationGM';
-import { StoryData, gameObjType, updateGameModesParams } from '@/app/page';
+import { StoryData } from '@/app/page';
 import GamemodeMaker from '../gamemodes/GamemodeMaker';
 import { useAtom } from 'jotai';
-import { allServerFunctionsAtom } from '@/app/utility/globalState';
 import { handleLikedStories, retreiveFromLocalStorage, saveRecentlySeenStories, saveToLocalStorage } from '@/app/utility/savestorage';
 import AddPassword from '../useful/AddPassword';
 import ShowServerErrors from '../useful/ShowServerErrors';
+import { deleteStory, updateGameModes, updateStory } from "@/app/utility/serverFunctions";
 
 function HandleRating({ rating, ratingAmt, seenStory }: { rating: number, ratingAmt: number, seenStory: StoryData }) {
-    const [allServerFunctions,] = useAtom(allServerFunctionsAtom)
     const [userRating, userRatingSet] = useState<number | undefined>(ratingAmt > 0 ? rating / ratingAmt : undefined)
     const [canShowButton, canShowButtonSet] = useState(userRating !== undefined ? false : true)
 
     const sendOffRating = () => {
-        allServerFunctions!.updateStory("rating", { ...seenStory, rating: userRating! })
-
+        updateStory("rating", { ...seenStory, rating: userRating! })
         canShowButtonSet(false)
     }
 
@@ -82,8 +78,6 @@ function DisplayStars({ starRating, userRatingSet }: { starRating: number | unde
 }
 
 export default function ViewStory({ fullData }: { fullData: StoryData }) {
-
-    const [allServerFunctions,] = useAtom(allServerFunctionsAtom)
 
     const [reading, readingSet] = useState(false)
 
@@ -175,7 +169,7 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
                             <div style={{ display: "flex", width: "100%", justifyContent: "center", gap: ".5rem", marginTop: ".5rem" }}>
                                 <button onClick={async () => {
 
-                                    const serverMessageObj = await allServerFunctions!.deleteStory(fullData.storyid, typedPass)
+                                    const serverMessageObj = await deleteStory(fullData.storyid, typedPass)
 
                                     if (serverMessageObj["message"].length !== 0) {
                                         errorsSeenSet(serverMessageObj)
@@ -254,7 +248,7 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
                             <div onClick={() => {
                                 if (!sentLikesAlready) {
                                     const newStoryObj: StoryData = { ...fullData, likes: 1 }
-                                    allServerFunctions!.updateStory("likes", newStoryObj)
+                                    updateStory("likes", newStoryObj)
                                 }
                                 sentLikesAlreadySet(true)
                                 handleLikedStories(fullData.storyid, "add")
@@ -353,7 +347,7 @@ export default function ViewStory({ fullData }: { fullData: StoryData }) {
                                                             <AddPassword option='gamemode' password={passForDelete} storyPasswordSet={passForDeleteSet} showFieldOnly={true} />
 
                                                             <button className='utilityButton' onClick={async () => {
-                                                                const serverMessageObj = await allServerFunctions!.updateGameModes({ ...eachGameObj, gamePass: passForDelete }, fullData.storyid, "delete")
+                                                                const serverMessageObj = await updateGameModes({ ...eachGameObj, gamePass: passForDelete }, fullData.storyid, "delete")
 
                                                                 if (serverMessageObj["message"].length !== 0) {
                                                                     errorsSeenForGamemodeSet(serverMessageObj)

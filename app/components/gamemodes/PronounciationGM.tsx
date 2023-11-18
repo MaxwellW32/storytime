@@ -4,14 +4,14 @@ import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognitio
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from "uuid";
 import DisplayGameOVer from '../useful/DisplayGameOver';
-import { gameObjType, pronounceType, storyBoardType, updateGameModesParams } from '@/app/page';
+import { gameObjType, pronounceType } from '@/app/page';
 import styles from "./style.module.css"
 import { handleStoriesWhereGameOver } from '@/app/utility/savestorage';
 import { useAtom } from 'jotai';
-import { allServerFunctionsAtom } from '@/app/utility/globalState';
 import ShowServerErrors from '../useful/ShowServerErrors';
 import AddPassword from '../useful/AddPassword';
 import ChangePassword from '../useful/ChangePassword';
+import { updateGameModes } from '@/app/utility/serverFunctions';
 
 
 export default function PronounciationGM({ isEditing = false, sentGameObj, storyid, addGameModeLocally, updateGamemodeDirectly, sentDirectlyFromMaker }: {
@@ -23,8 +23,6 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
     sentDirectlyFromMaker?: boolean
 
 }) {
-    const [allServerFunctions,] = useAtom(allServerFunctionsAtom)
-
     const [gamePass, gamePassSet] = useState("")
 
     const [errorsSeen, errorsSeenSet] = useState<{
@@ -251,7 +249,7 @@ export default function PronounciationGM({ isEditing = false, sentGameObj, story
         }
 
         if (updateGamemodeDirectly && storyid) {
-            const serverMessageObj = await allServerFunctions!.updateGameModes(newObj, storyid, "normal")
+            const serverMessageObj = await updateGameModes(newObj, storyid, "normal")
 
             if (serverMessageObj["message"].length !== 0) {
                 errorsSeenSet(serverMessageObj)

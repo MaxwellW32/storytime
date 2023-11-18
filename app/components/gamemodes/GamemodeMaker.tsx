@@ -5,8 +5,7 @@ import CrosswordGM from "./CrosswordGM"
 import MatchUpGM from "./MatchUpGM"
 import PronounciationGM from "./PronounciationGM"
 import WordsToMeaningGM from "./WordsToMeaningGM"
-import { gameObjType, gameSelectionTypes, updateGameModesParams } from "@/app/page"
-import { v4 as uuidv4 } from "uuid";
+import { gameObjType } from "@/app/page"
 import styles from "./style.module.css"
 
 
